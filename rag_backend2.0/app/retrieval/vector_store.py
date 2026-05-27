@@ -42,7 +42,8 @@ def get_qdrant_client() -> AsyncQdrantClient:
     return AsyncQdrantClient(
         url=settings.qdrant_url,
         api_key=settings.qdrant_api_key or None,
-        timeout=10,
+        timeout=30,
+        prefer_grpc=False,
     )
 
 
@@ -88,13 +89,15 @@ async def search(
     chunks: list[RetrievedChunk] = []
     for hit in hits:
         payload = hit.payload or {}
+        # Support both "text" (ingestion key) and "content" (legacy key)
+        text = payload.get("text") or payload.get("content", "")
         chunks.append(RetrievedChunk(
-            content=payload.get("content", ""),
+            content=text,
             source_id=payload.get("source_id", "unknown"),
             source_type=payload.get("source_type", "unknown"),
             benefit_id=payload.get("benefit_id"),
             score=float(hit.score),
-            metadata={k: v for k, v in payload.items() if k not in ("content",)},
+            metadata={k: v for k, v in payload.items() if k not in ("text", "content")},
         ))
 
     record_retrieval(len(chunks))
@@ -130,7 +133,7 @@ async def get_by_metadata(
 
     return [
         RetrievedChunk(
-            content=p.payload.get("content", ""),
+            content=p.payload.get("text") or p.payload.get("content", ""),
             source_id=p.payload.get("source_id", "unknown"),
             source_type=p.payload.get("source_type", "unknown"),
             benefit_id=p.payload.get("benefit_id"),

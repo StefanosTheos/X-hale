@@ -77,6 +77,11 @@ class _StructuredAdapter(logging.LoggerAdapter):
         self._log_with_kwargs(logging.ERROR, msg, **kw)
 
 
+def configure_logging() -> None:
+    """Public alias for _configure_root_logger — call once at app startup."""
+    _configure_root_logger()
+
+
 def get_logger(name: str) -> _StructuredAdapter:
     """Return a structured logger for the given module name."""
     _configure_root_logger()
