@@ -68,18 +68,19 @@ async def get_recent_diary_entries(
         return []
 
     entries: list[DiaryEntry] = []
-    for doc in result["documents"]:
-        tags_raw = doc.get("tags", [])
+    for doc in result.documents:
+        d = doc.data if isinstance(doc.data, dict) else {}
+        tags_raw = d.get("tags", [])
         tags = tags_raw if isinstance(tags_raw, list) else []
         created_at = datetime.now(timezone.utc)
         try:
-            created_at = datetime.fromisoformat(doc.get("createdAt", "").replace("Z", "+00:00"))
+            created_at = datetime.fromisoformat(d.get("createdAt", "").replace("Z", "+00:00"))
         except (ValueError, AttributeError):
             pass
         entries.append(DiaryEntry(
-            entry_id=doc["$id"],
-            content=doc.get("entry", doc.get("content", "")),
-            mood=doc.get("mood", "neutral"),
+            entry_id=doc.id,
+            content=d.get("entry", d.get("content", "")),
+            mood=d.get("mood", "neutral"),
             tags=tags,
             created_at=created_at,
         ))

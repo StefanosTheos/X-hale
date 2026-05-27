@@ -46,10 +46,13 @@ async def get_user_profile(user_id: str) -> UserProfile:
         logger.warning("user_profile_fetch_failed", user_id=user_id, error=str(exc))
         return UserProfile(user_id=user_id)
 
+    # SDK v19+: user-defined fields are in doc.data (dict)
+    d = doc.data if isinstance(doc.data, dict) else {}
+
     quit_date: datetime | None = None
-    if doc.get("quitDate"):
+    if d.get("quitDate"):
         try:
-            quit_date = datetime.fromisoformat(doc["quitDate"].replace("Z", "+00:00"))
+            quit_date = datetime.fromisoformat(d["quitDate"].replace("Z", "+00:00"))
         except (ValueError, AttributeError):
             pass
 
@@ -60,18 +63,18 @@ async def get_user_profile(user_id: str) -> UserProfile:
 
     return UserProfile(
         user_id=user_id,
-        name=doc.get("name", "there"),
+        name=d.get("name", "there"),
         quit_date=quit_date,
         days_quit=days_quit,
-        cigs_per_day=doc.get("cigsPerDay", 0),
-        cigs_per_pack=doc.get("cigsPerPack", 20),
-        price_per_pack=float(doc.get("pricePerPack", 0)),
-        years_smoking=doc.get("yearsSmoking", 0),
-        total_cigs_avoided=doc.get("totalCigsAvoided", 0),
-        money_saved=float(doc.get("moneySaved", 0)),
-        num_achievements=doc.get("numAchievements", 0),
-        num_milestones_completed=doc.get("numMilestonesCompleted", 0),
-        num_diary_entries=doc.get("numDiaryEntries", 0),
-        num_health_benefits_reached=doc.get("numHealthBenefit", 0),
-        locale=doc.get("locale", "en"),
+        cigs_per_day=d.get("cigsPerDay", 0),
+        cigs_per_pack=d.get("cigsPerPack", 20),
+        price_per_pack=float(d.get("pricePerPack", 0)),
+        years_smoking=d.get("yearsSmoking", 0),
+        total_cigs_avoided=d.get("totalCigsAvoided", 0),
+        money_saved=float(d.get("moneySaved", 0)),
+        num_achievements=d.get("numAchievements", 0),
+        num_milestones_completed=d.get("numMilestonesCompleted", 0),
+        num_diary_entries=d.get("numDiaryEntries", 0),
+        num_health_benefits_reached=d.get("numHealthBenefit", 0),
+        locale=d.get("locale", "en"),
     )

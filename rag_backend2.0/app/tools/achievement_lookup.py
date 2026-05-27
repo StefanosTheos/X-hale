@@ -41,15 +41,16 @@ async def get_recent_achievements(user_id: str, limit: int = 5) -> list[dict]:
                 Query.limit(limit),
             ],
         )
-        return [
-            {
-                "name": doc.get("achievementName", doc.get("name", "Unknown")),
-                "category": doc.get("category", ""),
-                "tier": doc.get("tier", ""),
-                "unlocked_at": doc.get("$createdAt", ""),
-            }
-            for doc in result["documents"]
-        ]
+        achievements = []
+        for doc in result.documents:
+            d = doc.data if isinstance(doc.data, dict) else {}
+            achievements.append({
+                "name": d.get("achievementName", d.get("name", "Unknown")),
+                "category": d.get("category", ""),
+                "tier": d.get("tier", ""),
+                "unlocked_at": doc.createdat,
+            })
+        return achievements
     except Exception as exc:
         logger.warning("achievement_fetch_failed", user_id=user_id, error=str(exc))
         return []

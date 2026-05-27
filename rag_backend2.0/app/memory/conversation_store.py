@@ -92,22 +92,25 @@ async def get_recent_turns(user_id: str, limit: int | None = None) -> list[Conve
             Query.limit(n),
         ],
     )
-    docs = result["documents"]
+    # SDK v19+: result.documents is a list of Document objects;
+    # user-defined fields live in doc.data (dict), system fields on doc directly.
+    docs = result.documents
     # Reverse to get oldest-first order
     docs = list(reversed(docs))
     turns: list[ConversationTurn] = []
     for doc in docs:
-        citations_raw = doc.get("citations", "[]")
+        d = doc.data if isinstance(doc.data, dict) else {}
+        citations_raw = d.get("citations", "[]")
         try:
             citations = json.loads(citations_raw) if isinstance(citations_raw, str) else []
         except json.JSONDecodeError:
             citations = []
         turns.append(ConversationTurn(
-            turn_id=doc.get("turn_id", doc["$id"]),
+            turn_id=d.get("turn_id", doc.id),
             user_id=user_id,
-            role=doc["role"],
-            content=doc["content"],
-            timestamp=datetime.fromisoformat(doc["timestamp"]),
+            role=d["role"],
+            content=d["content"],
+            timestamp=datetime.fromisoformat(d["timestamp"]),
             citations=citations,
         ))
     return turns
@@ -128,7 +131,7 @@ async def delete_history(user_id: str) -> int:
             settings.appwrite_chat_messages_collection_id,
             queries=[Query.equal("userId", user_id), Query.limit(100)],
         )
-        docs = result["documents"]
+        docs = result.documents
         if not docs:
             break
         for doc in docs:
@@ -136,7 +139,7 @@ async def delete_history(user_id: str) -> int:
                 db.delete_document,
                 db_id,
                 settings.appwrite_chat_messages_collection_id,
-                doc["$id"],
+                doc.id,
             )
             deleted += 1
     logger.info("conversation_history_deleted", user_id=user_id, count=deleted)

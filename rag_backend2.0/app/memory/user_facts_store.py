@@ -57,23 +57,24 @@ async def get_facts(user_id: str, fact_type: str | None = None) -> list[UserFact
         queries=queries,
     )
     facts: list[UserFact] = []
-    for doc in result["documents"]:
-        source_raw = doc.get("source_turn_ids", "[]")
+    for doc in result.documents:
+        d = doc.data if isinstance(doc.data, dict) else {}
+        source_raw = d.get("source_turn_ids", "[]")
         try:
             source_ids = json.loads(source_raw) if isinstance(source_raw, str) else []
         except json.JSONDecodeError:
             source_ids = []
         facts.append(UserFact(
-            fact_id=doc["$id"],
+            fact_id=doc.id,
             user_id=user_id,
-            fact_type=doc["fact_type"],
-            fact_key=doc["fact_key"],
-            fact_value=doc["fact_value"],
-            confidence=doc.get("confidence", 0.7),
+            fact_type=d["fact_type"],
+            fact_key=d["fact_key"],
+            fact_value=d["fact_value"],
+            confidence=d.get("confidence", 0.7),
             source_turn_ids=source_ids,
-            first_observed=datetime.fromisoformat(doc["first_observed"]) if doc.get("first_observed") else None,
-            last_confirmed=datetime.fromisoformat(doc["last_confirmed"]) if doc.get("last_confirmed") else None,
-            superseded_by=doc.get("superseded_by"),
+            first_observed=datetime.fromisoformat(d["first_observed"]) if d.get("first_observed") else None,
+            last_confirmed=datetime.fromisoformat(d["last_confirmed"]) if d.get("last_confirmed") else None,
+            superseded_by=d.get("superseded_by"),
         ))
     return facts
 
@@ -108,9 +109,9 @@ async def upsert_fact(fact: UserFact) -> UserFact:
         "source_turn_ids": json.dumps(fact.source_turn_ids),
         "last_confirmed": now,
     }
-    existing_docs = existing_result["documents"]
+    existing_docs = existing_result.documents
     if existing_docs:
-        doc_id = existing_docs[0]["$id"]
+        doc_id = existing_docs[0].id
         updated = await asyncio.to_thread(
             db.update_document,
             db_id,
@@ -118,7 +119,7 @@ async def upsert_fact(fact: UserFact) -> UserFact:
             doc_id,
             data,
         )
-        fact.fact_id = updated["$id"]
+        fact.fact_id = updated.id
     else:
         data["first_observed"] = now
         created = await asyncio.to_thread(
@@ -128,7 +129,7 @@ async def upsert_fact(fact: UserFact) -> UserFact:
             ID.unique(),
             data,
         )
-        fact.fact_id = created["$id"]
+        fact.fact_id = created.id
     return fact
 
 
