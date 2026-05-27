@@ -1,0 +1,50 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+env/
+*.egg-info/
+dist/
+build/
+.Python
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Test / coverage
+.pytest_cache/
+.coverage
+htmlcov/
+.deepeval/
+.deepeval_telemetry.txt
+
+# Model caches
+.cache/
+~/.cache/huggingface/
+sentence_transformers/
+
+# Fine-tune data (large, not in VCS)
+finetune/data/raw/
+finetune/data/processed/
+finetune/eval/reports/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Chroma legacy (do not use in 2.0)
+chroma_db/
+
+# Runtime artifacts
+*.log
+*.pid

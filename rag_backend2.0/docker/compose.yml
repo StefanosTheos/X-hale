@@ -1,0 +1,47 @@
+# Local development stack for Hailey 2.0
+# Run: docker compose -f docker/compose.yml up
+#
+# Includes:
+#   - app: the FastAPI backend
+#   - qdrant: local Qdrant instance (use Qdrant Cloud in production)
+#
+# Appwrite: use the cloud instance (fra.cloud.appwrite.io) for local dev too.
+# Copy .env.example to .env and fill in your credentials before running.
+
+version: "3.9"
+
+services:
+  app:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    ports:
+      - "7860:7860"
+    env_file:
+      - ../.env
+    environment:
+      - QDRANT_URL=http://qdrant:6333
+      - QDRANT_API_KEY=
+    depends_on:
+      qdrant:
+        condition: service_healthy
+    restart: unless-stopped
+    volumes:
+      - ../app:/app/app  # hot-reload in dev
+
+  qdrant:
+    image: qdrant/qdrant:latest
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - qdrant_data:/qdrant/storage
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:6333/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  qdrant_data:

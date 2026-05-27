@@ -1,0 +1,99 @@
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.build/
+.buildlog/
+.history
+.svn/
+.swiftpm/
+migrate_working_dir/
+
+# IntelliJ related
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# The .vscode folder contains launch configuration and tasks you configure in
+# VS Code which you may wish to be included in version control, so this line
+# is commented out by default.
+#.vscode/
+
+# Flutter/Dart/Pub related
+**/doc/api/
+**/ios/Flutter/.last_build_id
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+/build/
+
+# Symbolication related
+app.*.symbols
+
+# Obfuscation related
+app.*.map.json
+
+# Android Studio will place build artifacts here
+/android/app/debug
+/android/app/profile
+/android/app/release
+
+# Python
+*.pyc
+__pycache__/
+*.pyo
+*.pyd
+*.log
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.sqlite3
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Environments — defense in depth: also catch .env.local, .env.production, nested .env, etc.
+.env
+.env.*
+*.env
+**/.env
+**/.env.*
+
+# VSCode / IDEs
+.vscode/
+.idea/
+
+# Chroma or other local databases (real one lives in rag_backend/chroma_db/;
+# a vestigial copy at repo root can appear if a Python script is run from the
+# wrong cwd — keep both ignored)
+chroma_db/
+**/chroma_db/
+
+# DeepEval local config + cache + telemetry (regenerated on demand)
+.deepeval
+.deepeval_telemetry.txt
+.deepeval-cache.json
+**/.deepeval
+**/.deepeval_telemetry.txt
+**/.deepeval-cache.json
+
+# Firebase credential files — contain API keys and project secrets
+google-services.json
+GoogleService-Info.plist
+
+# Claude Code session data
+.claude/
+
+# Qdrant local data volume (if ever run locally outside Docker)
+qdrant_storage/
