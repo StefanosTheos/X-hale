@@ -134,13 +134,15 @@ async def delete_history(user_id: str) -> int:
         docs = result.documents
         if not docs:
             break
-        for doc in docs:
-            await asyncio.to_thread(
+        await asyncio.gather(*[
+            asyncio.to_thread(
                 db.delete_document,
                 db_id,
                 settings.appwrite_chat_messages_collection_id,
                 doc.id,
             )
-            deleted += 1
+            for doc in docs
+        ])
+        deleted += len(docs)
     logger.info("conversation_history_deleted", user_id=user_id, count=deleted)
     return deleted

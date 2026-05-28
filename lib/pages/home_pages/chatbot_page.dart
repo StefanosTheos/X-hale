@@ -72,10 +72,10 @@ class _ChatbotPageState extends ConsumerState<ChatbotPage>
       final history = await ChatService.loadHistory(jwt: jwt);
       if (!mounted) return;
       setState(() {
+        _messages.add(_welcomeMessage()); // always first (oldest = top of chat)
         _messages.addAll(history);
         _isLoadingHistory = false;
       });
-      // reverse: true ListView always starts at bottom — no manual scroll needed.
     } catch (e) {
       debugPrint('Failed to load history: $e');
       if (mounted) setState(() => _isLoadingHistory = false);
@@ -113,11 +113,13 @@ class _ChatbotPageState extends ConsumerState<ChatbotPage>
     // Add the user message immediately
     if (!mounted) return;
     setState(() {
-      _messages.add(ChatMessage(
-        content: text,
-        isUser: true,
-        timestamp: DateTime.now().toLocal(),
-      ));
+      _messages.add(
+        ChatMessage(
+          content: text,
+          isUser: true,
+          timestamp: DateTime.now().toLocal(),
+        ),
+      );
       _isStreaming = true;
       _streamingContent = '';
       _statusText = 'Hailey is thinking';
@@ -125,10 +127,7 @@ class _ChatbotPageState extends ConsumerState<ChatbotPage>
     _controller.clear();
     _scrollToBottom();
 
-    _streamSub = ChatService.sendMessageStream(
-      message: text,
-      jwt: jwt,
-    ).listen(
+    _streamSub = ChatService.sendMessageStream(message: text, jwt: jwt).listen(
       (event) {
         if (!mounted) return;
         switch (event) {
@@ -142,26 +141,29 @@ class _ChatbotPageState extends ConsumerState<ChatbotPage>
             _scrollToBottom();
           case HaileyDoneEvent():
             // Finalise the streamed message
-            final content = _streamingContent.isNotEmpty
-                ? _streamingContent
-                : '...';
+            final content =
+                _streamingContent.isNotEmpty ? _streamingContent : '...';
             setState(() {
-              _messages.add(ChatMessage(
-                content: content,
-                isUser: false,
-                timestamp: DateTime.now().toLocal(),
-              ));
+              _messages.add(
+                ChatMessage(
+                  content: content,
+                  isUser: false,
+                  timestamp: DateTime.now().toLocal(),
+                ),
+              );
               _isStreaming = false;
               _streamingContent = '';
             });
             _scrollToBottom();
           case HaileyErrorEvent(:final message):
             setState(() {
-              _messages.add(ChatMessage(
-                content: '❌ $message',
-                isUser: false,
-                timestamp: DateTime.now().toLocal(),
-              ));
+              _messages.add(
+                ChatMessage(
+                  content: '❌ $message',
+                  isUser: false,
+                  timestamp: DateTime.now().toLocal(),
+                ),
+              );
               _isStreaming = false;
               _streamingContent = '';
             });
@@ -171,11 +173,13 @@ class _ChatbotPageState extends ConsumerState<ChatbotPage>
       onError: (Object e) {
         if (!mounted) return;
         setState(() {
-          _messages.add(ChatMessage(
-            content: '❌ Connection error: $e',
-            isUser: false,
-            timestamp: DateTime.now().toLocal(),
-          ));
+          _messages.add(
+            ChatMessage(
+              content: '❌ Connection error: $e',
+              isUser: false,
+              timestamp: DateTime.now().toLocal(),
+            ),
+          );
           _isStreaming = false;
           _streamingContent = '';
         });
@@ -184,15 +188,18 @@ class _ChatbotPageState extends ConsumerState<ChatbotPage>
       onDone: () {
         // Stream closed before a done event (e.g. server dropped connection)
         if (!mounted || !_isStreaming) return;
-        final content = _streamingContent.isNotEmpty
-            ? _streamingContent
-            : '❌ Connection closed unexpectedly.';
+        final content =
+            _streamingContent.isNotEmpty
+                ? _streamingContent
+                : '❌ Connection closed unexpectedly.';
         setState(() {
-          _messages.add(ChatMessage(
-            content: content,
-            isUser: false,
-            timestamp: DateTime.now().toLocal(),
-          ));
+          _messages.add(
+            ChatMessage(
+              content: content,
+              isUser: false,
+              timestamp: DateTime.now().toLocal(),
+            ),
+          );
           _isStreaming = false;
           _streamingContent = '';
         });
@@ -202,26 +209,44 @@ class _ChatbotPageState extends ConsumerState<ChatbotPage>
   }
 
   String _labelForState(String state) => switch (state) {
-        'triaging' => 'Hailey is thinking',
-        'loading_context' => 'Loading context',
-        'searching_kb' => 'Searching knowledge base',
-        'composing' => 'Hailey is composing',
-        'saving' => 'Saving…',
-        _ => 'Hailey is thinking',
-      };
+    'triaging' => 'Hailey is thinking',
+    'loading_context' => 'Loading context',
+    'searching_kb' => 'Searching knowledge base',
+    'composing' => 'Hailey is composing',
+    'saving' => 'Saving…',
+    _ => 'Hailey is thinking',
+  };
 
-  void _clearHistory() async {
-    setState(() => _messages.clear());
+  ChatMessage _welcomeMessage() => ChatMessage(
+    content:
+        "Hi! I'm Hailey, your personal quit-smoking companion 💙\n\n"
+        "I'm here to support you every step of the way — whether you're "
+        "fighting a craving, celebrating a milestone, or just need someone "
+        "to talk to. How are you feeling today?",
+    isUser: false,
+    timestamp: DateTime.now().toLocal(),
+  );
+
+  void _clearHistory() {
     final jwt = _jwt;
     if (jwt == null) return;
-    try {
-      await ChatService.clearHistory(jwt: jwt);
-      if (!mounted) return;
-      _showSnack('History cleared');
-    } catch (e) {
-      if (!mounted) return;
-      _showSnack('❌ Error: ${e.toString()}');
-    }
+
+    // Grab messenger before popping so we can show on the parent page.
+    final messenger = ScaffoldMessenger.of(context);
+    Navigator.pop(context);
+
+    ChatService.clearHistory(jwt: jwt).then((_) {
+      messenger.showSnackBar(
+        const SnackBar(
+          content: Text('History cleared'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }).catchError((e) {
+      messenger.showSnackBar(
+        SnackBar(content: Text('❌ Failed to clear history: $e')),
+      );
+    });
   }
 
   void _showSnack(String msg) {
@@ -253,12 +278,20 @@ class _ChatbotPageState extends ConsumerState<ChatbotPage>
           ),
           onPressed: () => Navigator.pop(context),
         ),
-        title: Text(
-          'Chatbot',
-          style: TextStyle(
-            color: isDark ? AppThemes.darkTextColor : AppThemes.lightTextColor,
-            fontWeight: FontWeight.bold,
-          ),
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Image.asset('assets/icons/chatbot.png', height: 24),
+            const SizedBox(width: 8),
+            Text(
+              'Hailey',
+              style: TextStyle(
+                color:
+                    isDark ? AppThemes.darkTextColor : AppThemes.lightTextColor,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
         ),
         backgroundColor:
             isDark ? AppThemes.darkAppBarColor : AppThemes.lightAppBarColor,
@@ -278,56 +311,63 @@ class _ChatbotPageState extends ConsumerState<ChatbotPage>
       body: SafeArea(
         child: Container(
           decoration: BoxDecoration(
-            gradient: isDark
-                ? AppThemes.darkMotivationGradient
-                : AppThemes.lightMotivationGradient,
+            gradient:
+                isDark
+                    ? AppThemes.darkMotivationGradient
+                    : AppThemes.lightMotivationGradient,
           ),
           child: Column(
             children: [
               Expanded(
-                child: _isLoadingHistory
-                    ? Center(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            CircularProgressIndicator(
-                              color: isDark
-                                  ? AppThemes.darkDiaryTextColor
-                                  : const Color(0xFF0077B6),
-                            ),
-                            const SizedBox(height: 12),
-                            Text(
-                              'Loading history…',
-                              style: TextStyle(
-                                color: isDark
-                                    ? AppThemes.darkSubtitleColor
-                                    : Colors.black54,
-                                fontSize: 13,
+                child:
+                    _isLoadingHistory
+                        ? Center(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              CircularProgressIndicator(
+                                color:
+                                    isDark
+                                        ? AppThemes.darkDiaryTextColor
+                                        : const Color(0xFF0077B6),
                               ),
-                            ),
-                          ],
+                              const SizedBox(height: 12),
+                              Text(
+                                'Loading history…',
+                                style: TextStyle(
+                                  color:
+                                      isDark
+                                          ? AppThemes.darkSubtitleColor
+                                          : Colors.black54,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                        : ListView.builder(
+                          controller: scrollController,
+                          reverse: true,
+                          padding: const EdgeInsets.all(12),
+                          itemCount: itemCount,
+                          itemBuilder: (context, index) {
+                            // With reverse: true, index 0 = newest (visible at bottom).
+                            if (_isStreaming && index == 0) {
+                              return _StreamingBubble(
+                                isDark: isDark,
+                                content: _streamingContent,
+                                statusText: _statusText,
+                              );
+                            }
+                            final offset = _isStreaming ? 1 : 0;
+                            final msg =
+                                _messages[_messages.length -
+                                    1 -
+                                    (index - offset)];
+                            return _MessageBubble(msg: msg, isDark: isDark);
+                          },
                         ),
-                      )
-                    : ListView.builder(
-                  controller: scrollController,
-                  reverse: true,
-                  padding: const EdgeInsets.all(12),
-                  itemCount: itemCount,
-                  itemBuilder: (context, index) {
-                    // With reverse: true, index 0 = newest (visible at bottom).
-                    if (_isStreaming && index == 0) {
-                      return _StreamingBubble(
-                        isDark: isDark,
-                        content: _streamingContent,
-                        statusText: _statusText,
-                      );
-                    }
-                    final offset = _isStreaming ? 1 : 0;
-                    final msg = _messages[_messages.length - 1 - (index - offset)];
-                    return _MessageBubble(msg: msg, isDark: isDark);
-                  },
-                ),
-              ),  // closes Expanded
+              ), // closes Expanded
               Padding(
                 padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
                 child: Row(
@@ -339,14 +379,16 @@ class _ChatbotPageState extends ConsumerState<ChatbotPage>
                         onSubmitted: (_) => _sendMessage(),
                         enabled: !_isStreaming,
                         style: TextStyle(
-                          color: isDark
-                              ? AppThemes.darkTextColor
-                              : AppThemes.lightTextColor,
+                          color:
+                              isDark
+                                  ? AppThemes.darkTextColor
+                                  : AppThemes.lightTextColor,
                         ),
                         decoration: InputDecoration(
-                          hintText: _isStreaming
-                              ? 'Hailey is replying…'
-                              : 'Type your message...',
+                          hintText:
+                              _isStreaming
+                                  ? 'Hailey is replying…'
+                                  : 'Type your message...',
                           filled: true,
                           fillColor:
                               isDark ? AppThemes.darkCardColor : Colors.white,
@@ -366,9 +408,10 @@ class _ChatbotPageState extends ConsumerState<ChatbotPage>
                     IconButton(
                       icon: Icon(
                         Icons.send,
-                        color: _isStreaming
-                            ? Colors.grey
-                            : isDark
+                        color:
+                            _isStreaming
+                                ? Colors.grey
+                                : isDark
                                 ? AppThemes.darkDiaryTextColor
                                 : const Color(0xFF0077B6),
                       ),
@@ -387,82 +430,92 @@ class _ChatbotPageState extends ConsumerState<ChatbotPage>
   void _showClearHistoryDialog(bool isDark) {
     showDialog(
       context: context,
-      builder: (_) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        child: Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            gradient: isDark
-                ? AppThemes.darkDeleteDialogGradient
-                : AppThemes.lightDeleteDialogGradient,
-            borderRadius: const BorderRadius.all(Radius.circular(20)),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.warning_amber_rounded,
-                size: 40,
-                color: isDark
-                    ? AppThemes.darkDeleteButtonColor
-                    : AppThemes.lightDeleteButtonColor,
+      builder:
+          (_) => Dialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                gradient:
+                    isDark
+                        ? AppThemes.darkDeleteDialogGradient
+                        : AppThemes.lightDeleteDialogGradient,
+                borderRadius: const BorderRadius.all(Radius.circular(20)),
               ),
-              const SizedBox(height: 16),
-              Text(
-                'Are you sure you want to clear your history?',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                  color: isDark ? AppThemes.darkTextColor : Colors.black87,
-                ),
-              ),
-              const SizedBox(height: 10),
-              Text(
-                'This action cannot be undone.',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: isDark ? AppThemes.darkSubtitleColor : Colors.black87,
-                ),
-              ),
-              const SizedBox(height: 20),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  ElevatedButton(
-                    onPressed: () => Navigator.pop(context),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor:
-                          AppThemes.elevatedButtonBackground(isDark),
-                      foregroundColor:
-                          isDark ? AppThemes.darkTextColor : Colors.black,
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12)),
-                    ),
-                    child: const Text('No'),
+                  Icon(
+                    Icons.warning_amber_rounded,
+                    size: 40,
+                    color:
+                        isDark
+                            ? AppThemes.darkDeleteButtonColor
+                            : AppThemes.lightDeleteButtonColor,
                   ),
-                  ElevatedButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                      _clearHistory();
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: isDark
-                          ? AppThemes.darkDeleteButtonColor
-                          : AppThemes.lightDeleteButtonColor,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12)),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Are you sure you want to clear your history?',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                      color: isDark ? AppThemes.darkTextColor : Colors.black87,
                     ),
-                    child: const Text('Yes'),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    'This action cannot be undone.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color:
+                          isDark ? AppThemes.darkSubtitleColor : Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      ElevatedButton(
+                        onPressed: () => Navigator.pop(context),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppThemes.elevatedButtonBackground(
+                            isDark,
+                          ),
+                          foregroundColor:
+                              isDark ? AppThemes.darkTextColor : Colors.black,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: const Text('No'),
+                      ),
+                      ElevatedButton(
+                        onPressed: () {
+                          Navigator.pop(context);
+                          _clearHistory();
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor:
+                              isDark
+                                  ? AppThemes.darkDeleteButtonColor
+                                  : AppThemes.lightDeleteButtonColor,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: const Text('Yes'),
+                      ),
+                    ],
                   ),
                 ],
               ),
-            ],
+            ),
           ),
-        ),
-      ),
     );
   }
 }
@@ -483,9 +536,12 @@ class _MessageBubble extends StatelessWidget {
         margin: const EdgeInsets.symmetric(vertical: 4),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
-          color: msg.isUser
-              ? (isDark ? AppThemes.activeColor : const Color(0xFF0077B6))
-              : (isDark ? AppThemes.darkCardColor : const Color(0xFF90E0EF)),
+          color:
+              msg.isUser
+                  ? (isDark ? AppThemes.activeColor : const Color(0xFF0077B6))
+                  : (isDark
+                      ? AppThemes.darkCardColor
+                      : const Color(0xFF90E0EF)),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Column(
@@ -494,9 +550,10 @@ class _MessageBubble extends StatelessWidget {
             Text(
               msg.content,
               style: TextStyle(
-                color: msg.isUser
-                    ? Colors.white
-                    : (isDark ? AppThemes.darkTextColor : Colors.black87),
+                color:
+                    msg.isUser
+                        ? Colors.white
+                        : (isDark ? AppThemes.darkTextColor : Colors.black87),
                 fontSize: 15,
               ),
             ),
@@ -505,9 +562,12 @@ class _MessageBubble extends StatelessWidget {
               DateFormat('HH:mm • MMM d, yyyy').format(msg.timestamp.toLocal()),
               style: TextStyle(
                 fontSize: 11,
-                color: msg.isUser
-                    ? Colors.white70
-                    : (isDark ? AppThemes.darkSubtitleColor : Colors.black54),
+                color:
+                    msg.isUser
+                        ? Colors.white70
+                        : (isDark
+                            ? AppThemes.darkSubtitleColor
+                            : Colors.black54),
               ),
             ),
           ],
@@ -576,51 +636,53 @@ class _StreamingBubbleState extends State<_StreamingBubble>
           color: bubbleColor,
           borderRadius: BorderRadius.circular(12),
         ),
-        child: hasTokens
-            // Tokens are flowing — show the accumulated text
-            ? Text(
-                widget.content,
-                style: TextStyle(color: textColor, fontSize: 15),
-              )
-            // Waiting for first token — show status label + animated dots
-            : Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    widget.statusText,
-                    style: TextStyle(color: labelColor, fontSize: 13),
-                  ),
-                  const SizedBox(width: 6),
-                  AnimatedBuilder(
-                    animation: _controller,
-                    builder: (_, _) {
-                      return Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: List.generate(3, (i) {
-                          final t = (_controller.value - i / 3) % 1.0;
-                          final opacity =
-                              0.2 + 0.8 * (t < 0.5 ? t * 2 : (1 - t) * 2);
-                          return Padding(
-                            padding:
-                                const EdgeInsets.symmetric(horizontal: 1.5),
-                            child: Opacity(
-                              opacity: opacity.clamp(0.0, 1.0),
-                              child: Container(
-                                width: 6,
-                                height: 6,
-                                decoration: BoxDecoration(
-                                  color: dotColor,
-                                  shape: BoxShape.circle,
+        child:
+            hasTokens
+                // Tokens are flowing — show the accumulated text
+                ? Text(
+                  widget.content,
+                  style: TextStyle(color: textColor, fontSize: 15),
+                )
+                // Waiting for first token — show status label + animated dots
+                : Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      widget.statusText,
+                      style: TextStyle(color: labelColor, fontSize: 13),
+                    ),
+                    const SizedBox(width: 6),
+                    AnimatedBuilder(
+                      animation: _controller,
+                      builder: (_, _) {
+                        return Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: List.generate(3, (i) {
+                            final t = (_controller.value - i / 3) % 1.0;
+                            final opacity =
+                                0.2 + 0.8 * (t < 0.5 ? t * 2 : (1 - t) * 2);
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 1.5,
+                              ),
+                              child: Opacity(
+                                opacity: opacity.clamp(0.0, 1.0),
+                                child: Container(
+                                  width: 6,
+                                  height: 6,
+                                  decoration: BoxDecoration(
+                                    color: dotColor,
+                                    shape: BoxShape.circle,
+                                  ),
                                 ),
                               ),
-                            ),
-                          );
-                        }),
-                      );
-                    },
-                  ),
-                ],
-              ),
+                            );
+                          }),
+                        );
+                      },
+                    ),
+                  ],
+                ),
       ),
     );
   }
