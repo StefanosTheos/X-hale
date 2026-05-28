@@ -12,6 +12,9 @@ Port: 7860 (Hugging Face Spaces default).
 """
 from __future__ import annotations
 
+import warnings
+warnings.filterwarnings("ignore", category=DeprecationWarning)
+
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI

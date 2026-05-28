@@ -1,9 +1,9 @@
 """
 Appwrite JWT verification.
 
-Appwrite does not expose a public key for offline JWT verification.
-The canonical approach is to call GET /account with the user's JWT as a
-Bearer token. If the call succeeds the token is valid and we get the user's ID.
+Verifies a user JWT by calling Account.get() through the Appwrite Python SDK
+(which uses the requests transport — the same as all other Appwrite calls in
+this codebase, avoiding the httpx connectivity issues on some networks).
 
 Verified tokens are cached in-process for `settings.jwt_cache_ttl_seconds`
 (default 60s) to avoid hammering Appwrite on every SSE chunk.
@@ -14,7 +14,9 @@ import asyncio
 import time
 from typing import Optional
 
-import httpx
+from appwrite.client import Client
+from appwrite.exception import AppwriteException
+from appwrite.services.account import Account
 
 from app.config import settings
 from app.observability.logging import get_logger
@@ -53,22 +55,28 @@ async def verify_appwrite_jwt(token: str) -> Optional[str]:
     return user_id
 
 
-async def _call_appwrite_account(token: str) -> Optional[str]:
-    """Make a single GET /account call with the user JWT to verify it."""
-    url = f"{settings.appwrite_endpoint}/account"
-    headers = {
-        "X-Appwrite-Project": settings.appwrite_project_id,
-        "X-Appwrite-JWT": token,
-        "Content-Type": "application/json",
-    }
+def _verify_jwt_sync(token: str) -> Optional[str]:
+    """Synchronous JWT verification via the Appwrite SDK (requests transport)."""
+    client = Client()
+    (
+        client
+        .set_endpoint(settings.appwrite_endpoint)
+        .set_project(settings.appwrite_project_id)
+        .set_jwt(token)
+    )
+    account = Account(client)
     try:
-        async with httpx.AsyncClient(timeout=5.0) as client:
-            resp = await client.get(url, headers=headers)
-        if resp.status_code == 200:
-            data = resp.json()
-            return data.get("$id")
-        logger.warning("appwrite_jwt_verify_failed", status=resp.status_code)
+        user = account.get()
+        return user.id
+    except AppwriteException as exc:
+        logger.warning("appwrite_jwt_verify_failed", status=exc.code, message=exc.message)
         return None
-    except httpx.RequestError as exc:
+
+
+async def _call_appwrite_account(token: str) -> Optional[str]:
+    """Run JWT verification in a thread (SDK is synchronous)."""
+    try:
+        return await asyncio.to_thread(_verify_jwt_sync, token)
+    except Exception as exc:
         logger.warning("appwrite_jwt_request_error", error=str(exc))
         return None

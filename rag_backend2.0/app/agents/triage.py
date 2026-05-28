@@ -56,9 +56,9 @@ async def run_triage(user_input: str) -> TriageResult:
             messages=messages,
             temperature=0.0,
             json_mode=True,
-            max_tokens=256,
+            max_tokens=512,
         )
-        data = json.loads(raw)
+        data = json.loads(_extract_json(raw))
         result = TriageResult(**data)
         record_triage(result.intent, result.emotion)
         return result
@@ -66,3 +66,21 @@ async def run_triage(user_input: str) -> TriageResult:
         logger.warning("triage_parse_failed", error=str(exc))
         record_fallback()
         return _SAFE_DEFAULT
+
+
+def _extract_json(raw: str) -> str:
+    """Extract a JSON object from a response that may be wrapped in markdown fences."""
+    raw = raw.strip()
+    if not raw:
+        return "{}"
+    # Strip ```json ... ``` or ``` ... ``` fences
+    if raw.startswith("```"):
+        lines = raw.split("\n")
+        lines = [l for l in lines if not l.startswith("```")]
+        raw = "\n".join(lines).strip()
+    # Find the first { ... } block in case there's surrounding text
+    start = raw.find("{")
+    end = raw.rfind("}")
+    if start != -1 and end != -1 and end > start:
+        return raw[start:end + 1]
+    return raw

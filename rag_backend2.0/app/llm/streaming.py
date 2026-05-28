@@ -37,9 +37,12 @@ def done_event(
     turn_id: str = "",
 ) -> str:
     """Emit the terminal done event."""
+    def _to_dict(obj):
+        return obj if isinstance(obj, dict) else obj.model_dump()
+
     return _sse_line("done", {
-        "citations": [c.model_dump() for c in citations],
-        "deeplinks": [d.model_dump() for d in deeplinks],
+        "citations": [_to_dict(c) for c in citations],
+        "deeplinks": [_to_dict(d) for d in deeplinks],
         "turn_id": turn_id,
     })
 

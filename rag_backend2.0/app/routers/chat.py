@@ -19,7 +19,7 @@ import asyncio
 import uuid
 
 from fastapi import APIRouter, Depends, Request
-from sse_starlette.sse import EventSourceResponse
+from fastapi.responses import StreamingResponse
 
 from app.auth.dependencies import get_current_user
 from app.graph.builder import get_compiled_graph
@@ -108,4 +108,12 @@ async def chat(
             record_request("error")
             yield error_event("internal_error", "Something went wrong. Please try again.")
 
-    return EventSourceResponse(generate())
+    return StreamingResponse(
+        generate(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        },
+    )

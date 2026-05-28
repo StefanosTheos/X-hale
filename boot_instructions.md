@@ -5,22 +5,6 @@ connected via USB cable. Follow this every time you start a dev session.
 
 ---
 
-## Prerequisites (one-time setup, skip if already done)
-
-- [ ] USB debugging enabled on your Android device:
-  **Settings → About Phone → tap "Build number" 7 times → Developer Options → USB Debugging ON**
-- [ ] Android device trusted on this laptop:
-  Plug in the cable, accept the "Allow USB debugging?" prompt on the phone.
-- [ ] ADB (Android Debug Bridge) working:
-  ```powershell
-  adb devices
-  ```
-  You should see your device listed (not just "List of devices attached" with nothing below it).
-- [ ] Backend dependencies installed (already done — `rag_backend2.0/.venv` exists).
-- [ ] `.env` file filled in (`rag_backend2.0/.env` — all keys set ✅).
-
----
-
 ## Every-session checklist
 
 ### Step 1 — Plug in the phone and verify ADB sees it

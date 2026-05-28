@@ -62,15 +62,15 @@ async def retry_with_backoff(
     raise last_exc  # type: ignore[misc]
 
 
-def get_triage_client() -> "GroqClient":
-    """Return the small/fast LLM client for triage and classification."""
-    from app.llm.groq_client import GroqClient
+def get_triage_client() -> "GeminiClient":
+    """Return the fast LLM client for triage and classification."""
+    from app.llm.gemini_client import GeminiClient
     from app.config import settings
-    return GroqClient(model=settings.groq_triage_model)
+    return GeminiClient(model=settings.gemini_triage_model)
 
 
-def get_synthesis_client() -> "GroqClient":
-    """Return the large LLM client for the synthesizer."""
-    from app.llm.groq_client import GroqClient
+def get_synthesis_client() -> "GeminiClient":
+    """Return the LLM client for the synthesizer."""
+    from app.llm.gemini_client import GeminiClient
     from app.config import settings
-    return GroqClient(model=settings.groq_synthesis_model)
+    return GeminiClient(model=settings.gemini_synthesis_model)

@@ -26,6 +26,11 @@ class Settings(BaseSettings):
     groq_triage_temperature: float = 0.0
     groq_synthesis_temperature: float = 0.5
 
+    # ── Google Gemini ───────────────────────────────────────────────────────
+    gemini_api_key: str = ""
+    gemini_triage_model: str = "gemini-2.5-flash"
+    gemini_synthesis_model: str = "gemini-2.5-flash"
+
     # ── Cloudflare Workers AI ───────────────────────────────────────────────
     cf_account_id: str = ""
     cf_workers_ai_token: str = ""

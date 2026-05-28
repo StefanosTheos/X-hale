@@ -30,6 +30,9 @@ class _ChatbotPageState extends ConsumerState<ChatbotPage>
   String _statusText = 'Hailey is thinking';
   StreamSubscription<HaileyEvent>? _streamSub;
 
+  // History loading state
+  bool _isLoadingHistory = true;
+
   // Cached JWT (refreshed on 401)
   String? _jwt;
 
@@ -61,23 +64,34 @@ class _ChatbotPageState extends ConsumerState<ChatbotPage>
 
   Future<void> _loadHistory() async {
     final jwt = _jwt;
-    if (jwt == null) return;
+    if (jwt == null) {
+      if (mounted) setState(() => _isLoadingHistory = false);
+      return;
+    }
     try {
       final history = await ChatService.loadHistory(jwt: jwt);
       if (!mounted) return;
-      setState(() => _messages.addAll(history));
-      _scrollToBottom();
+      setState(() {
+        _messages.addAll(history);
+        _isLoadingHistory = false;
+      });
+      // reverse: true ListView always starts at bottom — no manual scroll needed.
     } catch (e) {
       debugPrint('Failed to load history: $e');
+      if (mounted) setState(() => _isLoadingHistory = false);
     }
   }
 
-  void _scrollToBottom() {
+  // With reverse: true on the ListView, "bottom" = pixels 0.
+  void _scrollToBottom({bool jump = false}) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (scrollController.hasClients) {
+      if (!scrollController.hasClients) return;
+      if (jump) {
+        scrollController.jumpTo(0);
+      } else {
         scrollController.animateTo(
-          scrollController.position.maxScrollExtent + 80,
-          duration: const Duration(milliseconds: 300),
+          0,
+          duration: const Duration(milliseconds: 200),
           curve: Curves.easeOut,
         );
       }
@@ -271,24 +285,49 @@ class _ChatbotPageState extends ConsumerState<ChatbotPage>
           child: Column(
             children: [
               Expanded(
-                child: ListView.builder(
+                child: _isLoadingHistory
+                    ? Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            CircularProgressIndicator(
+                              color: isDark
+                                  ? AppThemes.darkDiaryTextColor
+                                  : const Color(0xFF0077B6),
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              'Loading history…',
+                              style: TextStyle(
+                                color: isDark
+                                    ? AppThemes.darkSubtitleColor
+                                    : Colors.black54,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    : ListView.builder(
                   controller: scrollController,
+                  reverse: true,
                   padding: const EdgeInsets.all(12),
                   itemCount: itemCount,
                   itemBuilder: (context, index) {
-                    // Last slot: streaming bubble
-                    if (_isStreaming && index == _messages.length) {
+                    // With reverse: true, index 0 = newest (visible at bottom).
+                    if (_isStreaming && index == 0) {
                       return _StreamingBubble(
                         isDark: isDark,
                         content: _streamingContent,
                         statusText: _statusText,
                       );
                     }
-                    final msg = _messages[index];
+                    final offset = _isStreaming ? 1 : 0;
+                    final msg = _messages[_messages.length - 1 - (index - offset)];
                     return _MessageBubble(msg: msg, isDark: isDark);
                   },
                 ),
-              ),
+              ),  // closes Expanded
               Padding(
                 padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
                 child: Row(
