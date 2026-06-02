@@ -1,0 +1,32 @@
+# Python
+*.pyc
+__pycache__/
+*.pyo
+*.pyd
+*.sqlite3
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Environments
+.env
+.env.*
+*.env
+
+# VSCode / IDEs
+.vscode/
+.idea/
+
+# Chroma or other local databases
+chroma_db/
+
+# Runtime cache from ingest.ingest_url() when fetching PDF URLs.
+temp_ingest.pdf
+temp_ingest.*
+
+# DeepEval local config + cache + telemetry
+.deepeval
+.deepeval_telemetry.txt
+.deepeval-cache.json
