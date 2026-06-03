@@ -26,29 +26,6 @@ def append_to_history(user_id: str, role: str, text: str):
         }]
     )
 
-def load_user_history(user_id: str, k: int = 3):
-    """Return the user's most recent k turns joined oldest-to-newest as a
-    single string, capped at ~1000 tokens.
-
-    Previously this ran a vector similarity search against the literal seed
-    "recent messages", which is meaningless — the embedding of that phrase
-    has no relationship to chat-history ordering. Use a chronological fetch
-    instead.
-    """
-    items = load_user_history_as_list(user_id, k=k)
-
-    history = []
-    token_count = 0
-    for item in items:
-        content = item["content"]
-        words = content.split()
-        if token_count + len(words) > 1000:
-            break
-        history.append(content)
-        token_count += len(words)
-
-    return "\n".join(history)
-
 def load_user_history_as_list(user_id: str, k: int = 20):
     return retrieve_chat_history(user_id, limit=k)
 

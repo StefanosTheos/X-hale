@@ -7,7 +7,6 @@ load_dotenv()
 
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 MODEL_NAME = "llama-3.3-70b-versatile"
-CHROMA_DB_PATH = os.getenv("CHROMA_DB_PATH", "./chroma_db")
 ENABLE_WEB_SEARCH_FALLBACK = os.getenv("ENABLE_WEB_SEARCH_FALLBACK", "false").lower() == "true"
 
 embeddings = HuggingFaceEmbeddings(

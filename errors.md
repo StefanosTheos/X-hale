@@ -64,8 +64,33 @@
 
 ## Rag_backend errors
 
+23. **Three dead imports in `test_agent.py`.**
+    `AnswerRelevancyMetric`, `FaithfulnessMetric`, and `HallucinationMetric` are imported but their usages are commented out. They are resolved and loaded on every run for no benefit.
+    **Fix:** Remove the three unused imports.
 
+---
 
+## Rag_backend file summaries
+
+Files with no outstanding errors — brief notes on what each does and how.
+
+**`config.py`** — Module-level singleton setup. Loads `.env`, instantiates the shared `HuggingFaceEmbeddings` model (`all-MiniLM-L6-v2`) and the `ChatGroq` LLM (`llama-3.3-70b-versatile`). Both are imported by other modules; constructing them once here avoids repeated model loading.
+
+**`main.py`** — FastAPI entry point. Sets `ALLOW_CHROMA_TELEMETRY=FALSE` before any chromadb import, adds open-origin CORS middleware (intentional for development), and mounts `apiRoutes.router`.
+
+**`memory.py`** — History persistence layer. `append_to_history` writes a single message to the `chat_history` ChromaDB collection with `user_id`, `role`, and ISO-UTC timestamp metadata. `load_user_history_as_list` is a thin pass-through to `retrieve_chat_history` for the API layer. `get_formatted_memory` formats history as `"User: …"` / `"Hailey: …"` lines for LLM prompts. `delete_user_history` purges all of a user's messages via a `where` filter.
+
+**`retriever.py`** — Two retrieval functions. `retrieve_documents` performs dual similarity search — top-3 knowledge-base chunks plus the single most relevant prior user message — then prepends source-type tags (`[KNOWLEDGE BASE]` / `[USER PRIOR MESSAGE]`) so the context refiner can weight them appropriately. `retrieve_chat_history` fetches a user's full chronological message log using a server-side `where={"user_id": ...}` filter, sorted by ISO timestamp.
+
+**`chains.py`** — Thin wrappers that bind prompt templates to the LLM and wire up output parsers. All chains are module-level stateless `Runnable` instances. `classify_all` is the only function with business logic: it calls the batched classifier chain, validates the returned dict, and returns safe defaults on any parsing failure so the graph never hard-crashes on a malformed LLM response.
+
+**`web_search.py`** — DuckDuckGo fallback retriever. Wraps `DDGS.text()` in a try/except with a configurable timeout; on any failure logs a warning and returns `[]` so a search outage degrades gracefully rather than crashing the turn.
+
+**`check_DB.py`** — Debug CLI utility. Fetches and pretty-prints every entry in the `knowledge_base` collection (metadata + 300-char snippet). Run directly; not imported by any production module.
+
+**`health_benefit_ingest.py`** — One-time seeding script. Maps each `benefit_*` milestone ID to a list of authoritative URLs and calls `ingest_benefit_sources` for each. Guarded with `if __name__ == "__main__"`; importing the module has no side effects.
+
+**`test_example.py`** — Minimal `deepeval` sanity check with a single hardcoded `LLMTestCase`. Useful for verifying the evaluation framework is installed and reachable. Guarded; no side effects on import.
 
 ---
 

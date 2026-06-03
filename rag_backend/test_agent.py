@@ -31,47 +31,46 @@ def call_agent(message: str):
     res.raise_for_status()
     return res.json()
 
-# -----------------------------
-# TEST CASES
-# -----------------------------
-test_inputs = [
-    "What happens to your lungs after quitting smoking?",
-    #"Is nicotine gum safer than cigarettes?",
-    #"I'm feeling really anxious and craving a cigarette right now."
-]
+if __name__ == "__main__":
+    # -----------------------------
+    # TEST CASES
+    # -----------------------------
+    test_inputs = [
+        "What happens to your lungs after quitting smoking?",
+        #"Is nicotine gum safer than cigarettes?",
+        #"I'm feeling really anxious and craving a cigarette right now."
+    ]
 
-test_cases = []
+    test_cases = []
 
-reset_user_history()
+    reset_user_history()
 
-for user_input in test_inputs:
-    result = call_agent(user_input)
-    actual_output = result["response"]
+    for user_input in test_inputs:
+        result = call_agent(user_input)
+        actual_output = result["response"]
 
-    refined_context = result.get("refined_context", "")
+        refined_context = result.get("refined_context", "")
 
-    test_cases.append(
-        LLMTestCase(
-            input=user_input,
-            actual_output=actual_output,
-            retrieval_context=[refined_context]
+        test_cases.append(
+            LLMTestCase(
+                input=user_input,
+                actual_output=actual_output,
+                retrieval_context=[refined_context]
+            )
         )
-    )
 
+    # -----------------------------
+    # METRICS
+    # -----------------------------
+    metrics = [
+        #AnswerRelevancyMetric(threshold=0.6, async_mode=False),
+        #FaithfulnessMetric(threshold=0.6, async_mode=False),
+        #HallucinationMetric(threshold=0.6, async_mode=False),
+        ContextualRelevancyMetric(threshold=0.6, async_mode=False),
 
+    ]
 
-# -----------------------------
-# METRICS
-# -----------------------------
-metrics = [
-    #AnswerRelevancyMetric(threshold=0.6, async_mode=False),
-    #FaithfulnessMetric(threshold=0.6, async_mode=False),
-    #HallucinationMetric(threshold=0.6, async_mode=False),
-    ContextualRelevancyMetric(threshold=0.6, async_mode=False),
-
-]
-
-# -----------------------------
-# RUN
-# -----------------------------
-evaluate(test_cases=test_cases, metrics=metrics)
+    # -----------------------------
+    # RUN
+    # -----------------------------
+    evaluate(test_cases=test_cases, metrics=metrics)

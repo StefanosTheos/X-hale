@@ -17,7 +17,6 @@ from memory import get_formatted_memory
 from retriever import retrieve_documents
 from web_search import web_search
 
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # === STATE === #
@@ -30,18 +29,17 @@ class GraphState(TypedDict):
     needs_clarification: bool
     response: str
     conversation_history: str
-    raw_docs: list[str]
+    raw_docs: list
     refined_context: str
     knowledge_source: str
-    retrieved_docs: list[str]
 
 
 # === NODES === #
 def conversation_history_node(state: GraphState) -> GraphState:
     logger.info("[conversation_history] Fetching conversation history...")
     history = get_formatted_memory(state["user_id"], limit=10)
-    logger.info(f"Retrieved history: {history[:100]}...")
-    return {**state, "conversation_history": history, "response": None}
+    logger.debug("Retrieved history: %s...", history[:100])
+    return {**state, "conversation_history": history}
 
 
 def retrieve_node(state: GraphState) -> GraphState:
@@ -55,7 +53,7 @@ def retrieve_node(state: GraphState) -> GraphState:
     # format_docs) can read .page_content uniformly. Previously the internal
     # branch flattened to strings, which crashed the refiner — and erased the
     # source tags added by retrieve_documents.
-    return {**state, "raw_docs": docs, "retrieved_docs": docs}
+    return {**state, "raw_docs": docs}
 
 
 
@@ -79,7 +77,7 @@ def structured_response_node(state: GraphState) -> GraphState:
 def fallback_response_node(state: GraphState) -> GraphState:
     logger.info("[fallback_response] Generating fallback emotional support answer...")
     reply = run_fallback_chain(history=state["conversation_history"], question=state["input"])
-    logger.info(f"Fallback response: {reply}")
+    logger.debug("Fallback response: %s", reply)
     return {**state, "response": reply}
 
 
@@ -92,7 +90,7 @@ def motivation_node(state: GraphState) -> GraphState:
             state["input"],
             state["conversation_history"],
         )
-        logger.info(f"Motivation added: {motivation}")
+        logger.debug("Motivation added: %s", motivation)
         return {**state, "response": state["response"] + "\n\n" + motivation}
     logger.info("No motivation needed.")
     return state
@@ -104,7 +102,7 @@ def classify_all_node(state: GraphState) -> GraphState:
     round-trips per turn)."""
     logger.info("[classify_all] Batched classification...")
     result = classify_all(state["input"])
-    logger.info(f"Classifiers: {result}")
+    logger.info("Classifiers: %s", result)
     return {
         **state,
         "needs_clarification": result["needs_clarification"],
@@ -129,9 +127,9 @@ def irrelevant_reply_node(state: GraphState) -> GraphState:
     return {**state, "response": reply}
 
 
-def output_node(state: GraphState) -> str:
+def output_node(state: GraphState) -> GraphState:
     logger.info("[output] Final response ready.")
-    logger.info(f"Final state: {state}")
+    logger.debug("Final state: %s", state)
     return state
 
 

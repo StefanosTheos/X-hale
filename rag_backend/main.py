@@ -1,5 +1,7 @@
 import os
-os.environ["ALLOW_CHROMA_TELEMETRY"] = "FALSE" 
+import logging
+os.environ["ALLOW_CHROMA_TELEMETRY"] = "FALSE"
+logging.basicConfig(level=logging.INFO)
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware

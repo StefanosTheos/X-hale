@@ -5,7 +5,6 @@ from config import llm
 
 logger = logging.getLogger(__name__)
 from prompt_templates import (
-    RAG_PROMPT,
     FALLBACK_PROMPT,
     CLARIFICATION_PROMPT,
     IRRELEVANT_TOPIC_PROMPT,
@@ -17,7 +16,6 @@ from prompt_templates import (
 
 parser = StrOutputParser()
 
-rag_chain = RAG_PROMPT | llm | parser
 clarification_chain = CLARIFICATION_PROMPT | llm | parser
 irrelevant_topic_chain = IRRELEVANT_TOPIC_PROMPT | llm | parser
 generate_motivation_chain = MOTIVATION_PROMPT | llm | parser
@@ -55,10 +53,6 @@ def classify_all(input: str) -> dict:
             "knowledge_source": "internal",
         }
 
-def run_rag_chain(history: str, context: str, question: str) -> str:
-    return rag_chain.invoke({"history": history,"context": context,"question": question}).strip()
-
-
 # === Clarification ===
 def run_clarification_chain(input_text: str, history: str = "") -> str:
     return clarification_chain.invoke({"input": input_text, "history": history})
@@ -68,13 +62,9 @@ def generate_irrelevant_reply(input: str) -> str:
     return irrelevant_topic_chain.invoke({"input": input}).strip()
 
 # === Motivation ===
-# `user_id` was never read; the caller was passing `history` as both `context`
-# and `history`, so the template's {context} now just mirrors {history} from
-# the single source.
 def generate_motivation(input: str, history: str) -> str:
     return generate_motivation_chain.invoke({
         "history": history,
-        "context": history,
         "input": input,
     }).strip()
 
@@ -99,23 +89,3 @@ def run_structured_rag_chain(history: str, context: str, question: str, emotion:
     }).strip()
 
 
-def format_docs(docs, max_tokens=1000):
-    result = []
-    token_count = 0
-    for doc in docs:
-        content = doc.page_content.strip()
-        if not content or len(content.split()) < 5:
-            continue
-        if content.startswith("%PDF") or "obj" in content[:100]:
-            continue
-        if "User:" in content or "AI:" in content:
-            continue
-
-        words = content.split()
-        if token_count + len(words) > max_tokens:
-            break
-
-        result.append(content)
-        token_count += len(words)
-
-    return "\n\n---\n\n".join(result)

@@ -1,4 +1,6 @@
 import logging
+from datetime import datetime, timezone
+from typing import Literal
 
 from pydantic import BaseModel
 from fastapi import APIRouter
@@ -16,7 +18,7 @@ class ChatRequest(BaseModel):
 async def chat(request: ChatRequest):
     append_to_history(request.user_id, "user", request.input)
 
-    result = rag_agent_executor.invoke({
+    result = await rag_agent_executor.ainvoke({
         "user_id": request.user_id,
         "input": request.input,
         "conversation_history": "",
@@ -39,7 +41,7 @@ async def chat(request: ChatRequest):
 class SaveMessageRequest(BaseModel):
     user_id: str
     content: str
-    role: str
+    role: Literal["user", "ai"]
 
 @router.post("/save/")
 async def save_message(request: SaveMessageRequest):
@@ -60,8 +62,9 @@ async def get_history(user_id: str):
         # have to inject it after the fact. If the user manages to send a
         # message before this GET returns, the POST /chat/ path appends the
         # user message and we skip seeding (history is no longer empty).
+        now = datetime.now(timezone.utc).isoformat()
         append_to_history(user_id, "ai", WELCOME_MESSAGE)
-        full_history = load_user_history_as_list(user_id, k=20)
+        full_history = [{"timestamp": now, "content": WELCOME_MESSAGE, "role": "ai"}]
     logger.debug("Returned history: %s", full_history)
     return {"history": full_history}
 

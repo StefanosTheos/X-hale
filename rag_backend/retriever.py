@@ -42,7 +42,7 @@ def retrieve_documents(user_id: str, query: str, k: int = 3):
     
 def retrieve_chat_history(user_id: str, limit: int = 10) -> list[dict]:
     collection = get_chroma_collection("chat_history")
-    all_items = collection.get(include=['metadatas', 'documents'])
+    items = collection.get(where={"user_id": user_id}, include=['metadatas', 'documents'])
 
     filtered = [
         {
@@ -50,8 +50,7 @@ def retrieve_chat_history(user_id: str, limit: int = 10) -> list[dict]:
             "content": doc,
             "role": meta.get("role", "user")
         }
-        for doc, meta in zip(all_items["documents"], all_items["metadatas"])
-        if meta.get("user_id") == user_id
+        for doc, meta in zip(items["documents"], items["metadatas"])
     ]
 
     sorted_items = sorted(filtered, key=lambda x: x["timestamp"], reverse=True)
