@@ -9,6 +9,7 @@ import asyncio
 from datetime import datetime, timezone
 
 from appwrite.client import Client
+from appwrite.query import Query
 from appwrite.services.databases import Databases
 
 from app.config import settings
@@ -36,18 +37,23 @@ async def get_user_profile(user_id: str) -> UserProfile:
     """
     db, db_id = _build_db()
     try:
-        doc = await asyncio.to_thread(
-            db.get_document,
+        result = await asyncio.to_thread(
+            db.list_documents,
             db_id,
             settings.appwrite_users_collection_id,
-            user_id,
+            [Query.equal("userId", user_id)],
         )
+        docs = result.documents if hasattr(result, "documents") else result.get("documents", [])
     except Exception as exc:
         logger.warning("user_profile_fetch_failed", user_id=user_id, error=str(exc))
         return UserProfile(user_id=user_id)
 
+    if not docs:
+        logger.warning("user_profile_fetch_failed", user_id=user_id, error="no document found")
+        return UserProfile(user_id=user_id)
+
     # SDK v19+: user-defined fields are in doc.data (dict)
-    d = doc.data if isinstance(doc.data, dict) else {}
+    d = docs[0].data if isinstance(docs[0].data, dict) else {}
 
     quit_date: datetime | None = None
     if d.get("quitDate"):
