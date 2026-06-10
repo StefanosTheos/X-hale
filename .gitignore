@@ -74,7 +74,8 @@ env/
 !**/.env.example
 
 # VSCode / IDEs
-.vscode/
+.vscode/**
+!.vscode/launch.json
 .idea/
 
 # Chroma or other local databases (real one lives in rag_backend/chroma_db/;
