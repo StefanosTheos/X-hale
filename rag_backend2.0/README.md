@@ -1,3 +1,12 @@
+---
+title: Hailey Backend
+emoji: 🚭
+colorFrom: blue
+colorTo: purple
+sdk: docker
+pinned: false
+---
+
 # Hailey 2.0 — X-hale Chatbot Backend
 
 Agentic RAG chatbot backend for the X-hale quit-smoking companion app.
