@@ -692,57 +692,57 @@ A few notes on this structure:
 
 The full system can't ship at once. Sequenced for fastest user-visible improvement first.
 
-### Phase 0 — Lock down current Hailey (1 day)
+### Phase 0 — Lock down current Hailey — ✅ SUPERSEDED BY NEW BACKEND
 
 Even before the rewrite, the current backend should not be left as-is:
 
-- Remove the `/save/` endpoint (dead, unauthenticated write).
-- Add Appwrite JWT verification to all four endpoints.
-- Replace the hard-coded ngrok URL in `chat_service.dart` with `--dart-define`.
-- Stop logging full conversation state at INFO.
-- Cap conversation history fetches with a Chroma `where + limit`.
+- ✅ Remove the `/save/` endpoint (dead, unauthenticated write). — *new backend has no such endpoint*
+- ✅ Add Appwrite JWT verification to all four endpoints. — *implemented in `app/auth/appwrite_jwt.py` + `dependencies.py`*
+- ⬜ Replace the hard-coded ngrok URL in `chat_service.dart` with `--dart-define`. — *Flutter-side change, still pending*
+- ✅ Stop logging full conversation state at INFO. — *PII-stripped structured JSON logging in `app/observability/logging.py`*
+- ✅ Cap conversation history fetches with a Chroma `where + limit`. — *Qdrant + 10-turn default limit in `app/memory/conversation_store.py`*
 
-### Phase 1 — New backend foundation (1 week)
+### Phase 1 — New backend foundation — ✅ DONE (code complete; deployment/rollout pending)
 
-- New FastAPI app skeleton from the file structure above.
-- Auth middleware (Appwrite JWT verification).
-- Conversation history + user facts in Appwrite.
-- Qdrant Cloud + ingestion pipeline; re-chunk health benefits.
-- Single specialist (Medical Information Agent), no graph yet — straight vector retrieval.
-- 70B model for everything; no fine-tune.
-- SSE streaming.
-- Replace current Hailey behind a feature flag (gated rollout).
+- ✅ New FastAPI app skeleton from the file structure above. — *`app/main.py`, full router structure*
+- ✅ Auth middleware (Appwrite JWT verification). — *`app/auth/` with TTL cache*
+- ✅ Conversation history + user facts in Appwrite. — *`app/memory/conversation_store.py` + `user_facts_store.py`*
+- ✅ Qdrant Cloud + ingestion pipeline; re-chunk health benefits. — *`ingestion/ingest_kb.py`, `ingestion/chunk.py`, overlapping 500-char chunks*
+- ✅ Single specialist (Medical Information Agent), no graph yet — straight vector retrieval. — *`app/agents/medical.py` + `app/retrieval/hybrid_retriever.py`*
+- ✅ 70B model for everything; no fine-tune. — *Gemini 2.5 Flash (or Groq 70B) via `app/llm/`*
+- ✅ SSE streaming. — *`app/llm/streaming.py`, status + token + done events*
+- ⬜ Replace current Hailey behind a feature flag (gated rollout). — *deployment step, pending*
 
-### Phase 2 — Multi-agent + memory (1 week)
+### Phase 2 — Multi-agent + memory — ✅ DONE (backend code complete; one Flutter screen pending)
 
-- Triage Agent + Supervisor.
-- Add Emotional Support, Craving Support agents.
-- Synthesizer.
-- Memory Curator (async).
-- User-facts read at turn start.
-- Personalisation visible to user via "What does Hailey know about me?" screen.
+- ✅ Triage Agent + Supervisor. — *`app/agents/triage.py` + `app/agents/supervisor.py`; 2-layer crisis detection*
+- ✅ Add Emotional Support, Craving Support agents. — *`app/agents/emotional_support.py` + `app/agents/craving_support.py`*
+- ✅ Synthesizer. — *`app/agents/synthesizer.py`; weaves specialist drafts via 70B model, extracts/validates citations*
+- ✅ Memory Curator (async). — *`app/agents/memory_curator.py`; fire-and-forget, extracts 9 fact types*
+- ✅ User-facts read at turn start. — *`app/memory/snapshot.py` loads profile + turns + top_facts concurrently*
+- ⬜ Personalisation visible to user via "What does Hailey know about me?" screen. — *backend endpoints exist (`GET /memory/`, `DELETE /memory/{fact_id}`); Flutter screen not built yet*
 
-### Phase 3 — Retrieval depth (1 week)
+### Phase 3 — Retrieval depth — 🔲 NOT STARTED (stubs in place, ready to implement)
 
-- Knowledge graph YAML (hand-curated, ~200 nodes).
-- Entity extractor + entity-aware retrieval.
-- Reranker.
-- Reflection Agent (reads diary).
-- Relapse-Risk Agent (reads behavioural signals).
+- ⬜ Knowledge graph YAML (hand-curated, ~200 nodes). — *integration point stubbed in `hybrid_retriever.py`; `ENABLE_KNOWLEDGE_GRAPH=false`*
+- ⬜ Entity extractor + entity-aware retrieval. — *`app/retrieval/` integration point commented; needs spaCy/gliner*
+- ⬜ Reranker. — *`app/retrieval/reranker.py` is a pass-through stub; `ENABLE_RERANKER=false`*
+- ⬜ Reflection Agent (reads diary). — *`app/agents/reflection.py` is a stub that logs a warning and returns a placeholder draft*
+- ⬜ Relapse-Risk Agent (reads behavioural signals). — *`app/agents/relapse_risk.py` is a stub; `app/tools/behavioral_signals.py` exists*
 
-### Phase 4 — Safety hardening + benchmarks (1 week)
+### Phase 4 — Safety hardening + benchmarks — 🟡 PARTIAL
 
-- Crisis detector + deterministic handler.
-- Hotline locale mapping.
-- Benchmark harness running on a cron.
-- Side-by-side comparison vs Phase 0 baseline; publish report.
+- ✅ Crisis detector + deterministic handler. — *`app/safety/crisis_detector.py` (regex layer 1) + `app/agents/crisis_handler.py` (deterministic body + constrained LLM empathy line)*
+- ✅ Hotline locale mapping. — *`app/safety/hotlines.py`; Greek + English fallback (verified 2025-05-27)*
+- ⬜ Benchmark harness running on a cron. — *`finetune/eval/` folder and pytest structure exist but no gold cases or judge prompts written*
+- ⬜ Side-by-side comparison vs Phase 0 baseline; publish report. — *not started*
 
-### Phase 5 — Fine-tuning (optional, ~2 weeks calendar, ~3 days work)
+### Phase 5 — Fine-tuning — 🔲 NOT STARTED (deferred until Phase 4 benchmarks establish baselines)
 
-- Build training datasets (synthesised + filtered).
-- Train triage + memory-curator LoRAs.
-- Compare against Workers-AI-prompted baselines.
-- Deploy only if benchmark gain justifies serving infra.
+- ⬜ Build training datasets (synthesised + filtered).
+- ⬜ Train triage + memory-curator LoRAs.
+- ⬜ Compare against Workers-AI-prompted baselines.
+- ⬜ Deploy only if benchmark gain justifies serving infra.
 
 ---
 
