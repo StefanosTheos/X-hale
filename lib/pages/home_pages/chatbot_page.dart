@@ -8,6 +8,12 @@ import 'package:smoking/services/chat_service.dart';
 import 'package:smoking/models/chat_message.dart';
 import 'package:smoking/pages/utils/themes.dart';
 import 'package:smoking/extensions/widget_ref_theme.dart';
+import 'package:smoking/pages/home_pages/hailey_memory_page.dart';
+import 'package:smoking/pages/explore_pages/breathing.dart';
+import 'package:smoking/pages/explore_pages/distractions_wheel.dart';
+import 'package:smoking/pages/explore_pages/mini_games.dart';
+import 'package:smoking/pages/explore_pages/distractions_stretching.dart';
+import 'package:smoking/pages/home_pages/diary.dart';
 
 class ChatbotPage extends ConsumerStatefulWidget {
   final String userId;
@@ -149,7 +155,7 @@ class _ChatbotPageState extends ConsumerState<ChatbotPage>
               _statusText = ''; // clear status once tokens flow
             });
             _scrollToBottom();
-          case HaileyDoneEvent():
+          case HaileyDoneEvent(:final citations, :final deeplinks):
             // Finalise the streamed message
             final content =
                 _streamingContent.isNotEmpty ? _streamingContent : '...';
@@ -159,6 +165,8 @@ class _ChatbotPageState extends ConsumerState<ChatbotPage>
                   content: content,
                   isUser: false,
                   timestamp: DateTime.now().toLocal(),
+                  citations: citations,
+                  deeplinks: deeplinks,
                 ),
               );
               _isStreaming = false;
@@ -309,6 +317,22 @@ class _ChatbotPageState extends ConsumerState<ChatbotPage>
         centerTitle: true,
         actions: [
           IconButton(
+            icon: Icon(
+              Icons.psychology_outlined,
+              color: isDark ? AppThemes.darkTextColor : AppThemes.lightTextColor,
+            ),
+            tooltip: 'What does Hailey know about me?',
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => HaileyMemoryPage(
+                  userId: widget.userId,
+                  jwt: _jwt ?? '',
+                ),
+              ),
+            ),
+          ),
+          IconButton(
             icon: const Icon(
               Icons.delete,
               color: Color.fromARGB(255, 242, 75, 73),
@@ -374,7 +398,11 @@ class _ChatbotPageState extends ConsumerState<ChatbotPage>
                                 _messages[_messages.length -
                                     1 -
                                     (index - offset)];
-                            return _MessageBubble(msg: msg, isDark: isDark);
+                            return _MessageBubble(
+                              msg: msg,
+                              isDark: isDark,
+                              onDeeplink: _navigateDeeplink,
+                            );
                           },
                         ),
               ), // closes Expanded
@@ -435,6 +463,30 @@ class _ChatbotPageState extends ConsumerState<ChatbotPage>
         ),
       ),
     );
+  }
+
+  void _navigateDeeplink(String deeplink) {
+    Widget? page;
+    switch (deeplink) {
+      case 'xhale://breathing':
+        page = const BreathingExercisePage();
+      case 'xhale://distractions/spin':
+        page = const SpinTheWheelPage();
+      case 'xhale://explore/games':
+        page = MiniGamesPage();
+      case 'xhale://diary/new':
+        page = DiaryPage(userId: widget.userId);
+      case 'xhale://distractions/stretches':
+        page = const StretchRoutinePage();
+      case 'xhale://dashboard':
+        Navigator.popUntil(context, (route) => route.isFirst);
+        return;
+    }
+    if (page != null) {
+      Navigator.push(context, MaterialPageRoute(builder: (_) => page!));
+    } else {
+      _showSnack('Opening: $deeplink');
+    }
   }
 
   void _showClearHistoryDialog(bool isDark) {
@@ -532,56 +584,174 @@ class _ChatbotPageState extends ConsumerState<ChatbotPage>
 
 // ── Widgets ───────────────────────────────────────────────────────────────────
 
-class _MessageBubble extends StatelessWidget {
-  const _MessageBubble({required this.msg, required this.isDark});
+class _MessageBubble extends StatefulWidget {
+  const _MessageBubble({required this.msg, required this.isDark, this.onDeeplink});
 
   final ChatMessage msg;
   final bool isDark;
+  final void Function(String)? onDeeplink;
+
+  @override
+  State<_MessageBubble> createState() => _MessageBubbleState();
+}
+
+class _MessageBubbleState extends State<_MessageBubble> {
+  bool _citationsExpanded = false;
+
+  static const _sourceLabels = <String, String>{
+    'cdc_benefits_timeline': 'CDC: Quit Benefits Timeline',
+    'nhs_quit_benefits': 'NHS: Quit Benefits',
+    'acs_quit_timeline': 'American Cancer Society: Quit Timeline',
+    'mayo_quit_smoking': 'Mayo Clinic: Quitting Smoking',
+    'aha_why_quit': 'American Heart Association: Why Quit',
+    'who_tobacco_facts': 'WHO: Tobacco Facts',
+    'nhs_nicotine_withdrawal': 'NHS: Nicotine Withdrawal',
+    'nhs_nrt_guide': 'NHS: Nicotine Replacement Therapy',
+    'cdc_why_smoking_harmful': 'CDC: Health Effects of Smoking',
+    'smokefree_quit_guide': 'Smokefree.gov: Quit Guide',
+    'smokefree_nrt': 'Smokefree.gov: Nicotine Replacement Therapy',
+    'nhs_10_self_help_tips': 'NHS: 10 Self-Help Tips to Stop Smoking',
+    'nhs_stop_smoking_treatments': 'NHS: Stop-Smoking Treatments',
+    'smokefree_cravings': 'Smokefree.gov: Managing Cravings',
+    'smokefree_withdrawal': 'Smokefree.gov: Nicotine Withdrawal',
+    'smokefree_triggers': 'Smokefree.gov: Know Your Triggers',
+    'cdc_cancer_mortality': 'CDC: Lung Cancer Statistics',
+    'aha_smoking_cvd': 'American Heart Association: Smoking & Heart Disease',
+    'cdc_secondhand_smoke': 'CDC: Secondhand Smoke',
+    'ala_smoking_lung_health': 'American Lung Association: Smoking & Lung Health',
+    'nhs_copd_causes': 'NHS: COPD & Smoking',
+    'cdc_smoking_pregnancy': 'CDC: Smoking & Pregnancy',
+    'acs_smoking_cancer_risks': 'NCI: Tobacco & Cancer Risk',
+    'mayo_nicotine_dependence': 'MedlinePlus: Nicotine Addiction',
+    'mayo_nicotine_dependence_treatment': 'MedlinePlus: Smoking Cessation Treatments',
+    'smokefree_stay_free': 'Smokefree.gov: Staying Smoke-Free',
+    'smokefree_slips_relapses': 'Smokefree.gov: Slips & Relapses',
+    'uspstf_tobacco_2021': 'USPSTF: Tobacco Cessation Guidelines',
+  };
+
+  static String _labelFor(Map<String, dynamic> citation) {
+    final id = citation['source_id'] as String? ?? '';
+    if (_sourceLabels.containsKey(id)) return _sourceLabels[id]!;
+    // Fallback: snake_case → Title Case
+    return id.split('_').map((w) => w.isEmpty ? '' : '${w[0].toUpperCase()}${w.substring(1)}').join(' ');
+  }
 
   @override
   Widget build(BuildContext context) {
+    final msg = widget.msg;
+    final isDark = widget.isDark;
+    final isUser = msg.isUser;
+    final bubbleColor = isUser
+        ? (isDark ? AppThemes.activeColor : const Color(0xFF0077B6))
+        : (isDark ? AppThemes.darkCardColor : const Color(0xFF90E0EF));
+    final textColor = isUser
+        ? Colors.white
+        : (isDark ? AppThemes.darkTextColor : Colors.black87);
+    final subColor = isUser
+        ? Colors.white70
+        : (isDark ? AppThemes.darkSubtitleColor : Colors.black54);
+
     return Align(
-      alignment: msg.isUser ? Alignment.centerRight : Alignment.centerLeft,
-      child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 4),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        decoration: BoxDecoration(
-          color:
-              msg.isUser
-                  ? (isDark ? AppThemes.activeColor : const Color(0xFF0077B6))
-                  : (isDark
-                      ? AppThemes.darkCardColor
-                      : const Color(0xFF90E0EF)),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              msg.content,
-              style: TextStyle(
-                color:
-                    msg.isUser
-                        ? Colors.white
-                        : (isDark ? AppThemes.darkTextColor : Colors.black87),
-                fontSize: 15,
+      alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
+      child: Column(
+        crossAxisAlignment:
+            isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+        children: [
+          Container(
+            margin: const EdgeInsets.symmetric(vertical: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            decoration: BoxDecoration(
+              color: bubbleColor,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(msg.content,
+                    style: TextStyle(color: textColor, fontSize: 15)),
+                const SizedBox(height: 4),
+                Text(
+                  DateFormat('HH:mm • MMM d, yyyy')
+                      .format(msg.timestamp.toLocal()),
+                  style: TextStyle(fontSize: 11, color: subColor),
+                ),
+                // Citations toggle
+                if (!isUser && msg.citations.isNotEmpty) ...[
+                  const SizedBox(height: 6),
+                  GestureDetector(
+                    onTap: () =>
+                        setState(() => _citationsExpanded = !_citationsExpanded),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          _citationsExpanded
+                              ? Icons.expand_less
+                              : Icons.expand_more,
+                          size: 16,
+                          color: subColor,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          '${msg.citations.length} source${msg.citations.length > 1 ? 's' : ''}',
+                          style: TextStyle(fontSize: 12, color: subColor),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (_citationsExpanded)
+                    ...msg.citations.map((c) => Padding(
+                          padding: const EdgeInsets.only(top: 4),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: isDark
+                                  ? Colors.black26
+                                  : Colors.white38,
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              '• ${_labelFor(c)}',
+                              style:
+                                  TextStyle(fontSize: 11, color: subColor),
+                            ),
+                          ),
+                        )),
+                ],
+              ],
+            ),
+          ),
+          // Deeplink action chips (below the bubble, not inside it)
+          if (!isUser && msg.deeplinks.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 4),
+              child: Wrap(
+                spacing: 6,
+                runSpacing: 4,
+                children: msg.deeplinks.map((dl) {
+                  final label = dl['label'] as String? ?? 'Open';
+                  final deeplink = dl['deeplink'] as String? ?? '';
+                  return ActionChip(
+                    label: Text(label,
+                        style: const TextStyle(fontSize: 12)),
+                    backgroundColor: isDark
+                        ? AppThemes.darkCardColor
+                        : const Color(0xFFCAF0F8),
+                    side: BorderSide(
+                      color: isDark
+                          ? AppThemes.darkDiaryTextColor
+                          : const Color(0xFF0077B6),
+                      width: 1,
+                    ),
+                    onPressed: deeplink.isNotEmpty
+                        ? () => widget.onDeeplink?.call(deeplink)
+                        : null,
+                  );
+                }).toList(),
               ),
             ),
-            const SizedBox(height: 4),
-            Text(
-              DateFormat('HH:mm • MMM d, yyyy').format(msg.timestamp.toLocal()),
-              style: TextStyle(
-                fontSize: 11,
-                color:
-                    msg.isUser
-                        ? Colors.white70
-                        : (isDark
-                            ? AppThemes.darkSubtitleColor
-                            : Colors.black54),
-              ),
-            ),
-          ],
-        ),
+        ],
       ),
     );
   }

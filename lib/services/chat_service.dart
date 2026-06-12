@@ -188,4 +188,46 @@ class ChatService {
       throw Exception('Failed to clear history: ${response.statusCode}');
     }
   }
+
+  // -------------------------------------------------------------------------
+  // Memory (user facts)
+  // -------------------------------------------------------------------------
+
+  /// GET /memory/ — returns all structured facts Hailey has recorded.
+  static Future<List<Map<String, dynamic>>> loadMemory({
+    required String jwt,
+  }) async {
+    final response = await http.get(
+      Uri.parse('$_baseUrl/memory/'),
+      headers: {
+        'Authorization': 'Bearer $jwt',
+        'Content-Type': 'application/json',
+      },
+    );
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      return (data['facts'] as List?)
+              ?.map((e) => e as Map<String, dynamic>)
+              .toList() ??
+          [];
+    } else if (response.statusCode == 401) {
+      throw Exception('Session expired. Please sign in again.');
+    } else {
+      throw Exception('Failed to load memory: ${response.statusCode}');
+    }
+  }
+
+  /// DELETE /memory/{factId} — lets the user remove a specific fact.
+  static Future<void> deleteFact({
+    required String factId,
+    required String jwt,
+  }) async {
+    final response = await http.delete(
+      Uri.parse('$_baseUrl/memory/$factId'),
+      headers: {'Authorization': 'Bearer $jwt'},
+    );
+    if (response.statusCode != 204 && response.statusCode != 200) {
+      throw Exception('Failed to delete fact: ${response.statusCode}');
+    }
+  }
 }

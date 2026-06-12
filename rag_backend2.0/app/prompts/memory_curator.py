@@ -23,7 +23,7 @@ Return JSON array (may be empty if no durable facts found):
 [
   {
     "fact_type": one of ["trigger","coping_strategy_validated","coping_strategy_failed","nrt_use","social_context","motivation","stage_of_change","past_attempt_history","physical_symptom_reported"],
-    "fact_key": "short_snake_case_key",
+    "fact_key": "short descriptive label in snake_case (e.g. morning_coffee, stress_at_work, nicotine_patches — no redundant type suffix)",
     "fact_value": "descriptive value in plain English",
     "confidence": 0.0-1.0
   }

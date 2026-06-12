@@ -2,11 +2,15 @@ class ChatMessage {
   final String content;
   final bool isUser;
   final DateTime timestamp;
+  final List<Map<String, dynamic>> citations;
+  final List<Map<String, dynamic>> deeplinks;
 
-  ChatMessage({
+  const ChatMessage({
     required this.content,
     required this.isUser,
     required this.timestamp,
+    this.citations = const [],
+    this.deeplinks = const [],
   });
 
   Map<String, dynamic> toJson() => {

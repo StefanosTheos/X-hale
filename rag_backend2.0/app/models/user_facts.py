@@ -107,7 +107,7 @@ class ConversationTurn(BaseModel):
     role: Literal["user", "assistant"]
     content: str
     timestamp: datetime
-    citations: list[str] = Field(default_factory=list)
+    citations: list[dict] = Field(default_factory=list)
 
 
 # ---------------------------------------------------------------------------

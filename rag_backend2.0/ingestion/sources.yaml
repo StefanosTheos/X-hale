@@ -1,7 +1,7 @@
 # Curated knowledge base source manifest for Hailey 2.0
 # Each entry defines a source that has been (or should be) ingested into Qdrant.
-# Run `python -m ingestion.ingest_kb --url <url> --source-id <id> --source-type <type>`
-# to ingest a new source.
+# Run `python -m ingestion.bulk_ingest` to ingest all pending sources, or:
+#   python -m ingestion.ingest_kb --url <url> --source-id <id> --source-type <type>
 #
 # Fields:
 #   source_id:    unique identifier (snake_case)
@@ -13,6 +13,8 @@
 #   ingested:     true if currently in Qdrant
 
 sources:
+  # ── Already ingested ────────────────────────────────────────────────────────
+
   - source_id: cdc_benefits_timeline
     url: https://www.cdc.gov/tobacco/quit_smoking/how_to_quit/benefits/index.htm
     source_type: government
@@ -53,30 +55,177 @@ sources:
     recency_date: "2024-02-01"
     ingested: true
 
+  # ── Pending (were in manifest, not yet ingested) ────────────────────────────
+
   - source_id: who_tobacco_facts
     url: https://www.who.int/news-room/fact-sheets/detail/tobacco
     source_type: government
     topic_tags: [tobacco_harms, global_statistics, addiction]
     recency_date: "2023-07-31"
-    ingested: false
+    ingested: true
 
   - source_id: nhs_nicotine_withdrawal
-    url: https://www.nhs.uk/live-well/quit-smoking/cravings/
+    url: https://www.nhs.uk/better-health/quit-smoking/staying-smoke-free/managing-nicotine-withdrawal-symptoms/
     source_type: government
     topic_tags: [withdrawal, cravings, nicotine, coping_strategies]
     recency_date: "2023-05-01"
-    ingested: false
+    ingested: true
 
   - source_id: nhs_nrt_guide
-    url: https://www.nhs.uk/live-well/quit-smoking/using-nicotine-replacement-therapy-nrt/
+    url: https://www.nhs.uk/better-health/quit-smoking/ready-to-quit-smoking/quit-with-nicotine-replacement-therapies-nrt/
     source_type: government
     topic_tags: [nrt, nicotine_patches, nicotine_gum, cessation_methods]
     recency_date: "2023-08-01"
-    ingested: false
+    ingested: true
 
   - source_id: cdc_why_smoking_harmful
-    url: https://www.cdc.gov/tobacco/data_statistics/fact_sheets/health_effects/effects_cig_smoking/index.htm
+    url: https://www.cdc.gov/tobacco/about/index.html
     source_type: government
     topic_tags: [tobacco_harms, cancer_risk, cardiovascular, lung_disease]
     recency_date: "2023-01-01"
-    ingested: false
+    ingested: true
+
+  # ── New: cessation methods & quit support ───────────────────────────────────
+
+  - source_id: smokefree_quit_guide
+    url: https://smokefree.gov/quit-smoking/getting-started
+    source_type: government
+    topic_tags: [cessation_methods, quit_plan, behavioral_support, motivation]
+    recency_date: "2024-01-01"
+    ingested: true
+
+  - source_id: smokefree_nrt
+    url: https://smokefree.gov/tools-tips/quit-methods/using-nicotine-replacement-therapy
+    source_type: government
+    topic_tags: [nrt, nicotine_patches, nicotine_gum, cessation_methods]
+    recency_date: "2024-01-01"
+    ingested: true
+
+  - source_id: nhs_10_self_help_tips
+    url: https://www.nhs.uk/live-well/quit-smoking/10-self-help-tips-to-stop-smoking/
+    source_type: government
+    topic_tags: [cessation_methods, coping_strategies, behavioral_support, cravings]
+    recency_date: "2023-10-01"
+    ingested: true
+
+  - source_id: nhs_stop_smoking_treatments
+    url: https://www.nhs.uk/conditions/stop-smoking-treatments/
+    source_type: government
+    topic_tags: [cessation_methods, nrt, varenicline, bupropion, prescription_medications]
+    recency_date: "2024-03-01"
+    ingested: true
+
+  # ── New: cravings, withdrawal & triggers ───────────────────────────────────
+
+  - source_id: smokefree_cravings
+    url: https://smokefree.gov/challenges-when-quitting/cravings-triggers/how-manage-cravings
+    source_type: government
+    topic_tags: [cravings, nicotine, withdrawal, coping_strategies]
+    recency_date: "2024-01-01"
+    ingested: true
+
+  - source_id: smokefree_withdrawal
+    url: https://smokefree.gov/challenges-when-quitting/withdrawal/managing-nicotine-withdrawal
+    source_type: government
+    topic_tags: [withdrawal, cravings, nicotine, coping_strategies]
+    recency_date: "2024-01-01"
+    ingested: true
+
+  - source_id: smokefree_triggers
+    url: https://smokefree.gov/challenges-when-quitting/cravings-triggers/know-your-triggers
+    source_type: government
+    topic_tags: [cravings, triggers, behavioral_support, coping_strategies]
+    recency_date: "2024-01-01"
+    ingested: true
+
+  # ── New: smoking harms ─────────────────────────────────────────────────────
+
+  - source_id: cdc_cancer_mortality
+    url: https://www.cdc.gov/cancer/lung/
+    source_type: government
+    topic_tags: [tobacco_harms, cancer_risk, tobacco_related_mortality, lung_cancer]
+    recency_date: "2024-01-01"
+    ingested: true
+
+  - source_id: aha_smoking_cvd
+    url: https://www.heart.org/en/healthy-living/healthy-lifestyle/quit-smoking-tobacco/smoking-and-cardiovascular-disease
+    source_type: charity
+    topic_tags: [tobacco_harms, cardiovascular, heart_disease, stroke]
+    recency_date: "2024-01-01"
+    ingested: true
+
+  - source_id: cdc_secondhand_smoke
+    url: https://www.cdc.gov/tobacco/secondhand-smoke/index.html
+    source_type: government
+    topic_tags: [tobacco_harms, secondhand_smoke, passive_smoking, children]
+    recency_date: "2024-01-01"
+    ingested: true
+
+  - source_id: ala_smoking_lung_health
+    url: https://www.lung.org/quit-smoking/smoking-facts/health-effects/smoking
+    source_type: charity
+    topic_tags: [tobacco_harms, lung_disease, copd, lung_cancer, lung_health]
+    recency_date: "2024-01-01"
+    ingested: true
+
+  - source_id: nhs_copd_causes
+    url: https://www.nhs.uk/conditions/chronic-obstructive-pulmonary-disease-copd/causes/
+    source_type: government
+    topic_tags: [tobacco_harms, copd, lung_disease, lung_health]
+    recency_date: "2023-11-01"
+    ingested: true
+
+  - source_id: cdc_smoking_pregnancy
+    url: https://www.cdc.gov/tobacco/hcp/patient-care-settings/maternal-infant.html
+    source_type: government
+    topic_tags: [tobacco_harms, pregnancy, maternal_health, children]
+    recency_date: "2024-01-01"
+    ingested: true
+
+  - source_id: acs_smoking_cancer_risks
+    url: https://www.cancer.gov/about-cancer/causes-prevention/risk/tobacco
+    source_type: government
+    topic_tags: [tobacco_harms, cancer_risk, lung_cancer, mouth_cancer, throat_cancer]
+    recency_date: "2024-01-01"
+    ingested: true
+
+  # ── New: nicotine addiction ────────────────────────────────────────────────
+
+  - source_id: mayo_nicotine_dependence
+    url: https://medlineplus.gov/ency/article/000953.htm
+    source_type: government
+    topic_tags: [nicotine, addiction, withdrawal, nicotine_dependence]
+    recency_date: "2023-12-01"
+    ingested: true
+
+  - source_id: mayo_nicotine_dependence_treatment
+    url: https://medlineplus.gov/smokingcessation.html
+    source_type: government
+    topic_tags: [cessation_methods, nrt, varenicline, bupropion, nicotine_dependence, counseling]
+    recency_date: "2023-12-01"
+    ingested: true
+
+  # ── New: relapse prevention & staying smoke-free ──────────────────────────
+
+  - source_id: smokefree_stay_free
+    url: https://smokefree.gov/stay-smokefree-good/stick-with-it
+    source_type: government
+    topic_tags: [relapse_prevention, coping_strategies, motivation, behavioral_support]
+    recency_date: "2024-01-01"
+    ingested: true
+
+  - source_id: smokefree_slips_relapses
+    url: https://smokefree.gov/stay-smokefree-good/stick-with-it/slips-relapses
+    source_type: government
+    topic_tags: [relapse_prevention, coping_strategies, motivation]
+    recency_date: "2024-01-01"
+    ingested: true
+
+  # ── New: clinical guidelines (public-access summary pages) ────────────────
+
+  - source_id: uspstf_tobacco_2021
+    url: https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/tobacco-use-in-adults-and-pregnant-women-counseling-and-interventions
+    source_type: peer_reviewed
+    topic_tags: [cessation_methods, behavioral_support, clinical_guidelines, nrt]
+    recency_date: "2021-01-12"
+    ingested: true
