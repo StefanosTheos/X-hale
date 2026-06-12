@@ -8,7 +8,7 @@ import asyncio
 
 from appwrite.client import Client
 from appwrite.query import Query
-from appwrite.services.databases import Databases
+from appwrite.services.tables_db import TablesDB
 
 from app.config import settings
 from app.observability.logging import get_logger
@@ -16,7 +16,7 @@ from app.observability.logging import get_logger
 logger = get_logger(__name__)
 
 
-def _build_db() -> tuple[Databases, str]:
+def _build_db() -> tuple[TablesDB, str]:
     client = Client()
     (
         client
@@ -24,7 +24,7 @@ def _build_db() -> tuple[Databases, str]:
         .set_project(settings.appwrite_project_id)
         .set_key(settings.appwrite_api_key)
     )
-    return Databases(client), settings.appwrite_database_id
+    return TablesDB(client), settings.appwrite_database_id
 
 
 async def get_recent_achievements(user_id: str, limit: int = 5) -> list[dict]:
@@ -32,7 +32,7 @@ async def get_recent_achievements(user_id: str, limit: int = 5) -> list[dict]:
     db, db_id = _build_db()
     try:
         result = await asyncio.to_thread(
-            db.list_documents,
+            db.list_rows,
             db_id,
             settings.appwrite_achievements_collection_id,
             queries=[
@@ -42,7 +42,7 @@ async def get_recent_achievements(user_id: str, limit: int = 5) -> list[dict]:
             ],
         )
         achievements = []
-        for doc in result.documents:
+        for doc in result.rows:
             d = doc.data if isinstance(doc.data, dict) else {}
             achievements.append({
                 "name": d.get("achievementName", d.get("name", "Unknown")),

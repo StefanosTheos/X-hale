@@ -21,7 +21,7 @@ from datetime import datetime, timezone
 from appwrite.client import Client
 from appwrite.id import ID
 from appwrite.query import Query
-from appwrite.services.databases import Databases
+from appwrite.services.tables_db import TablesDB
 
 from app.config import settings
 from app.models.user_facts import ConversationTurn
@@ -30,8 +30,8 @@ from app.observability.logging import get_logger
 logger = get_logger(__name__)
 
 
-def _build_client() -> tuple[Databases, str]:
-    """Build an Appwrite Databases client using the server API key."""
+def _build_client() -> tuple[TablesDB, str]:
+    """Build an Appwrite TablesDB client using the server API key."""
     client = Client()
     (
         client
@@ -39,7 +39,7 @@ def _build_client() -> tuple[Databases, str]:
         .set_project(settings.appwrite_project_id)
         .set_key(settings.appwrite_api_key)
     )
-    return Databases(client), settings.appwrite_database_id
+    return TablesDB(client), settings.appwrite_database_id
 
 
 async def append_turn(
@@ -65,7 +65,7 @@ async def append_turn(
         "citations": json.dumps(citations or []),
     }
     await asyncio.to_thread(
-        db.create_document,
+        db.create_row,
         db_id,
         settings.appwrite_chat_messages_collection_id,
         ID.unique(),
@@ -83,7 +83,7 @@ async def get_recent_turns(user_id: str, limit: int | None = None) -> list[Conve
     n = limit or settings.max_conversation_turns
     db, db_id = _build_client()
     result = await asyncio.to_thread(
-        db.list_documents,
+        db.list_rows,
         db_id,
         settings.appwrite_chat_messages_collection_id,
         queries=[
@@ -92,9 +92,7 @@ async def get_recent_turns(user_id: str, limit: int | None = None) -> list[Conve
             Query.limit(n),
         ],
     )
-    # SDK v19+: result.documents is a list of Document objects;
-    # user-defined fields live in doc.data (dict), system fields on doc directly.
-    docs = result.documents
+    docs = result.rows
     # Reverse to get oldest-first order
     docs = list(reversed(docs))
     turns: list[ConversationTurn] = []
@@ -126,17 +124,17 @@ async def delete_history(user_id: str) -> int:
     deleted = 0
     while True:
         result = await asyncio.to_thread(
-            db.list_documents,
+            db.list_rows,
             db_id,
             settings.appwrite_chat_messages_collection_id,
             queries=[Query.equal("userId", user_id), Query.limit(100)],
         )
-        docs = result.documents
+        docs = result.rows
         if not docs:
             break
         await asyncio.gather(*[
             asyncio.to_thread(
-                db.delete_document,
+                db.delete_row,
                 db_id,
                 settings.appwrite_chat_messages_collection_id,
                 doc.id,

@@ -10,7 +10,7 @@ from typing import Optional
 
 from appwrite.client import Client
 from appwrite.query import Query
-from appwrite.services.databases import Databases
+from appwrite.services.tables_db import TablesDB
 
 from app.config import settings
 from app.observability.logging import get_logger
@@ -30,7 +30,7 @@ class DiaryEntry:
         return f"DiaryEntry(mood={self.mood}, date={self.created_at.date()}, tags={self.tags})"
 
 
-def _build_db() -> tuple[Databases, str]:
+def _build_db() -> tuple[TablesDB, str]:
     client = Client()
     (
         client
@@ -38,7 +38,7 @@ def _build_db() -> tuple[Databases, str]:
         .set_project(settings.appwrite_project_id)
         .set_key(settings.appwrite_api_key)
     )
-    return Databases(client), settings.appwrite_database_id
+    return TablesDB(client), settings.appwrite_database_id
 
 
 async def get_recent_diary_entries(
@@ -53,7 +53,7 @@ async def get_recent_diary_entries(
     since = (datetime.now(timezone.utc) - timedelta(days=days)).isoformat()
     try:
         result = await asyncio.to_thread(
-            db.list_documents,
+            db.list_rows,
             db_id,
             settings.appwrite_diary_collection_id,
             queries=[
@@ -68,7 +68,7 @@ async def get_recent_diary_entries(
         return []
 
     entries: list[DiaryEntry] = []
-    for doc in result.documents:
+    for doc in result.rows:
         d = doc.data if isinstance(doc.data, dict) else {}
         tags_raw = d.get("tags", [])
         tags = tags_raw if isinstance(tags_raw, list) else []

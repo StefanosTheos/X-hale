@@ -23,7 +23,7 @@ from datetime import datetime, timezone
 from appwrite.client import Client
 from appwrite.id import ID
 from appwrite.query import Query
-from appwrite.services.databases import Databases
+from appwrite.services.tables_db import TablesDB
 
 from app.config import settings
 from app.models.user_facts import UserFact
@@ -32,7 +32,7 @@ from app.observability.logging import get_logger
 logger = get_logger(__name__)
 
 
-def _build_client() -> tuple[Databases, str]:
+def _build_client() -> tuple[TablesDB, str]:
     client = Client()
     (
         client
@@ -40,7 +40,7 @@ def _build_client() -> tuple[Databases, str]:
         .set_project(settings.appwrite_project_id)
         .set_key(settings.appwrite_api_key)
     )
-    return Databases(client), settings.appwrite_database_id
+    return TablesDB(client), settings.appwrite_database_id
 
 
 async def get_facts(user_id: str, fact_type: str | None = None) -> list[UserFact]:
@@ -51,13 +51,13 @@ async def get_facts(user_id: str, fact_type: str | None = None) -> list[UserFact
     if fact_type:
         queries.append(Query.equal("fact_type", fact_type))
     result = await asyncio.to_thread(
-        db.list_documents,
+        db.list_rows,
         db_id,
         settings.appwrite_user_facts_collection_id,
         queries=queries,
     )
     facts: list[UserFact] = []
-    for doc in result.documents:
+    for doc in result.rows:
         d = doc.data if isinstance(doc.data, dict) else {}
         source_raw = d.get("source_turn_ids", "[]")
         try:
@@ -90,7 +90,7 @@ async def upsert_fact(fact: UserFact) -> UserFact:
     now = datetime.now(timezone.utc).isoformat()
 
     existing_result = await asyncio.to_thread(
-        db.list_documents,
+        db.list_rows,
         db_id,
         settings.appwrite_user_facts_collection_id,
         queries=[
@@ -109,11 +109,11 @@ async def upsert_fact(fact: UserFact) -> UserFact:
         "source_turn_ids": json.dumps(fact.source_turn_ids),
         "last_confirmed": now,
     }
-    existing_docs = existing_result.documents
+    existing_docs = existing_result.rows
     if existing_docs:
         doc_id = existing_docs[0].id
         updated = await asyncio.to_thread(
-            db.update_document,
+            db.update_row,
             db_id,
             settings.appwrite_user_facts_collection_id,
             doc_id,
@@ -123,7 +123,7 @@ async def upsert_fact(fact: UserFact) -> UserFact:
     else:
         data["first_observed"] = now
         created = await asyncio.to_thread(
-            db.create_document,
+            db.create_row,
             db_id,
             settings.appwrite_user_facts_collection_id,
             ID.unique(),
@@ -138,7 +138,7 @@ async def delete_fact(fact_id: str) -> None:
     import asyncio
     db, db_id = _build_client()
     await asyncio.to_thread(
-        db.delete_document,
+        db.delete_row,
         db_id,
         settings.appwrite_user_facts_collection_id,
         fact_id,

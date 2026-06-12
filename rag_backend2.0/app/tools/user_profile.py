@@ -10,7 +10,7 @@ from datetime import datetime, timezone
 
 from appwrite.client import Client
 from appwrite.query import Query
-from appwrite.services.databases import Databases
+from appwrite.services.tables_db import TablesDB
 
 from app.config import settings
 from app.models.user_facts import UserProfile
@@ -19,7 +19,7 @@ from app.observability.logging import get_logger
 logger = get_logger(__name__)
 
 
-def _build_db() -> tuple[Databases, str]:
+def _build_db() -> tuple[TablesDB, str]:
     client = Client()
     (
         client
@@ -27,7 +27,7 @@ def _build_db() -> tuple[Databases, str]:
         .set_project(settings.appwrite_project_id)
         .set_key(settings.appwrite_api_key)
     )
-    return Databases(client), settings.appwrite_database_id
+    return TablesDB(client), settings.appwrite_database_id
 
 
 async def get_user_profile(user_id: str) -> UserProfile:
@@ -38,12 +38,12 @@ async def get_user_profile(user_id: str) -> UserProfile:
     db, db_id = _build_db()
     try:
         result = await asyncio.to_thread(
-            db.list_documents,
+            db.list_rows,
             db_id,
             settings.appwrite_users_collection_id,
-            [Query.equal("userId", user_id)],
+            queries=[Query.equal("userId", user_id)],
         )
-        docs = result.documents if hasattr(result, "documents") else result.get("documents", [])
+        docs = result.rows
     except Exception as exc:
         logger.warning("user_profile_fetch_failed", user_id=user_id, error=str(exc))
         return UserProfile(user_id=user_id)
