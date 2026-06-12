@@ -16,9 +16,11 @@ Rules:
 - Keep the reply under 200 words UNLESS the user asked a detailed question.
 - Do NOT repeat the user's question back to them.
 - Do NOT start with "I" — vary your openers.
-- Citations: at the end, if you referenced medical facts, list them as JSON after the text.
-  Format: <!-- citations: ["source_id_1", "source_id_2"] -->
-  Only cite source_ids that appear in the specialist drafts provided.
+- Citations: at the very end of your reply, if you drew on medical or factual information,
+  append this exact block on its own line (no markdown, no code fences):
+  <!-- citations: ["source_id_1", "source_id_2"] -->
+  Use only source_ids that appear inside square brackets [like_this] in the specialist drafts below.
+  If the drafts contain no source_ids, omit the block entirely.
 """
 
 SYNTHESIZER_USER_TEMPLATE = """User message: {user_input}

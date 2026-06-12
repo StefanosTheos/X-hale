@@ -106,23 +106,29 @@ def _build_messages(state) -> list[dict]:
 
 def _post_process(raw: str, state) -> tuple[str, list[Citation]]:
     """Apply content filter and extract validated citations."""
-    # Build set of valid source_ids from all specialist drafts
+    # Build valid source_ids + deduplicated Citation objects from all specialist drafts
     valid_ids: set[str] = set()
+    draft_citations: list[Citation] = []
     for draft_json in state.get("specialist_drafts", {}).values():
         try:
             draft = json.loads(draft_json) if isinstance(draft_json, str) else draft_json
             for c in draft.get("citations", []):
-                sid = c.get("source_id", "") if isinstance(c, dict) else c.source_id
-                if sid:
+                sid = c.get("source_id", "") if isinstance(c, dict) else getattr(c, "source_id", "")
+                stype = c.get("source_type", "unknown") if isinstance(c, dict) else getattr(c, "source_type", "unknown")
+                if sid and sid not in valid_ids:
                     valid_ids.add(sid)
+                    draft_citations.append(Citation(source_id=sid, source_type=stype))
         except (json.JSONDecodeError, AttributeError):
             pass
 
     text, cited_ids = _extract_citations(raw, valid_ids)
     filtered_text, _, _ = filter_response(text)
 
-    citations = [
-        Citation(source_id=sid, source_type="unknown")
-        for sid in cited_ids
-    ]
+    if cited_ids:
+        citations = [Citation(source_id=sid, source_type="unknown") for sid in cited_ids]
+    else:
+        # Gemini didn't emit the HTML comment block — fall back to all retrieved sources
+        logger.debug("citations_fallback_to_drafts", count=len(draft_citations))
+        citations = draft_citations
+
     return filtered_text, citations
