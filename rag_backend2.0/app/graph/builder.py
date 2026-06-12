@@ -135,9 +135,11 @@ async def output_node(state: HaileyState) -> HaileyState:
         turn_id=turn_id,
     )
 
-    # Fire-and-forget memory curation
-    from app.agents.memory_curator import curate_memory
-    asyncio.ensure_future(curate_memory(user_id, user_input, final_response, turn_id))
+    # Fire-and-forget memory curation — skip for casual turns (nothing to extract)
+    intent = state.get("triage").intent if state.get("triage") else "unknown"
+    if intent not in ("general_conversation", "unknown"):
+        from app.agents.memory_curator import curate_memory
+        asyncio.ensure_future(curate_memory(user_id, user_input, final_response, turn_id))
 
     return {**state, "turn_id": turn_id}
 

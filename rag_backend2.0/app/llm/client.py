@@ -62,15 +62,20 @@ async def retry_with_backoff(
     raise last_exc  # type: ignore[misc]
 
 
-def get_triage_client() -> "GeminiClient":
-    """Return the fast LLM client for triage and classification."""
-    from app.llm.gemini_client import GeminiClient
+def get_triage_client() -> "GroqClient":
+    """Return the fast LLM client for triage, specialists, and memory curator.
+
+    Uses Groq (llama-3.1-8b-instant, 30 RPM free tier) — all callers need
+    structured JSON at temperature≈0, which Groq handles well and cheaply.
+    Keeps Gemini quota reserved solely for the synthesizer.
+    """
+    from app.llm.groq_client import GroqClient
     from app.config import settings
-    return GeminiClient(model=settings.gemini_triage_model)
+    return GroqClient(model=settings.groq_triage_model)
 
 
 def get_synthesis_client() -> "GeminiClient":
-    """Return the LLM client for the synthesizer."""
+    """Return the LLM client for the synthesizer (streaming final response)."""
     from app.llm.gemini_client import GeminiClient
     from app.config import settings
     return GeminiClient(model=settings.gemini_synthesis_model)
