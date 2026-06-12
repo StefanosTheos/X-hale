@@ -33,6 +33,7 @@ async def retrieve(
     strategy: RetrievalStrategy = "factual",
     filters: Optional[dict] = None,
     k: int = 5,
+    intent: str = "unknown",
 ) -> RetrievalResult:
     """
     Main retrieval entry point.
@@ -64,8 +65,10 @@ async def retrieve(
     #     # Use graph_context.related_node_ids to add a second Qdrant filter pass
     # ── End Phase 3 ────────────────────────────────────────────────────────
 
-    # Web search fallback if KB returns fewer than 2 meaningful chunks
-    if len(chunks) < 2 and strategy in ("factual", "exploratory"):
+    # Web search fallback if KB returns fewer than 2 meaningful chunks.
+    # Skip for general conversation — web search adds no value for greetings.
+    _web_intents = {"medical", "factual", "exploratory", "unknown"}
+    if len(chunks) < 2 and strategy in ("factual", "exploratory") and intent in _web_intents:
         chunks = await _web_fallback(query, chunks)
 
     # Rerank if enabled (currently a pass-through stub)

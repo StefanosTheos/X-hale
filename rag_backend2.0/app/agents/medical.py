@@ -31,6 +31,7 @@ class MedicalAgent(AgentBase):
             user_id=state["user_id"],
             strategy="factual",
             k=5,
+            intent=state.get("intent", "unknown"),
         )
 
         if not retrieval.chunks:
