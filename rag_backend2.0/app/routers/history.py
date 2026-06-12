@@ -24,7 +24,14 @@ async def get_history(
     Return the user's recent conversation turns, oldest first.
     Only the authenticated user can access their own history.
     """
-    turns = await get_recent_turns(user_id, limit=limit)
+    try:
+        turns = await get_recent_turns(user_id, limit=limit)
+    except Exception as exc:
+        logger.error("get_history_failed", user_id=user_id, error=str(exc))
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"Could not load history: {exc}",
+        )
     return HistoryResponse(
         user_id=user_id,
         turns=[

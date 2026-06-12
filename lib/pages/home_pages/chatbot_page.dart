@@ -65,20 +65,30 @@ class _ChatbotPageState extends ConsumerState<ChatbotPage>
   Future<void> _loadHistory() async {
     final jwt = _jwt;
     if (jwt == null) {
-      if (mounted) setState(() => _isLoadingHistory = false);
+      if (mounted) {
+        setState(() {
+          _messages.add(_welcomeMessage());
+          _isLoadingHistory = false;
+        });
+      }
       return;
     }
     try {
       final history = await ChatService.loadHistory(jwt: jwt);
       if (!mounted) return;
       setState(() {
-        _messages.add(_welcomeMessage()); // always first (oldest = top of chat)
+        _messages.add(_welcomeMessage());
         _messages.addAll(history);
         _isLoadingHistory = false;
       });
     } catch (e) {
-      debugPrint('Failed to load history: $e');
-      if (mounted) setState(() => _isLoadingHistory = false);
+      debugPrint('[Hailey] loadHistory failed: $e');
+      if (mounted) {
+        setState(() {
+          _messages.add(_welcomeMessage());
+          _isLoadingHistory = false;
+        });
+      }
     }
   }
 
