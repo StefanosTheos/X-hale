@@ -441,13 +441,13 @@ rag_backend2.0/
 - ✅ User memory snapshot loaded at turn start (profile + facts + recent turns).
 - ⬜ "What does Hailey know about me?" Flutter screen — backend live, Flutter pending.
 
-### Phase 3 — Retrieval depth — 🔲 NOT STARTED
+### Phase 3 — Retrieval depth — ✅ DONE
 
-- ⬜ Knowledge graph YAML (~200 nodes) + NetworkX loader.
-- ⬜ Entity extractor (spaCy/gliner) + entity-aware retrieval.
-- ⬜ Reranker (`bge-reranker-base`).
-- ⬜ Reflection Agent (reads diary, surfaces patterns).
-- ⬜ Relapse-Risk Agent (reads behavioural signals, emits risk score).
+- ✅ Knowledge graph YAML (139 nodes, 206 edges) + NetworkX loader. Enabled by default (`ENABLE_KNOWLEDGE_GRAPH=true`).
+- ✅ Entity extractor — pure-Python keyword/alias matcher (<1 ms, no ML dependency). spaCy/gliner deferred: unnecessary at current KB scale; swap-in point is `entity_extractor.py`.
+- ✅ Reranker (`bge-reranker-base`) — implemented, **disabled by default** (`ENABLE_RERANKER=false`). Code is production-ready; enable when KB grows large enough that vector search returns noisy candidates.
+- ✅ Reflection Agent — reads last 30 days of diary entries, surfaces mood patterns and data-grounded observations.
+- ✅ Relapse-Risk Agent — reads `BehavioralSignals` (diary gaps, milestone rate, relapse flag), emits risk-informed intervention draft.
 
 ### Phase 4 — Safety hardening + benchmarks — 🟡 PARTIAL
 

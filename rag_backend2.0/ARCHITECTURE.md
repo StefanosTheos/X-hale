@@ -10,8 +10,8 @@ The design rationale is in `chatbot_revamp_overview.md` (project root).
 | 0 | ✅ Complete | Auth, URL config, logging |
 | 1 | ✅ Complete | FastAPI foundation, Qdrant, Appwrite history, Medical agent, SSE |
 | 2 | ✅ Complete | Multi-agent supervisor, Emotional + Craving agents, Memory Curator |
-| 3 | 🔄 Stub | Knowledge graph, Reflection agent, Relapse-Risk agent |
-| 4 | ✅ Complete | Crisis handler (deterministic) |
+| 3 | ✅ Complete | Knowledge graph (enabled), entity extractor, Reflection + Relapse-Risk agents, reranker (off by default) |
+| 4 | 🟡 Partial | Crisis handler done; benchmark harness (eval categories, judge prompts, CI) pending |
 | 5 | ⏳ Deferred | Fine-tuning pipeline |
 
 ## Request Flow
@@ -91,15 +91,11 @@ Per-turn context budget (~5400 tokens):
   6. Specialist draft outputs                ~800 tok
 ```
 
-## Phase 3 Placeholders
+## Phase 3 Feature Flags
 
-These files exist as stubs and will be filled in during Phase 3:
-- `app/agents/reflection.py`
-- `app/agents/relapse_risk.py`
-- `app/retrieval/reranker.py` (behind `ENABLE_RERANKER=false`)
-- `app/prompts/reflection.py`
-- `app/prompts/relapse_risk.py`
+All Phase 3 features are implemented. Two remain off by default:
 
-Enable with feature flags when implementation is ready:
-- `ENABLE_RERANKER=true`
-- `ENABLE_KNOWLEDGE_GRAPH=true`
+| Flag | Default | Notes |
+|---|---|---|
+| `ENABLE_KNOWLEDGE_GRAPH` | `true` | 139-node domain graph; entity extractor uses keyword matching (no ML dep) |
+| `ENABLE_RERANKER` | `false` | `BAAI/bge-reranker-base` cross-encoder; enable when KB exceeds ~250 diverse chunks |
