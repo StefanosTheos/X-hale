@@ -439,7 +439,7 @@ rag_backend2.0/
 - ✅ Synthesizer (Gemini Flash, streaming).
 - ✅ Memory Curator (async, skips `general_conversation` turns).
 - ✅ User memory snapshot loaded at turn start (profile + facts + recent turns).
-- ⬜ "What does Hailey know about me?" Flutter screen — backend live, Flutter pending.
+- ✅ "What does Hailey know about me?" Flutter screen — live. Psychology icon in chatbot AppBar opens `HaileyMemoryPage`: facts grouped by type, confidence bars, delete with confirmation, pull-to-refresh.
 
 ### Phase 3 — Retrieval depth — ✅ DONE
 
