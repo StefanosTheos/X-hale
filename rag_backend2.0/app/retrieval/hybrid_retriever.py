@@ -56,14 +56,19 @@ async def retrieve(
 
     chunks = await _vector_retrieval(query, strategy, filters, k)
 
-    # ── Phase 3: knowledge graph expansion goes here ──────────────────────
-    # if settings.enable_knowledge_graph and strategy in ("factual", "exploratory"):
-    #     from app.retrieval.entity_extractor import extract_entities
-    #     from app.retrieval.knowledge_graph import expand_entities
-    #     entities = extract_entities(query)
-    #     graph_context = expand_entities(entities, hops=2)
-    #     # Use graph_context.related_node_ids to add a second Qdrant filter pass
-    # ── End Phase 3 ────────────────────────────────────────────────────────
+    # Knowledge graph expansion: find related concepts and retrieve additional chunks
+    # tagged with the expanded topic_tags, then merge with the vector results.
+    strategy_used = "vector"
+    if settings.enable_knowledge_graph and strategy in ("factual", "exploratory"):
+        from app.retrieval.entity_extractor import extract_entities
+        from app.retrieval.knowledge_graph import expand_entities
+        entities = extract_entities(query)
+        if entities:
+            expansion = expand_entities(entities, hops=2)
+            if not expansion.is_empty():
+                kg_chunks = await _kg_retrieval(query, expansion.topic_tags, k=3)
+                chunks = _merge_chunks(chunks, kg_chunks, max_total=k + 3)
+                strategy_used = "vector+graph"
 
     # Web search fallback if KB returns fewer than 2 meaningful chunks.
     # Skip for general conversation — web search adds no value for greetings.
@@ -80,7 +85,7 @@ async def retrieve(
         query=query,
         chunks=chunks,
         citations=citations,
-        strategy_used="vector" if not settings.enable_knowledge_graph else "vector+graph",
+        strategy_used=strategy_used,
     )
 
 
@@ -142,6 +147,59 @@ async def _web_fallback(query: str, existing_chunks: list[RetrievedChunk]) -> li
         for doc in web_docs
     ]
     return existing_chunks + web_chunks
+
+
+async def _kg_retrieval(
+    query: str,
+    topic_tags: list[str],
+    k: int = 3,
+) -> list[RetrievedChunk]:
+    """
+    Second-pass vector search filtered to chunks tagged with any of the
+    KG-expanded topic_tags (OR filter). Returns at most k chunks.
+    """
+    from app.llm.workers_ai_client import embed
+    from app.retrieval.vector_store import search
+
+    try:
+        query_vector = await embed(query)
+    except Exception as exc:
+        logger.warning("kg_retrieval_embed_failed", error=str(exc))
+        return []
+
+    return await search(
+        query_vector=query_vector,
+        collection=settings.qdrant_kb_collection,
+        k=k,
+        topic_tags_should=topic_tags,
+    )
+
+
+def _merge_chunks(
+    primary: list[RetrievedChunk],
+    secondary: list[RetrievedChunk],
+    max_total: int = 8,
+) -> list[RetrievedChunk]:
+    """
+    Merge two chunk lists, deduplicating by source_id.
+    Primary chunks take precedence; secondary chunks are appended if not already present.
+    Result is capped at max_total and sorted by score descending.
+    """
+    seen: set[str] = set()
+    merged: list[RetrievedChunk] = []
+
+    for chunk in primary:
+        if chunk.source_id not in seen:
+            seen.add(chunk.source_id)
+            merged.append(chunk)
+
+    for chunk in secondary:
+        if chunk.source_id not in seen:
+            seen.add(chunk.source_id)
+            merged.append(chunk)
+
+    merged.sort(key=lambda c: c.score, reverse=True)
+    return merged[:max_total]
 
 
 def _chunks_to_citations(chunks: list[RetrievedChunk]) -> list[Citation]:

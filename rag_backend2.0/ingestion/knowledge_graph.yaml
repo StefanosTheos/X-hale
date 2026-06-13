@@ -1,0 +1,2276 @@
+version: "1.0"
+# Domain knowledge graph for Hailey quit-smoking chatbot.
+# Loaded into NetworkX at startup; used to expand user queries before Qdrant vector search.
+# topic_tags must exactly match Qdrant chunk payload tag values.
+# Schema:
+#   nodes: id (snake_case), type, label, aliases (lowercase chat phrases), topic_tags
+#   edges: from, to, relation
+
+nodes:
+
+  # ── Symptoms (18) ─────────────────────────────────────────────────────────
+  - id: sym_irritability
+    type: Symptom
+    label: "Irritability"
+    aliases:
+      - "irritable"
+      - "mood swings"
+      - "angry since quitting"
+      - "snappy"
+      - "short tempered"
+      - "grumpy"
+      - "agitated"
+      - "short fuse"
+      - "snapping at"
+      - "moody"
+      - "bad temper"
+      - "easily annoyed"
+    topic_tags: [withdrawal, coping_strategies]
+
+  - id: sym_anxiety_withdrawal
+    type: Symptom
+    label: "Anxiety (Withdrawal)"
+    aliases:
+      - "anxious since quitting"
+      - "nervous"
+      - "on edge"
+      - "withdrawal anxiety"
+      - "jittery"
+      - "feeling uneasy"
+      - "restless"
+      - "panicky"
+      - "worried"
+      - "tense"
+      - "apprehensive"
+    topic_tags: [withdrawal, coping_strategies]
+
+  - id: sym_insomnia
+    type: Symptom
+    label: "Insomnia"
+    aliases:
+      - "can't sleep"
+      - "trouble sleeping"
+      - "insomnia"
+      - "waking up at night"
+      - "vivid dreams"
+      - "nightmares"
+      - "restless at night"
+      - "sleep problems"
+      - "not sleeping well"
+      - "poor sleep"
+      - "tossing and turning"
+    topic_tags: [withdrawal, coping_strategies]
+
+  - id: sym_concentration_difficulty
+    type: Symptom
+    label: "Difficulty Concentrating"
+    aliases:
+      - "can't concentrate"
+      - "brain fog"
+      - "trouble focusing"
+      - "can't think straight"
+      - "mind wandering"
+      - "forgetful"
+      - "distracted"
+      - "poor focus"
+      - "difficulty thinking"
+      - "foggy head"
+    topic_tags: [withdrawal, coping_strategies]
+
+  - id: sym_increased_appetite
+    type: Symptom
+    label: "Increased Appetite"
+    aliases:
+      - "always hungry"
+      - "increased hunger"
+      - "eating more since quitting"
+      - "constant hunger"
+      - "appetite increase"
+      - "hungry all the time"
+      - "snacking more"
+      - "food cravings"
+      - "want to eat more"
+      - "ravenous"
+    topic_tags: [withdrawal, coping_strategies]
+
+  - id: sym_weight_gain
+    type: Symptom
+    label: "Weight Gain"
+    aliases:
+      - "gained weight"
+      - "putting on weight"
+      - "weight gain after quitting"
+      - "getting fat since quitting"
+      - "heavier"
+      - "weight increase"
+      - "body weight up"
+      - "scales going up"
+      - "getting bigger"
+    topic_tags: [withdrawal, coping_strategies]
+
+  - id: sym_headache
+    type: Symptom
+    label: "Headache"
+    aliases:
+      - "headache"
+      - "head pain"
+      - "throbbing head"
+      - "tension headache"
+      - "head hurts"
+      - "migraine"
+      - "headaches since quitting"
+      - "splitting headache"
+      - "head pounding"
+    topic_tags: [withdrawal, coping_strategies]
+
+  - id: sym_cough_increase
+    type: Symptom
+    label: "Increased Cough"
+    aliases:
+      - "coughing more"
+      - "cough got worse"
+      - "coughing up phlegm"
+      - "hacking cough"
+      - "productive cough"
+      - "chest cough"
+      - "cough increased"
+      - "coughing a lot"
+      - "mucus cough"
+      - "coughing after quitting"
+    topic_tags: [withdrawal, coping_strategies, lung_health]
+
+  - id: sym_fatigue
+    type: Symptom
+    label: "Fatigue"
+    aliases:
+      - "tired"
+      - "exhausted"
+      - "fatigue"
+      - "no energy"
+      - "worn out"
+      - "drained"
+      - "lethargic"
+      - "run down"
+      - "always tired"
+      - "sluggish"
+      - "low energy"
+    topic_tags: [withdrawal, coping_strategies]
+
+  - id: sym_mouth_sores
+    type: Symptom
+    label: "Mouth Sores"
+    aliases:
+      - "mouth sores"
+      - "ulcers in mouth"
+      - "mouth ulcers"
+      - "sore mouth"
+      - "canker sores"
+      - "blisters in mouth"
+      - "painful mouth"
+      - "oral sores"
+      - "gum sores"
+    topic_tags: [withdrawal, coping_strategies]
+
+  - id: sym_dizziness
+    type: Symptom
+    label: "Dizziness"
+    aliases:
+      - "dizzy"
+      - "lightheaded"
+      - "dizziness"
+      - "spinning"
+      - "vertigo"
+      - "feel faint"
+      - "wobbly"
+      - "unsteady"
+      - "giddy"
+      - "head rush"
+    topic_tags: [withdrawal, coping_strategies]
+
+  - id: sym_nausea
+    type: Symptom
+    label: "Nausea"
+    aliases:
+      - "nausea"
+      - "feel sick"
+      - "queasy"
+      - "stomach upset"
+      - "nauseated"
+      - "want to vomit"
+      - "feeling ill"
+      - "stomach churning"
+      - "sick to stomach"
+      - "unsettled stomach"
+    topic_tags: [withdrawal, coping_strategies]
+
+  - id: sym_chest_tightness
+    type: Symptom
+    label: "Chest Tightness"
+    aliases:
+      - "tight chest"
+      - "chest tightness"
+      - "chest pressure"
+      - "chest discomfort"
+      - "heavy chest"
+      - "chest feels tight"
+      - "pressure in chest"
+      - "chest pain"
+      - "constricted chest"
+    topic_tags: [withdrawal, coping_strategies, cardiovascular]
+
+  - id: sym_constipation
+    type: Symptom
+    label: "Constipation"
+    aliases:
+      - "constipated"
+      - "constipation"
+      - "can't poop"
+      - "bowel problems"
+      - "blocked up"
+      - "irregular bowels"
+      - "hard to go to toilet"
+      - "digestive issues"
+      - "stomach backed up"
+    topic_tags: [withdrawal, coping_strategies]
+
+  - id: sym_tingling_extremities
+    type: Symptom
+    label: "Tingling in Hands and Feet"
+    aliases:
+      - "tingling hands"
+      - "tingling feet"
+      - "pins and needles"
+      - "numbness in fingers"
+      - "hands tingling"
+      - "feet tingling"
+      - "strange sensation in hands"
+      - "extremities tingling"
+      - "numbness in toes"
+    topic_tags: [withdrawal, coping_strategies]
+
+  - id: sym_sweating
+    type: Symptom
+    label: "Sweating"
+    aliases:
+      - "sweating"
+      - "night sweats"
+      - "excessive sweating"
+      - "sweating more"
+      - "sweat a lot"
+      - "clammy"
+      - "perspiring"
+      - "hot flushes"
+      - "sweaty palms"
+    topic_tags: [withdrawal, coping_strategies]
+
+  - id: sym_dry_throat
+    type: Symptom
+    label: "Dry Throat"
+    aliases:
+      - "dry throat"
+      - "scratchy throat"
+      - "sore throat"
+      - "throat dry"
+      - "throat irritation"
+      - "throat discomfort"
+      - "hoarse throat"
+      - "itchy throat"
+      - "rough throat"
+    topic_tags: [withdrawal, coping_strategies]
+
+  - id: sym_depression_withdrawal
+    type: Symptom
+    label: "Depression (Withdrawal)"
+    aliases:
+      - "depressed since quitting"
+      - "feeling low"
+      - "withdrawal depression"
+      - "sad after quitting"
+      - "miserable"
+      - "down in the dumps"
+      - "hopeless"
+      - "feel worthless"
+      - "low mood"
+      - "tearful"
+      - "blue"
+    topic_tags: [withdrawal, coping_strategies]
+
+  # ── Triggers (16) ─────────────────────────────────────────────────────────
+  - id: trig_coffee
+    type: Trigger
+    label: "Coffee / Caffeine"
+    aliases:
+      - "coffee"
+      - "morning coffee"
+      - "caffeine"
+      - "espresso"
+      - "cup of tea"
+      - "having a coffee"
+      - "latte"
+      - "hot drink"
+      - "cuppa"
+      - "brew"
+    topic_tags: [cravings, triggers, coping_strategies, behavioral_support]
+
+  - id: trig_alcohol
+    type: Trigger
+    label: "Alcohol"
+    aliases:
+      - "alcohol"
+      - "beer"
+      - "wine"
+      - "drinking"
+      - "pub"
+      - "bar"
+      - "going out drinking"
+      - "having a drink"
+      - "booze"
+      - "spirits"
+      - "drunk"
+      - "social drinking"
+    topic_tags: [cravings, triggers, coping_strategies, behavioral_support]
+
+  - id: trig_stress
+    type: Trigger
+    label: "Stress"
+    aliases:
+      - "stress"
+      - "stressed out"
+      - "under pressure"
+      - "overwhelmed"
+      - "work stress"
+      - "stressful situation"
+      - "anxious moment"
+      - "tense situation"
+      - "pressure at work"
+      - "deadline stress"
+    topic_tags: [cravings, triggers, coping_strategies, behavioral_support]
+
+  - id: trig_after_meals
+    type: Trigger
+    label: "After Meals"
+    aliases:
+      - "after eating"
+      - "after dinner"
+      - "after lunch"
+      - "after breakfast"
+      - "post meal"
+      - "after food"
+      - "when i finish eating"
+      - "after a meal"
+      - "full after eating"
+      - "craving after food"
+    topic_tags: [cravings, triggers, coping_strategies, behavioral_support]
+
+  - id: trig_social_smoking
+    type: Trigger
+    label: "Social Smoking"
+    aliases:
+      - "social smoking"
+      - "smoking with friends"
+      - "peer smoking"
+      - "party smoking"
+      - "friends smoke"
+      - "everyone smoking"
+      - "at a party"
+      - "group smoking"
+      - "smoking socially"
+      - "when others smoke around me"
+    topic_tags: [cravings, triggers, coping_strategies, behavioral_support]
+
+  - id: trig_boredom
+    type: Trigger
+    label: "Boredom"
+    aliases:
+      - "bored"
+      - "boredom"
+      - "nothing to do"
+      - "idle"
+      - "killing time"
+      - "sitting around"
+      - "restless with nothing to do"
+      - "unoccupied"
+      - "time on my hands"
+      - "at a loose end"
+    topic_tags: [cravings, triggers, coping_strategies, behavioral_support]
+
+  - id: trig_driving
+    type: Trigger
+    label: "Driving"
+    aliases:
+      - "driving"
+      - "in the car"
+      - "road trip"
+      - "commuting"
+      - "stuck in traffic"
+      - "long drive"
+      - "car journey"
+      - "while driving"
+      - "sitting in car"
+    topic_tags: [cravings, triggers, coping_strategies, behavioral_support]
+
+  - id: trig_morning_routine
+    type: Trigger
+    label: "Morning Routine"
+    aliases:
+      - "morning routine"
+      - "first thing in the morning"
+      - "waking up"
+      - "morning cigarette"
+      - "first smoke of the day"
+      - "as soon as i wake up"
+      - "morning habit"
+      - "upon waking"
+      - "getting up ritual"
+    topic_tags: [cravings, triggers, coping_strategies, behavioral_support]
+
+  - id: trig_phone_calls
+    type: Trigger
+    label: "Phone Calls"
+    aliases:
+      - "phone call"
+      - "on the phone"
+      - "talking on phone"
+      - "phone conversation"
+      - "work calls"
+      - "long phone call"
+      - "during a call"
+      - "while on phone"
+      - "telephone"
+    topic_tags: [cravings, triggers, coping_strategies, behavioral_support]
+
+  - id: trig_work_breaks
+    type: Trigger
+    label: "Work Breaks"
+    aliases:
+      - "work break"
+      - "smoke break"
+      - "break time"
+      - "lunchbreak"
+      - "tea break"
+      - "outside at work"
+      - "taking a break"
+      - "office break"
+      - "break room"
+    topic_tags: [cravings, triggers, coping_strategies, behavioral_support]
+
+  - id: trig_emotional_upset
+    type: Trigger
+    label: "Emotional Upset"
+    aliases:
+      - "upset"
+      - "emotional"
+      - "feeling bad"
+      - "had a row"
+      - "argument"
+      - "fight"
+      - "bad news"
+      - "emotional turmoil"
+      - "upset after argument"
+      - "feeling hurt"
+      - "frustrated"
+    topic_tags: [cravings, triggers, coping_strategies, behavioral_support]
+
+  - id: trig_concentration_work
+    type: Trigger
+    label: "Concentration / Work Focus"
+    aliases:
+      - "trying to concentrate"
+      - "hard thinking"
+      - "working hard"
+      - "studying"
+      - "deep work"
+      - "mental work"
+      - "problem solving"
+      - "focusing on task"
+      - "deadline work"
+    topic_tags: [cravings, triggers, coping_strategies, behavioral_support]
+
+  - id: trig_watching_tv
+    type: Trigger
+    label: "Watching TV"
+    aliases:
+      - "watching tv"
+      - "watching telly"
+      - "watching a movie"
+      - "streaming"
+      - "netflix"
+      - "watching series"
+      - "sitting watching tv"
+      - "in front of tv"
+      - "binge watching"
+    topic_tags: [cravings, triggers, coping_strategies, behavioral_support]
+
+  - id: trig_end_of_day
+    type: Trigger
+    label: "End of Day"
+    aliases:
+      - "end of day"
+      - "after work"
+      - "finishing work"
+      - "evening"
+      - "unwinding"
+      - "relaxing after work"
+      - "come home from work"
+      - "clocking off"
+      - "end of shift"
+      - "evening wind down"
+    topic_tags: [cravings, triggers, coping_strategies, behavioral_support]
+
+  - id: trig_smell_of_smoke
+    type: Trigger
+    label: "Smell of Smoke"
+    aliases:
+      - "smell smoke"
+      - "cigarette smell"
+      - "tobacco smell"
+      - "whiff of smoke"
+      - "smell of cigarettes"
+      - "smoke smell"
+      - "second hand smoke smell"
+      - "smell triggered craving"
+    topic_tags: [cravings, triggers, coping_strategies, behavioral_support]
+
+  - id: trig_seeing_others_smoke
+    type: Trigger
+    label: "Seeing Others Smoke"
+    aliases:
+      - "seeing someone smoke"
+      - "watching others smoke"
+      - "person smoking nearby"
+      - "coworker smoking"
+      - "friend smoking"
+      - "passers by smoking"
+      - "cigarette in someone's hand"
+      - "people lighting up"
+    topic_tags: [cravings, triggers, coping_strategies, behavioral_support]
+
+  # ── Coping Strategies (17) ────────────────────────────────────────────────
+  - id: cope_deep_breathing
+    type: CopingStrategy
+    label: "Deep Breathing"
+    aliases:
+      - "deep breathing"
+      - "breathe deeply"
+      - "slow breathing"
+      - "breathing exercise"
+      - "breath control"
+      - "box breathing"
+      - "belly breathing"
+      - "relax with breathing"
+      - "controlled breathing"
+    topic_tags: [coping_strategies, behavioral_support]
+
+  - id: cope_exercise
+    type: CopingStrategy
+    label: "Exercise"
+    aliases:
+      - "exercise"
+      - "go for a walk"
+      - "workout"
+      - "run"
+      - "gym"
+      - "physical activity"
+      - "jog"
+      - "cycling"
+      - "sport"
+      - "active"
+      - "get moving"
+    topic_tags: [coping_strategies, behavioral_support]
+
+  - id: cope_delay_tactic
+    type: CopingStrategy
+    label: "Delay Tactic"
+    aliases:
+      - "delay tactic"
+      - "wait it out"
+      - "wait ten minutes"
+      - "put it off"
+      - "hold on"
+      - "delay the craving"
+      - "give it five minutes"
+      - "pause before smoking"
+      - "procrastinate the craving"
+    topic_tags: [coping_strategies, behavioral_support]
+
+  - id: cope_drink_water
+    type: CopingStrategy
+    label: "Drink Water"
+    aliases:
+      - "drink water"
+      - "have a glass of water"
+      - "sip water"
+      - "stay hydrated"
+      - "cold drink of water"
+      - "glass of water"
+      - "water helps cravings"
+      - "hydrate"
+    topic_tags: [coping_strategies, behavioral_support]
+
+  - id: cope_distraction
+    type: CopingStrategy
+    label: "Distraction"
+    aliases:
+      - "distract yourself"
+      - "keep busy"
+      - "find a distraction"
+      - "do something else"
+      - "occupy your mind"
+      - "change focus"
+      - "redirect attention"
+      - "divert attention"
+      - "stay occupied"
+    topic_tags: [coping_strategies, behavioral_support]
+
+  - id: cope_nrt_use
+    type: CopingStrategy
+    label: "Use NRT"
+    aliases:
+      - "use nicotine replacement"
+      - "nicotine patch"
+      - "nicotine gum"
+      - "nrt"
+      - "nicotine inhaler"
+      - "nicotine spray"
+      - "nicotine lozenge"
+      - "quit aids"
+      - "nicotine replacement therapy"
+    topic_tags: [coping_strategies, behavioral_support, nrt, cessation_methods]
+
+  - id: cope_mindfulness
+    type: CopingStrategy
+    label: "Mindfulness"
+    aliases:
+      - "mindfulness"
+      - "meditation"
+      - "be present"
+      - "mindful breathing"
+      - "mindful awareness"
+      - "focus on the moment"
+      - "meditate"
+      - "grounding exercise"
+      - "mindful practice"
+      - "body scan"
+    topic_tags: [coping_strategies, behavioral_support]
+
+  - id: cope_chew_gum
+    type: CopingStrategy
+    label: "Chew Gum"
+    aliases:
+      - "chew gum"
+      - "chewing gum"
+      - "sugarfree gum"
+      - "mints"
+      - "hard candy"
+      - "oral fixation"
+      - "mouth busy"
+      - "chew something"
+    topic_tags: [coping_strategies, behavioral_support]
+
+  - id: cope_support_network
+    type: CopingStrategy
+    label: "Support Network"
+    aliases:
+      - "talk to someone"
+      - "call a friend"
+      - "get support"
+      - "support group"
+      - "friends and family"
+      - "quit buddy"
+      - "ask for help"
+      - "lean on someone"
+      - "tell someone you're quitting"
+      - "social support"
+    topic_tags: [coping_strategies, behavioral_support, counseling]
+
+  - id: cope_diary_journaling
+    type: CopingStrategy
+    label: "Diary / Journaling"
+    aliases:
+      - "write in a diary"
+      - "journaling"
+      - "journal"
+      - "keep a diary"
+      - "write down feelings"
+      - "quit journal"
+      - "tracking progress"
+      - "note your feelings"
+      - "write about cravings"
+    topic_tags: [coping_strategies, behavioral_support]
+
+  - id: cope_cold_water
+    type: CopingStrategy
+    label: "Cold Water"
+    aliases:
+      - "cold water"
+      - "splash cold water"
+      - "cold shower"
+      - "ice cold water"
+      - "cold water on face"
+      - "cool yourself down"
+      - "cold water trick"
+    topic_tags: [coping_strategies, behavioral_support]
+
+  - id: cope_brush_teeth
+    type: CopingStrategy
+    label: "Brush Teeth"
+    aliases:
+      - "brush teeth"
+      - "clean teeth"
+      - "brush your teeth"
+      - "teeth brushing"
+      - "fresh mouth"
+      - "mouth feels clean"
+      - "oral hygiene"
+    topic_tags: [coping_strategies, behavioral_support]
+
+  - id: cope_reward_milestone
+    type: CopingStrategy
+    label: "Reward Milestones"
+    aliases:
+      - "reward yourself"
+      - "treat yourself"
+      - "celebrate milestone"
+      - "milestone reward"
+      - "incentive"
+      - "buy something nice"
+      - "self reward"
+      - "positive reinforcement"
+      - "give yourself a treat"
+    topic_tags: [coping_strategies, behavioral_support, motivation]
+
+  - id: cope_quit_line
+    type: CopingStrategy
+    label: "Quit Line"
+    aliases:
+      - "quit line"
+      - "quit helpline"
+      - "smoking cessation helpline"
+      - "call a quit line"
+      - "smoking helpline"
+      - "stop smoking line"
+      - "nhs quit line"
+      - "telephone support"
+    topic_tags: [coping_strategies, behavioral_support, counseling, cessation_methods]
+
+  - id: cope_self_compassion
+    type: CopingStrategy
+    label: "Self-Compassion"
+    aliases:
+      - "be kind to yourself"
+      - "self compassion"
+      - "don't be too hard on yourself"
+      - "forgive yourself"
+      - "self forgiveness"
+      - "self care"
+      - "compassionate thinking"
+      - "no self blame"
+      - "gentle on yourself"
+    topic_tags: [coping_strategies, behavioral_support]
+
+  - id: cope_healthy_eating
+    type: CopingStrategy
+    label: "Healthy Eating"
+    aliases:
+      - "eat healthy"
+      - "healthy snacks"
+      - "fruit and vegetables"
+      - "good diet"
+      - "nutritious food"
+      - "eat well"
+      - "balanced diet"
+      - "low calorie snacks"
+      - "healthy food choices"
+    topic_tags: [coping_strategies, behavioral_support]
+
+  - id: cope_stress_management
+    type: CopingStrategy
+    label: "Stress Management"
+    aliases:
+      - "manage stress"
+      - "stress relief"
+      - "stress management"
+      - "reduce stress"
+      - "stress coping"
+      - "relaxation techniques"
+      - "calm yourself"
+      - "stress reduction"
+      - "deal with stress"
+    topic_tags: [coping_strategies, behavioral_support]
+
+  # ── Health Benefits (15) ──────────────────────────────────────────────────
+  - id: ben_blood_pressure_normalise
+    type: HealthBenefit
+    label: "Blood Pressure Normalises"
+    aliases:
+      - "blood pressure drops"
+      - "blood pressure normal"
+      - "blood pressure improves"
+      - "bp normalises"
+      - "lower blood pressure"
+      - "heart rate down"
+      - "pulse rate normal"
+      - "blood pressure benefit"
+    topic_tags: [health_benefits, quit_timeline, withdrawal, cardiovascular]
+
+  - id: ben_carbon_monoxide_clear
+    type: HealthBenefit
+    label: "Carbon Monoxide Clears"
+    aliases:
+      - "carbon monoxide clears"
+      - "co levels normal"
+      - "co out of blood"
+      - "carbon monoxide gone"
+      - "co reading normal"
+      - "blood oxygen improves"
+      - "oxygen levels improve"
+    topic_tags: [health_benefits, quit_timeline, withdrawal]
+
+  - id: ben_nicotine_eliminated
+    type: HealthBenefit
+    label: "Nicotine Eliminated from Body"
+    aliases:
+      - "nicotine gone"
+      - "nicotine out of body"
+      - "nicotine cleared"
+      - "nicotine free"
+      - "body clear of nicotine"
+      - "nicotine levels zero"
+    topic_tags: [health_benefits, quit_timeline, withdrawal, nicotine]
+
+  - id: ben_taste_smell_restore
+    type: HealthBenefit
+    label: "Taste and Smell Restored"
+    aliases:
+      - "taste improves"
+      - "smell returns"
+      - "food tastes better"
+      - "smell better"
+      - "taste and smell back"
+      - "senses return"
+      - "can smell again"
+      - "food tastes amazing"
+    topic_tags: [health_benefits, quit_timeline, withdrawal]
+
+  - id: ben_breathing_easier
+    type: HealthBenefit
+    label: "Breathing Easier"
+    aliases:
+      - "easier to breathe"
+      - "breathing improves"
+      - "less breathless"
+      - "not short of breath"
+      - "lungs feel better"
+      - "breathing easier"
+      - "less wheezing"
+      - "better lung capacity"
+    topic_tags: [health_benefits, quit_timeline, lung_health]
+
+  - id: ben_lung_cilia_repair
+    type: HealthBenefit
+    label: "Lung Cilia Begin to Repair"
+    aliases:
+      - "cilia repair"
+      - "lungs repairing"
+      - "lung cilia growing back"
+      - "lung cleaning mechanism"
+      - "lung self-cleaning"
+      - "cilia regenerating"
+      - "lung cilia recovery"
+    topic_tags: [health_benefits, quit_timeline, lung_health]
+
+  - id: ben_lung_function_improve
+    type: HealthBenefit
+    label: "Lung Function Improves"
+    aliases:
+      - "lung function better"
+      - "lung capacity improves"
+      - "better breathing capacity"
+      - "lung performance up"
+      - "fev1 improves"
+      - "peak flow better"
+      - "lungs working better"
+    topic_tags: [health_benefits, quit_timeline, lung_health]
+
+  - id: ben_heart_attack_risk_halved
+    type: HealthBenefit
+    label: "Heart Attack Risk Halved"
+    aliases:
+      - "heart attack risk drops"
+      - "heart risk halved"
+      - "lower risk of heart attack"
+      - "heart health better"
+      - "heart attack chance halved"
+      - "cardiac risk reduced"
+      - "heart risk cuts in half"
+    topic_tags: [health_benefits, quit_timeline, cardiovascular]
+
+  - id: ben_stroke_risk_normalise
+    type: HealthBenefit
+    label: "Stroke Risk Returns to Normal"
+    aliases:
+      - "stroke risk normal"
+      - "stroke risk drops"
+      - "lower stroke risk"
+      - "stroke chance normal"
+      - "stroke risk like non-smoker"
+      - "stroke benefit"
+    topic_tags: [health_benefits, quit_timeline, cardiovascular]
+
+  - id: ben_lung_cancer_risk_halved
+    type: HealthBenefit
+    label: "Lung Cancer Risk Halved"
+    aliases:
+      - "lung cancer risk drops"
+      - "lung cancer risk halved"
+      - "lower lung cancer risk"
+      - "cancer risk halved"
+      - "lung cancer benefit"
+      - "reduced cancer risk"
+    topic_tags: [health_benefits, quit_timeline, lung_cancer, cancer_risk]
+
+  - id: ben_health_normal
+    type: HealthBenefit
+    label: "Health Returns to Non-Smoker Level"
+    aliases:
+      - "health like non-smoker"
+      - "risk back to normal"
+      - "fully recovered"
+      - "health restored"
+      - "same risk as non-smoker"
+      - "fully quit benefit"
+      - "complete recovery"
+    topic_tags: [health_benefits, quit_timeline]
+
+  - id: ben_energy_improved
+    type: HealthBenefit
+    label: "Energy Improved"
+    aliases:
+      - "more energy"
+      - "feel energetic"
+      - "less tired"
+      - "energy boost"
+      - "vitality improved"
+      - "feeling alive"
+      - "active again"
+      - "energised"
+    topic_tags: [health_benefits, quit_timeline]
+
+  - id: ben_skin_improved
+    type: HealthBenefit
+    label: "Skin Improved"
+    aliases:
+      - "skin looks better"
+      - "skin improves"
+      - "clearer skin"
+      - "younger looking skin"
+      - "complexion better"
+      - "skin glowing"
+      - "skin health"
+      - "less wrinkles"
+    topic_tags: [health_benefits, quit_timeline]
+
+  - id: ben_reduced_infection_risk
+    type: HealthBenefit
+    label: "Reduced Infection Risk"
+    aliases:
+      - "fewer infections"
+      - "less illness"
+      - "stronger immune system"
+      - "get sick less"
+      - "better immunity"
+      - "reduced cold and flu"
+      - "immune system stronger"
+      - "less infections"
+    topic_tags: [health_benefits, quit_timeline]
+
+  - id: ben_dental_health
+    type: HealthBenefit
+    label: "Dental Health Improved"
+    aliases:
+      - "teeth whiter"
+      - "healthier gums"
+      - "dental health better"
+      - "teeth improve"
+      - "gum disease risk down"
+      - "tooth staining reduces"
+      - "fresher breath"
+      - "oral health improves"
+    topic_tags: [health_benefits, quit_timeline]
+
+  # ── Time Windows (14) ─────────────────────────────────────────────────────
+  - id: time_5min
+    type: TimeWindow
+    label: "5 Minutes"
+    aliases:
+      - "5 minutes"
+      - "five minutes"
+      - "just 5 mins"
+      - "craving lasts 5 minutes"
+      - "cravings pass in 5 minutes"
+      - "first few minutes"
+    topic_tags: [quit_timeline, health_benefits]
+
+  - id: time_20min
+    type: TimeWindow
+    label: "20 Minutes"
+    aliases:
+      - "20 minutes"
+      - "twenty minutes"
+      - "within 20 minutes"
+      - "after 20 minutes"
+      - "20 mins"
+    topic_tags: [quit_timeline, health_benefits]
+
+  - id: time_8hr
+    type: TimeWindow
+    label: "8 Hours"
+    aliases:
+      - "8 hours"
+      - "eight hours"
+      - "after 8 hours"
+      - "8 hrs"
+      - "within 8 hours"
+    topic_tags: [quit_timeline, health_benefits]
+
+  - id: time_24hr
+    type: TimeWindow
+    label: "24 Hours"
+    aliases:
+      - "24 hours"
+      - "one day"
+      - "first day"
+      - "after 24 hours"
+      - "a full day"
+      - "24 hrs"
+    topic_tags: [quit_timeline, health_benefits]
+
+  - id: time_48hr
+    type: TimeWindow
+    label: "48 Hours"
+    aliases:
+      - "48 hours"
+      - "two days"
+      - "after 48 hours"
+      - "2 days"
+      - "48 hrs"
+    topic_tags: [quit_timeline, health_benefits]
+
+  - id: time_72hr
+    type: TimeWindow
+    label: "72 Hours"
+    aliases:
+      - "72 hours"
+      - "three days"
+      - "after 72 hours"
+      - "3 days"
+      - "72 hrs"
+    topic_tags: [quit_timeline, health_benefits]
+
+  - id: time_2wk
+    type: TimeWindow
+    label: "2 Weeks"
+    aliases:
+      - "2 weeks"
+      - "two weeks"
+      - "a fortnight"
+      - "14 days"
+      - "after two weeks"
+    topic_tags: [quit_timeline, health_benefits]
+
+  - id: time_1mo
+    type: TimeWindow
+    label: "1 Month"
+    aliases:
+      - "one month"
+      - "1 month"
+      - "a month"
+      - "30 days"
+      - "after a month"
+    topic_tags: [quit_timeline, health_benefits]
+
+  - id: time_3mo
+    type: TimeWindow
+    label: "3 Months"
+    aliases:
+      - "3 months"
+      - "three months"
+      - "90 days"
+      - "after three months"
+      - "quarter of a year"
+    topic_tags: [quit_timeline, health_benefits]
+
+  - id: time_6mo
+    type: TimeWindow
+    label: "6 Months"
+    aliases:
+      - "6 months"
+      - "six months"
+      - "half a year"
+      - "after six months"
+      - "180 days"
+    topic_tags: [quit_timeline, health_benefits]
+
+  - id: time_1yr
+    type: TimeWindow
+    label: "1 Year"
+    aliases:
+      - "one year"
+      - "1 year"
+      - "a year"
+      - "12 months"
+      - "after a year"
+      - "365 days"
+    topic_tags: [quit_timeline, health_benefits]
+
+  - id: time_5yr
+    type: TimeWindow
+    label: "5 Years"
+    aliases:
+      - "5 years"
+      - "five years"
+      - "after 5 years"
+      - "half a decade"
+    topic_tags: [quit_timeline, health_benefits]
+
+  - id: time_10yr
+    type: TimeWindow
+    label: "10 Years"
+    aliases:
+      - "10 years"
+      - "ten years"
+      - "after 10 years"
+      - "a decade"
+    topic_tags: [quit_timeline, health_benefits]
+
+  - id: time_15yr
+    type: TimeWindow
+    label: "15 Years"
+    aliases:
+      - "15 years"
+      - "fifteen years"
+      - "after 15 years"
+      - "long term quit"
+    topic_tags: [quit_timeline, health_benefits]
+
+  # ── Body Systems (8) ──────────────────────────────────────────────────────
+  - id: body_cardiovascular
+    type: BodySystem
+    label: "Cardiovascular System"
+    aliases:
+      - "heart"
+      - "cardiovascular"
+      - "heart and blood vessels"
+      - "circulatory heart"
+      - "cardiac"
+      - "blood vessels"
+      - "arteries"
+      - "coronary"
+    topic_tags: [cardiovascular, health_benefits]
+
+  - id: body_respiratory
+    type: BodySystem
+    label: "Respiratory System"
+    aliases:
+      - "lungs"
+      - "respiratory"
+      - "breathing"
+      - "airways"
+      - "bronchial"
+      - "lung system"
+      - "pulmonary"
+      - "windpipe"
+    topic_tags: [lung_health, health_benefits]
+
+  - id: body_nervous_system
+    type: BodySystem
+    label: "Nervous System"
+    aliases:
+      - "nervous system"
+      - "brain"
+      - "neural"
+      - "neurological"
+      - "mind"
+      - "central nervous system"
+      - "mental"
+    topic_tags: [addiction, nicotine_dependence, health_benefits]
+
+  - id: body_oral_throat
+    type: BodySystem
+    label: "Oral and Throat"
+    aliases:
+      - "mouth"
+      - "throat"
+      - "oral"
+      - "tongue"
+      - "gums"
+      - "teeth"
+      - "pharynx"
+      - "larynx"
+    topic_tags: [mouth_cancer, throat_cancer, health_benefits]
+
+  - id: body_reproductive
+    type: BodySystem
+    label: "Reproductive System"
+    aliases:
+      - "reproductive"
+      - "fertility"
+      - "pregnancy"
+      - "sexual health"
+      - "reproductive health"
+      - "conception"
+    topic_tags: [pregnancy, maternal_health, health_benefits]
+
+  - id: body_skin
+    type: BodySystem
+    label: "Skin"
+    aliases:
+      - "skin"
+      - "complexion"
+      - "dermis"
+      - "appearance"
+      - "face"
+      - "skin health"
+    topic_tags: [health_benefits]
+
+  - id: body_circulatory
+    type: BodySystem
+    label: "Circulatory System"
+    aliases:
+      - "circulatory"
+      - "blood circulation"
+      - "blood flow"
+      - "veins"
+      - "peripheral circulation"
+      - "blood supply"
+    topic_tags: [cardiovascular, health_benefits]
+
+  - id: body_immune_system
+    type: BodySystem
+    label: "Immune System"
+    aliases:
+      - "immune system"
+      - "immunity"
+      - "immune response"
+      - "body defences"
+      - "infection resistance"
+      - "white blood cells"
+    topic_tags: [health_benefits]
+
+  # ── Medications (10) ──────────────────────────────────────────────────────
+  - id: med_nicotine_patch
+    type: Medication
+    label: "Nicotine Patch"
+    aliases:
+      - "nicotine patch"
+      - "patch"
+      - "transdermal patch"
+      - "niquitin patch"
+      - "nicorette patch"
+      - "wearing a patch"
+      - "skin patch"
+      - "slow release nicotine"
+    topic_tags: [nrt, cessation_methods, nicotine_patches]
+
+  - id: med_nicotine_gum
+    type: Medication
+    label: "Nicotine Gum"
+    aliases:
+      - "nicotine gum"
+      - "quit gum"
+      - "nicorette gum"
+      - "niquitin gum"
+      - "chewing nicotine"
+      - "nicotine chewing gum"
+      - "gum for quitting"
+    topic_tags: [nrt, cessation_methods, nicotine_gum]
+
+  - id: med_nicotine_lozenge
+    type: Medication
+    label: "Nicotine Lozenge"
+    aliases:
+      - "nicotine lozenge"
+      - "lozenge"
+      - "nicotine mint"
+      - "nicorette lozenge"
+      - "niquitin lozenge"
+      - "dissolving nicotine"
+      - "nicotine tablet"
+    topic_tags: [nrt, cessation_methods]
+
+  - id: med_nicotine_inhaler
+    type: Medication
+    label: "Nicotine Inhaler"
+    aliases:
+      - "nicotine inhaler"
+      - "nicorette inhaler"
+      - "inhalator"
+      - "quit inhaler"
+      - "nicotine inhalator"
+      - "oral inhaler"
+      - "puffing device"
+    topic_tags: [nrt, cessation_methods]
+
+  - id: med_nicotine_spray
+    type: Medication
+    label: "Nicotine Spray"
+    aliases:
+      - "nicotine spray"
+      - "mouth spray"
+      - "nicorette spray"
+      - "nasal spray"
+      - "nicotine mouth spray"
+      - "quick spray"
+      - "fast acting spray"
+    topic_tags: [nrt, cessation_methods]
+
+  - id: med_varenicline
+    type: Medication
+    label: "Varenicline (Champix / Chantix)"
+    aliases:
+      - "varenicline"
+      - "champix"
+      - "chantix"
+      - "prescription pill"
+      - "quit pill"
+      - "champix pill"
+      - "smoking pill"
+      - "cessation medication"
+      - "varenicline tablet"
+    topic_tags: [cessation_methods, varenicline, prescription_medications]
+
+  - id: med_bupropion
+    type: Medication
+    label: "Bupropion (Zyban)"
+    aliases:
+      - "bupropion"
+      - "zyban"
+      - "wellbutrin"
+      - "antidepressant for quitting"
+      - "bupropion for smoking"
+      - "zyban pill"
+      - "quit antidepressant"
+      - "wellbutrin quit smoking"
+    topic_tags: [cessation_methods, bupropion, prescription_medications]
+
+  - id: med_combination_nrt
+    type: Medication
+    label: "Combination NRT"
+    aliases:
+      - "combination nrt"
+      - "patch and gum"
+      - "double nrt"
+      - "combined nicotine replacement"
+      - "using patch and spray"
+      - "multi nrt"
+      - "combining nicotine products"
+    topic_tags: [nrt, cessation_methods]
+
+  - id: med_cessation_counseling
+    type: Medication
+    label: "Cessation Counselling"
+    aliases:
+      - "counselling"
+      - "behavioral counselling"
+      - "stop smoking counsellor"
+      - "cessation counsellor"
+      - "talking therapy"
+      - "behavioral therapy"
+      - "cbt for quitting"
+      - "quit counselling"
+    topic_tags: [cessation_methods, behavioral_support, counseling, clinical_guidelines]
+
+  - id: med_prescription_cessation
+    type: Medication
+    label: "Prescription Cessation Medication"
+    aliases:
+      - "prescription medication"
+      - "doctor prescribed quit aid"
+      - "smoking prescription"
+      - "gp prescribed"
+      - "prescription cessation"
+      - "prescribed quit medication"
+      - "doctor's quit medicine"
+    topic_tags: [cessation_methods, prescription_medications, clinical_guidelines]
+
+  # ── Emotional States (11) ─────────────────────────────────────────────────
+  - id: emo_anxiety
+    type: EmotionalState
+    label: "Anxiety"
+    aliases:
+      - "anxious"
+      - "anxiety"
+      - "nervous"
+      - "panicking"
+      - "panic attacks"
+      - "worried"
+      - "fearful"
+      - "on edge"
+      - "dread"
+      - "apprehensive"
+    topic_tags: [coping_strategies, behavioral_support]
+
+  - id: emo_depression
+    type: EmotionalState
+    label: "Depression"
+    aliases:
+      - "depressed"
+      - "depression"
+      - "really low"
+      - "sad"
+      - "hopeless"
+      - "no motivation"
+      - "can't get out of bed"
+      - "feeling empty"
+      - "miserable"
+      - "dark thoughts"
+    topic_tags: [coping_strategies, behavioral_support]
+
+  - id: emo_guilt
+    type: EmotionalState
+    label: "Guilt"
+    aliases:
+      - "guilty"
+      - "guilt"
+      - "feel terrible about slip"
+      - "ashamed of smoking"
+      - "regret smoking"
+      - "beat myself up"
+      - "feeling bad about relapse"
+      - "blaming myself"
+    topic_tags: [coping_strategies, behavioral_support, relapse_prevention]
+
+  - id: emo_shame
+    type: EmotionalState
+    label: "Shame"
+    aliases:
+      - "ashamed"
+      - "shame"
+      - "embarrassed"
+      - "humiliated"
+      - "feel worthless"
+      - "letting people down"
+      - "feel like a failure"
+      - "shameful"
+    topic_tags: [coping_strategies, behavioral_support, relapse_prevention]
+
+  - id: emo_frustration
+    type: EmotionalState
+    label: "Frustration"
+    aliases:
+      - "frustrated"
+      - "frustration"
+      - "fed up"
+      - "fed up of trying"
+      - "annoyed"
+      - "exasperated"
+      - "at my wits end"
+      - "angry at myself"
+      - "impatient"
+    topic_tags: [coping_strategies, behavioral_support]
+
+  - id: emo_loneliness
+    type: EmotionalState
+    label: "Loneliness"
+    aliases:
+      - "lonely"
+      - "loneliness"
+      - "isolated"
+      - "alone"
+      - "no one understands"
+      - "feel cut off"
+      - "socially isolated"
+      - "no support"
+      - "miss smoking friends"
+    topic_tags: [coping_strategies, behavioral_support]
+
+  - id: emo_hope
+    type: EmotionalState
+    label: "Hope"
+    aliases:
+      - "hopeful"
+      - "hope"
+      - "optimistic"
+      - "positive"
+      - "looking forward"
+      - "feel good about quitting"
+      - "confident"
+      - "believe i can do it"
+    topic_tags: [coping_strategies, behavioral_support, motivation]
+
+  - id: emo_pride
+    type: EmotionalState
+    label: "Pride"
+    aliases:
+      - "proud"
+      - "pride"
+      - "so proud of myself"
+      - "achievement"
+      - "accomplished"
+      - "great feeling"
+      - "feeling strong"
+      - "sense of achievement"
+    topic_tags: [coping_strategies, behavioral_support, motivation]
+
+  - id: emo_grief_loss
+    type: EmotionalState
+    label: "Grief / Sense of Loss"
+    aliases:
+      - "miss smoking"
+      - "grief about quitting"
+      - "loss of smoking"
+      - "mourning cigarettes"
+      - "lost without cigarettes"
+      - "mourning habit"
+      - "feel bereft"
+      - "grieving the habit"
+    topic_tags: [coping_strategies, behavioral_support]
+
+  - id: emo_overwhelm
+    type: EmotionalState
+    label: "Feeling Overwhelmed"
+    aliases:
+      - "overwhelmed"
+      - "too much"
+      - "can't cope"
+      - "everything is too hard"
+      - "feeling overloaded"
+      - "swamped"
+      - "drowning"
+      - "out of my depth"
+    topic_tags: [coping_strategies, behavioral_support]
+
+  - id: emo_stress
+    type: EmotionalState
+    label: "Stress"
+    aliases:
+      - "stressed"
+      - "stress"
+      - "under a lot of pressure"
+      - "wound up"
+      - "tense"
+      - "high strung"
+      - "stretched thin"
+      - "frazzled"
+      - "burning out"
+    topic_tags: [coping_strategies, behavioral_support]
+
+  # ── Concepts (15) ─────────────────────────────────────────────────────────
+  - id: concept_nicotine_dependence
+    type: Concept
+    label: "Nicotine Dependence"
+    aliases:
+      - "nicotine addiction"
+      - "addicted to nicotine"
+      - "dependent on nicotine"
+      - "hooked"
+      - "can't stop"
+      - "physical dependence"
+      - "tobacco dependence"
+      - "nicotine habit"
+      - "need nicotine"
+    topic_tags: [addiction, nicotine, nicotine_dependence, cessation_methods]
+
+  - id: concept_nicotine_withdrawal
+    type: Concept
+    label: "Nicotine Withdrawal"
+    aliases:
+      - "nicotine withdrawal"
+      - "withdrawal symptoms"
+      - "withdrawal"
+      - "symptoms of quitting"
+      - "side effects of quitting"
+      - "withdrawal effects"
+      - "after stopping"
+      - "quit symptoms"
+    topic_tags: [withdrawal, nicotine, addiction]
+
+  - id: concept_relapse
+    type: Concept
+    label: "Relapse"
+    aliases:
+      - "relapse"
+      - "started smoking again"
+      - "went back to smoking"
+      - "couldn't quit"
+      - "failed quit attempt"
+      - "fell off the wagon"
+      - "smoking again"
+      - "back to square one"
+    topic_tags: [relapse_prevention, motivation, behavioral_support]
+
+  - id: concept_quit_attempt
+    type: Concept
+    label: "Quit Attempt"
+    aliases:
+      - "quit attempt"
+      - "trying to quit"
+      - "stop smoking attempt"
+      - "quitting smoking"
+      - "giving up smoking"
+      - "my quit"
+      - "quit plan"
+      - "stop smoking effort"
+    topic_tags: [cessation_methods, motivation, behavioral_support]
+
+  - id: concept_craving
+    type: Concept
+    label: "Craving"
+    aliases:
+      - "craving"
+      - "urge to smoke"
+      - "want a cigarette"
+      - "desperate for a smoke"
+      - "dying for a cigarette"
+      - "strong urge"
+      - "nicotine craving"
+      - "urge to light up"
+      - "need a smoke"
+    topic_tags: [cravings, triggers]
+
+  - id: concept_cessation_support
+    type: Concept
+    label: "Cessation Support"
+    aliases:
+      - "quit support"
+      - "help to stop smoking"
+      - "cessation support"
+      - "stop smoking support"
+      - "support to quit"
+      - "professional help quitting"
+      - "smoking cessation help"
+      - "resources to quit"
+    topic_tags: [cessation_methods, behavioral_support, counseling, clinical_guidelines]
+
+  - id: concept_health_recovery
+    type: Concept
+    label: "Health Recovery"
+    aliases:
+      - "health recovery"
+      - "body healing"
+      - "recovering from smoking"
+      - "body repair"
+      - "health improving"
+      - "getting healthier"
+      - "healing after quitting"
+      - "body bouncing back"
+    topic_tags: [health_benefits, quit_timeline]
+
+  - id: concept_weight_management
+    type: Concept
+    label: "Weight Management"
+    aliases:
+      - "weight management"
+      - "managing weight"
+      - "not gaining weight"
+      - "control weight"
+      - "stop weight gain"
+      - "diet after quitting"
+      - "weight control"
+      - "staying slim after quitting"
+    topic_tags: [coping_strategies, behavioral_support]
+
+  - id: concept_financial_benefit
+    type: Concept
+    label: "Financial Benefit of Quitting"
+    aliases:
+      - "save money"
+      - "financial benefit"
+      - "cost of smoking"
+      - "money saved"
+      - "smoking is expensive"
+      - "cheaper not to smoke"
+      - "savings from quitting"
+      - "financial gain"
+    topic_tags: [motivation, health_benefits]
+
+  - id: concept_secondhand_smoke
+    type: Concept
+    label: "Secondhand Smoke"
+    aliases:
+      - "secondhand smoke"
+      - "passive smoking"
+      - "second hand smoke"
+      - "sidestream smoke"
+      - "smoke affects others"
+      - "smoking around family"
+      - "children exposed to smoke"
+      - "passive smoker"
+    topic_tags: [secondhand_smoke, passive_smoking, tobacco_harms]
+
+  - id: concept_quitting
+    type: Concept
+    label: "Quitting Smoking"
+    aliases:
+      - "quitting smoking"
+      - "stopping smoking"
+      - "giving up cigarettes"
+      - "becoming smoke free"
+      - "no more smoking"
+      - "quit for good"
+      - "smoke free"
+      - "stop smoking for good"
+    topic_tags: [cessation_methods, motivation, health_benefits]
+
+  - id: concept_slip_vs_relapse
+    type: Concept
+    label: "Slip vs Relapse"
+    aliases:
+      - "slip vs relapse"
+      - "difference between slip and relapse"
+      - "had one cigarette"
+      - "just one smoke"
+      - "slip up"
+      - "lapse"
+      - "momentary lapse"
+      - "one puff"
+      - "slip not failure"
+    topic_tags: [relapse_prevention, motivation, behavioral_support]
+
+  - id: concept_dopamine_reward
+    type: Concept
+    label: "Dopamine Reward Pathway"
+    aliases:
+      - "dopamine"
+      - "reward system"
+      - "brain reward"
+      - "pleasure from smoking"
+      - "feel good chemicals"
+      - "nicotine reward"
+      - "dopamine hit"
+      - "why smoking feels good"
+    topic_tags: [addiction, nicotine, nicotine_dependence]
+
+  - id: concept_behavioral_change
+    type: Concept
+    label: "Behavioral Change"
+    aliases:
+      - "change habits"
+      - "behavioral change"
+      - "breaking the habit"
+      - "habit change"
+      - "change routine"
+      - "new habits"
+      - "break smoking routine"
+      - "alter behavior"
+    topic_tags: [behavioral_support, cessation_methods, coping_strategies]
+
+  - id: concept_reasons_to_quit
+    type: Concept
+    label: "Reasons to Quit"
+    aliases:
+      - "reasons to quit"
+      - "why quit"
+      - "motivation to quit"
+      - "benefits of quitting"
+      - "why stop smoking"
+      - "quit for health"
+      - "quit for family"
+      - "quit for money"
+    topic_tags: [motivation, health_benefits, behavioral_support]
+
+  # ── Diseases (9) ──────────────────────────────────────────────────────────
+  - id: disease_copd
+    type: Disease
+    label: "COPD"
+    aliases:
+      - "copd"
+      - "chronic obstructive pulmonary disease"
+      - "emphysema"
+      - "chronic bronchitis"
+      - "breathing disease"
+      - "lung disease from smoking"
+      - "obstructive lung disease"
+      - "copd diagnosis"
+    topic_tags: [copd, lung_disease, tobacco_harms, lung_health]
+
+  - id: disease_lung_cancer
+    type: Disease
+    label: "Lung Cancer"
+    aliases:
+      - "lung cancer"
+      - "cancer of the lung"
+      - "smoking causes lung cancer"
+      - "lung tumour"
+      - "pulmonary cancer"
+      - "lung cancer risk"
+      - "carcinoma"
+    topic_tags: [lung_cancer, cancer_risk, tobacco_harms, lung_disease]
+
+  - id: disease_heart_disease
+    type: Disease
+    label: "Heart Disease"
+    aliases:
+      - "heart disease"
+      - "coronary heart disease"
+      - "cardiovascular disease"
+      - "heart problems"
+      - "heart condition"
+      - "ischaemic heart disease"
+      - "coronary artery disease"
+      - "smoking and heart disease"
+    topic_tags: [cardiovascular, tobacco_harms]
+
+  - id: disease_stroke
+    type: Disease
+    label: "Stroke"
+    aliases:
+      - "stroke"
+      - "brain attack"
+      - "cerebrovascular accident"
+      - "cva"
+      - "mini stroke"
+      - "tia"
+      - "smoking causes stroke"
+      - "stroke risk"
+    topic_tags: [cardiovascular, tobacco_harms]
+
+  - id: disease_mouth_cancer
+    type: Disease
+    label: "Mouth Cancer"
+    aliases:
+      - "mouth cancer"
+      - "oral cancer"
+      - "cancer of the mouth"
+      - "oral carcinoma"
+      - "lip cancer"
+      - "tongue cancer"
+      - "smoking mouth cancer"
+    topic_tags: [mouth_cancer, cancer_risk, tobacco_harms]
+
+  - id: disease_throat_cancer
+    type: Disease
+    label: "Throat Cancer"
+    aliases:
+      - "throat cancer"
+      - "laryngeal cancer"
+      - "pharyngeal cancer"
+      - "cancer of the throat"
+      - "larynx cancer"
+      - "pharynx cancer"
+      - "smoking throat cancer"
+    topic_tags: [throat_cancer, cancer_risk, tobacco_harms]
+
+  - id: disease_pregnancy_complications
+    type: Disease
+    label: "Pregnancy Complications"
+    aliases:
+      - "pregnancy complications"
+      - "smoking during pregnancy"
+      - "premature birth"
+      - "low birth weight"
+      - "miscarriage"
+      - "birth defects"
+      - "fetal harm"
+      - "smoking harm to baby"
+      - "harm to unborn baby"
+    topic_tags: [pregnancy, maternal_health, tobacco_harms]
+
+  - id: disease_peripheral_vascular
+    type: Disease
+    label: "Peripheral Vascular Disease"
+    aliases:
+      - "peripheral vascular disease"
+      - "pvd"
+      - "peripheral artery disease"
+      - "bad circulation"
+      - "blocked arteries legs"
+      - "poor blood flow limbs"
+      - "peripheral circulation problems"
+    topic_tags: [cardiovascular, tobacco_harms]
+
+  - id: disease_diabetes_risk
+    type: Disease
+    label: "Diabetes Risk (Smoking-Related)"
+    aliases:
+      - "diabetes risk from smoking"
+      - "smoking and diabetes"
+      - "type 2 diabetes risk"
+      - "insulin resistance smoking"
+      - "diabetes smoking link"
+      - "blood sugar smoking"
+    topic_tags: [tobacco_harms]
+
+  # ── Milestones (6) ────────────────────────────────────────────────────────
+  - id: mile_24h_free
+    type: Milestone
+    label: "24 Hours Smoke-Free"
+    aliases:
+      - "one day smoke free"
+      - "24 hours without a cigarette"
+      - "first day quit"
+      - "made it through a day"
+      - "24 hour milestone"
+      - "first 24 hours"
+      - "survived a day"
+    topic_tags: [health_benefits, motivation, quit_timeline]
+
+  - id: mile_1wk_free
+    type: Milestone
+    label: "1 Week Smoke-Free"
+    aliases:
+      - "one week smoke free"
+      - "week without smoking"
+      - "7 days quit"
+      - "first week done"
+      - "seven days smoke free"
+      - "week milestone"
+      - "made it a week"
+    topic_tags: [health_benefits, motivation, quit_timeline]
+
+  - id: mile_1mo_free
+    type: Milestone
+    label: "1 Month Smoke-Free"
+    aliases:
+      - "one month smoke free"
+      - "month without smoking"
+      - "30 days quit"
+      - "made it a month"
+      - "first month done"
+      - "month milestone"
+      - "30 day milestone"
+    topic_tags: [health_benefits, motivation, quit_timeline]
+
+  - id: mile_3mo_free
+    type: Milestone
+    label: "3 Months Smoke-Free"
+    aliases:
+      - "three months smoke free"
+      - "3 months without smoking"
+      - "90 days quit"
+      - "quarter year smoke free"
+      - "three month milestone"
+      - "made it three months"
+    topic_tags: [health_benefits, motivation, quit_timeline]
+
+  - id: mile_6mo_free
+    type: Milestone
+    label: "6 Months Smoke-Free"
+    aliases:
+      - "six months smoke free"
+      - "half year without smoking"
+      - "180 days quit"
+      - "six month milestone"
+      - "made it six months"
+      - "half year milestone"
+    topic_tags: [health_benefits, motivation, quit_timeline]
+
+  - id: mile_1yr_free
+    type: Milestone
+    label: "1 Year Smoke-Free"
+    aliases:
+      - "one year smoke free"
+      - "year without smoking"
+      - "365 days quit"
+      - "annual quit milestone"
+      - "made it a year"
+      - "first anniversary smoke free"
+      - "12 months quit"
+    topic_tags: [health_benefits, motivation, quit_timeline]
+
+
+edges:
+
+  # ── All 18 symptoms caused_by concept_nicotine_withdrawal ─────────────────
+  - { from: sym_irritability, to: concept_nicotine_withdrawal, relation: caused_by }
+  - { from: sym_anxiety_withdrawal, to: concept_nicotine_withdrawal, relation: caused_by }
+  - { from: sym_insomnia, to: concept_nicotine_withdrawal, relation: caused_by }
+  - { from: sym_concentration_difficulty, to: concept_nicotine_withdrawal, relation: caused_by }
+  - { from: sym_increased_appetite, to: concept_nicotine_withdrawal, relation: caused_by }
+  - { from: sym_weight_gain, to: concept_nicotine_withdrawal, relation: caused_by }
+  - { from: sym_headache, to: concept_nicotine_withdrawal, relation: caused_by }
+  - { from: sym_cough_increase, to: concept_nicotine_withdrawal, relation: caused_by }
+  - { from: sym_fatigue, to: concept_nicotine_withdrawal, relation: caused_by }
+  - { from: sym_mouth_sores, to: concept_nicotine_withdrawal, relation: caused_by }
+  - { from: sym_dizziness, to: concept_nicotine_withdrawal, relation: caused_by }
+  - { from: sym_nausea, to: concept_nicotine_withdrawal, relation: caused_by }
+  - { from: sym_chest_tightness, to: concept_nicotine_withdrawal, relation: caused_by }
+  - { from: sym_constipation, to: concept_nicotine_withdrawal, relation: caused_by }
+  - { from: sym_tingling_extremities, to: concept_nicotine_withdrawal, relation: caused_by }
+  - { from: sym_sweating, to: concept_nicotine_withdrawal, relation: caused_by }
+  - { from: sym_dry_throat, to: concept_nicotine_withdrawal, relation: caused_by }
+  - { from: sym_depression_withdrawal, to: concept_nicotine_withdrawal, relation: caused_by }
+
+  # ── concept_nicotine_withdrawal causes all 18 symptoms (reverse) ──────────
+  - { from: concept_nicotine_withdrawal, to: sym_irritability, relation: causes }
+  - { from: concept_nicotine_withdrawal, to: sym_anxiety_withdrawal, relation: causes }
+  - { from: concept_nicotine_withdrawal, to: sym_insomnia, relation: causes }
+  - { from: concept_nicotine_withdrawal, to: sym_concentration_difficulty, relation: causes }
+  - { from: concept_nicotine_withdrawal, to: sym_increased_appetite, relation: causes }
+  - { from: concept_nicotine_withdrawal, to: sym_weight_gain, relation: causes }
+  - { from: concept_nicotine_withdrawal, to: sym_headache, relation: causes }
+  - { from: concept_nicotine_withdrawal, to: sym_cough_increase, relation: causes }
+  - { from: concept_nicotine_withdrawal, to: sym_fatigue, relation: causes }
+  - { from: concept_nicotine_withdrawal, to: sym_mouth_sores, relation: causes }
+  - { from: concept_nicotine_withdrawal, to: sym_dizziness, relation: causes }
+  - { from: concept_nicotine_withdrawal, to: sym_nausea, relation: causes }
+  - { from: concept_nicotine_withdrawal, to: sym_chest_tightness, relation: causes }
+  - { from: concept_nicotine_withdrawal, to: sym_constipation, relation: causes }
+  - { from: concept_nicotine_withdrawal, to: sym_tingling_extremities, relation: causes }
+  - { from: concept_nicotine_withdrawal, to: sym_sweating, relation: causes }
+  - { from: concept_nicotine_withdrawal, to: sym_dry_throat, relation: causes }
+  - { from: concept_nicotine_withdrawal, to: sym_depression_withdrawal, relation: causes }
+
+  # ── All 16 triggers provoke concept_craving ───────────────────────────────
+  - { from: trig_coffee, to: concept_craving, relation: provokes }
+  - { from: trig_alcohol, to: concept_craving, relation: provokes }
+  - { from: trig_stress, to: concept_craving, relation: provokes }
+  - { from: trig_after_meals, to: concept_craving, relation: provokes }
+  - { from: trig_social_smoking, to: concept_craving, relation: provokes }
+  - { from: trig_boredom, to: concept_craving, relation: provokes }
+  - { from: trig_driving, to: concept_craving, relation: provokes }
+  - { from: trig_morning_routine, to: concept_craving, relation: provokes }
+  - { from: trig_phone_calls, to: concept_craving, relation: provokes }
+  - { from: trig_work_breaks, to: concept_craving, relation: provokes }
+  - { from: trig_emotional_upset, to: concept_craving, relation: provokes }
+  - { from: trig_concentration_work, to: concept_craving, relation: provokes }
+  - { from: trig_watching_tv, to: concept_craving, relation: provokes }
+  - { from: trig_end_of_day, to: concept_craving, relation: provokes }
+  - { from: trig_smell_of_smoke, to: concept_craving, relation: provokes }
+  - { from: trig_seeing_others_smoke, to: concept_craving, relation: provokes }
+
+  # ── All 17 coping strategies address concept_craving ─────────────────────
+  - { from: cope_deep_breathing, to: concept_craving, relation: addresses }
+  - { from: cope_exercise, to: concept_craving, relation: addresses }
+  - { from: cope_delay_tactic, to: concept_craving, relation: addresses }
+  - { from: cope_drink_water, to: concept_craving, relation: addresses }
+  - { from: cope_distraction, to: concept_craving, relation: addresses }
+  - { from: cope_nrt_use, to: concept_craving, relation: addresses }
+  - { from: cope_mindfulness, to: concept_craving, relation: addresses }
+  - { from: cope_chew_gum, to: concept_craving, relation: addresses }
+  - { from: cope_support_network, to: concept_craving, relation: addresses }
+  - { from: cope_diary_journaling, to: concept_craving, relation: addresses }
+  - { from: cope_cold_water, to: concept_craving, relation: addresses }
+  - { from: cope_brush_teeth, to: concept_craving, relation: addresses }
+  - { from: cope_reward_milestone, to: concept_craving, relation: addresses }
+  - { from: cope_quit_line, to: concept_craving, relation: addresses }
+  - { from: cope_self_compassion, to: concept_craving, relation: addresses }
+  - { from: cope_healthy_eating, to: concept_craving, relation: addresses }
+  - { from: cope_stress_management, to: concept_craving, relation: addresses }
+
+  # ── All 10 medications treat concept_nicotine_dependence ─────────────────
+  - { from: med_nicotine_patch, to: concept_nicotine_dependence, relation: treated_by }
+  - { from: med_nicotine_gum, to: concept_nicotine_dependence, relation: treated_by }
+  - { from: med_nicotine_lozenge, to: concept_nicotine_dependence, relation: treated_by }
+  - { from: med_nicotine_inhaler, to: concept_nicotine_dependence, relation: treated_by }
+  - { from: med_nicotine_spray, to: concept_nicotine_dependence, relation: treated_by }
+  - { from: med_varenicline, to: concept_nicotine_dependence, relation: treated_by }
+  - { from: med_bupropion, to: concept_nicotine_dependence, relation: treated_by }
+  - { from: med_combination_nrt, to: concept_nicotine_dependence, relation: treated_by }
+  - { from: med_cessation_counseling, to: concept_nicotine_dependence, relation: treated_by }
+  - { from: med_prescription_cessation, to: concept_nicotine_dependence, relation: treated_by }
+
+  # ── Nicotine withdrawal timing ────────────────────────────────────────────
+  - { from: concept_nicotine_withdrawal, to: time_72hr, relation: peaks_at }
+  - { from: concept_nicotine_withdrawal, to: time_2wk, relation: subsides_by }
+
+  # ── Nicotine dependence leads to withdrawal ───────────────────────────────
+  - { from: concept_nicotine_dependence, to: concept_nicotine_withdrawal, relation: leads_to }
+
+  # ── Craving peaks at 5 minutes ────────────────────────────────────────────
+  - { from: concept_craving, to: time_5min, relation: peaks_at }
+
+  # ── Relapse emotional effects ─────────────────────────────────────────────
+  - { from: concept_relapse, to: emo_guilt, relation: causes }
+  - { from: concept_relapse, to: emo_shame, relation: causes }
+  - { from: concept_relapse, to: concept_slip_vs_relapse, relation: is_type_of }
+
+  # ── All milestones motivate quit attempt ──────────────────────────────────
+  - { from: mile_24h_free, to: concept_quit_attempt, relation: motivates }
+  - { from: mile_1wk_free, to: concept_quit_attempt, relation: motivates }
+  - { from: mile_1mo_free, to: concept_quit_attempt, relation: motivates }
+  - { from: mile_3mo_free, to: concept_quit_attempt, relation: motivates }
+  - { from: mile_6mo_free, to: concept_quit_attempt, relation: motivates }
+  - { from: mile_1yr_free, to: concept_quit_attempt, relation: motivates }
+
+  # ── All diseases risk_reduced_by quitting ─────────────────────────────────
+  - { from: disease_copd, to: concept_quitting, relation: risk_reduced_by }
+  - { from: disease_lung_cancer, to: concept_quitting, relation: risk_reduced_by }
+  - { from: disease_heart_disease, to: concept_quitting, relation: risk_reduced_by }
+  - { from: disease_stroke, to: concept_quitting, relation: risk_reduced_by }
+  - { from: disease_mouth_cancer, to: concept_quitting, relation: risk_reduced_by }
+  - { from: disease_throat_cancer, to: concept_quitting, relation: risk_reduced_by }
+  - { from: disease_pregnancy_complications, to: concept_quitting, relation: risk_reduced_by }
+  - { from: disease_peripheral_vascular, to: concept_quitting, relation: risk_reduced_by }
+  - { from: disease_diabetes_risk, to: concept_quitting, relation: risk_reduced_by }
+
+  # ── Diseases affect body systems ──────────────────────────────────────────
+  - { from: disease_copd, to: body_respiratory, relation: affects }
+  - { from: disease_lung_cancer, to: body_respiratory, relation: affects }
+  - { from: disease_heart_disease, to: body_cardiovascular, relation: affects }
+  - { from: disease_stroke, to: body_cardiovascular, relation: affects }
+  - { from: disease_mouth_cancer, to: body_oral_throat, relation: affects }
+  - { from: disease_throat_cancer, to: body_oral_throat, relation: affects }
+  - { from: disease_peripheral_vascular, to: body_circulatory, relation: affects }
+  - { from: disease_pregnancy_complications, to: body_reproductive, relation: affects }
+
+  # ── Health benefits timing ────────────────────────────────────────────────
+  - { from: ben_blood_pressure_normalise, to: time_20min, relation: occurs_at }
+  - { from: ben_carbon_monoxide_clear, to: time_8hr, relation: occurs_at }
+  - { from: ben_nicotine_eliminated, to: time_72hr, relation: occurs_at }
+  - { from: ben_taste_smell_restore, to: time_48hr, relation: occurs_at }
+  - { from: ben_breathing_easier, to: time_2wk, relation: occurs_at }
+  - { from: ben_lung_cilia_repair, to: time_1mo, relation: occurs_at }
+  - { from: ben_lung_function_improve, to: time_3mo, relation: occurs_at }
+  - { from: ben_heart_attack_risk_halved, to: time_1yr, relation: occurs_at }
+  - { from: ben_stroke_risk_normalise, to: time_5yr, relation: occurs_at }
+  - { from: ben_lung_cancer_risk_halved, to: time_10yr, relation: occurs_at }
+  - { from: ben_health_normal, to: time_15yr, relation: occurs_at }
+
+  # ── Health benefits affect body systems ───────────────────────────────────
+  - { from: ben_blood_pressure_normalise, to: body_cardiovascular, relation: affects }
+  - { from: ben_breathing_easier, to: body_respiratory, relation: affects }
+  - { from: ben_lung_cilia_repair, to: body_respiratory, relation: affects }
+  - { from: ben_heart_attack_risk_halved, to: body_cardiovascular, relation: affects }
+
+  # ── Symptoms affect body systems ──────────────────────────────────────────
+  - { from: sym_cough_increase, to: body_respiratory, relation: affects }
+  - { from: sym_chest_tightness, to: body_cardiovascular, relation: affects }
+  - { from: sym_tingling_extremities, to: body_circulatory, relation: affects }
+  - { from: sym_depression_withdrawal, to: body_nervous_system, relation: affects }
+  - { from: sym_anxiety_withdrawal, to: body_nervous_system, relation: affects }
+  - { from: sym_concentration_difficulty, to: body_nervous_system, relation: affects }
+
+  # ── Emotional states complicate quit attempt ──────────────────────────────
+  - { from: emo_anxiety, to: concept_quit_attempt, relation: complicates }
+  - { from: emo_depression, to: concept_quit_attempt, relation: complicates }
+  - { from: emo_guilt, to: concept_quit_attempt, relation: complicates }
+  - { from: emo_shame, to: concept_quit_attempt, relation: complicates }
+  - { from: emo_frustration, to: concept_quit_attempt, relation: complicates }
+  - { from: emo_loneliness, to: concept_quit_attempt, relation: complicates }
+  - { from: emo_overwhelm, to: concept_quit_attempt, relation: complicates }
+  - { from: emo_stress, to: concept_quit_attempt, relation: complicates }
+
+  # ── Coping strategy → emotional state edges ───────────────────────────────
+  - { from: cope_self_compassion, to: emo_guilt, relation: addresses }
+  - { from: cope_self_compassion, to: emo_shame, relation: addresses }
+  - { from: cope_diary_journaling, to: emo_grief_loss, relation: addresses }
+  - { from: cope_support_network, to: emo_loneliness, relation: addresses }
+  - { from: cope_stress_management, to: emo_stress, relation: addresses }
+  - { from: cope_exercise, to: sym_anxiety_withdrawal, relation: addresses }
+  - { from: cope_exercise, to: sym_depression_withdrawal, relation: addresses }
+  - { from: cope_exercise, to: emo_depression, relation: addresses }
+  - { from: cope_exercise, to: sym_insomnia, relation: addresses }
+  - { from: cope_deep_breathing, to: sym_anxiety_withdrawal, relation: addresses }
+  - { from: cope_mindfulness, to: sym_concentration_difficulty, relation: addresses }
+
+  # ── Weight and appetite concepts ──────────────────────────────────────────
+  - { from: concept_weight_management, to: sym_weight_gain, relation: associated_with }
+  - { from: concept_weight_management, to: sym_increased_appetite, relation: associated_with }
+
+  # ── Financial benefit concept ─────────────────────────────────────────────
+  - { from: concept_financial_benefit, to: concept_reasons_to_quit, relation: associated_with }
+
+  # ── Combination NRT is_type_of individual NRTs ───────────────────────────
+  - { from: med_combination_nrt, to: med_nicotine_patch, relation: is_type_of }
+  - { from: med_combination_nrt, to: med_nicotine_gum, relation: is_type_of }
+
+  # ── Cessation support includes counseling ────────────────────────────────
+  - { from: concept_cessation_support, to: med_cessation_counseling, relation: addresses }
+
+  # ── Secondhand smoke and lung cancer ─────────────────────────────────────
+  - { from: concept_secondhand_smoke, to: disease_lung_cancer, relation: associated_with }
+
+  # ── NRT use addresses withdrawal and craving ──────────────────────────────
+  - { from: cope_nrt_use, to: concept_nicotine_withdrawal, relation: addresses }
+  - { from: cope_nrt_use, to: concept_craving, relation: addresses }
+
+  # ── Trigger → emotional state edges ──────────────────────────────────────
+  - { from: trig_stress, to: emo_stress, relation: associated_with }
+  - { from: trig_emotional_upset, to: emo_frustration, relation: associated_with }
+
+  # ── Additional meaningful edges ───────────────────────────────────────────
+
+  # Dopamine reward underlies nicotine dependence
+  - { from: concept_dopamine_reward, to: concept_nicotine_dependence, relation: associated_with }
+  - { from: concept_nicotine_dependence, to: concept_dopamine_reward, relation: associated_with }
+
+  # Relapse prevention / slip framing
+  - { from: cope_self_compassion, to: concept_relapse, relation: addresses }
+  - { from: concept_slip_vs_relapse, to: concept_relapse, relation: associated_with }
+
+  # Behavioral change supports quit attempt
+  - { from: concept_behavioral_change, to: concept_quit_attempt, relation: addresses }
+
+  # Reasons to quit motivate the quit attempt
+  - { from: concept_reasons_to_quit, to: concept_quit_attempt, relation: motivates }
+
+  # Hope and pride reinforce quit attempt
+  - { from: emo_hope, to: concept_quit_attempt, relation: motivates }
+  - { from: emo_pride, to: concept_quit_attempt, relation: motivates }
+
+  # Milestones generate pride and hope
+  - { from: mile_24h_free, to: emo_pride, relation: motivates }
+  - { from: mile_1wk_free, to: emo_pride, relation: motivates }
+  - { from: mile_1mo_free, to: emo_pride, relation: motivates }
+  - { from: mile_1yr_free, to: emo_pride, relation: motivates }
+  - { from: mile_24h_free, to: emo_hope, relation: motivates }
+
+  # Secondhand smoke affects children and pregnancy
+  - { from: concept_secondhand_smoke, to: disease_pregnancy_complications, relation: associated_with }
+
+  # Varenicline and bupropion are prescription medications
+  - { from: med_varenicline, to: med_prescription_cessation, relation: is_type_of }
+  - { from: med_bupropion, to: med_prescription_cessation, relation: is_type_of }
+
+  # Cessation support includes various treatments
+  - { from: concept_cessation_support, to: med_varenicline, relation: addresses }
+  - { from: concept_cessation_support, to: med_combination_nrt, relation: addresses }
+
+  # Lung function improvements affect respiratory system
+  - { from: ben_lung_function_improve, to: body_respiratory, relation: affects }
+  - { from: ben_lung_cancer_risk_halved, to: body_respiratory, relation: affects }
+  - { from: ben_stroke_risk_normalise, to: body_cardiovascular, relation: affects }
+
+  # Skin and immune benefits
+  - { from: ben_skin_improved, to: body_skin, relation: affects }
+  - { from: ben_reduced_infection_risk, to: body_immune_system, relation: affects }
+
+  # Energy benefit occurs at early timeline
+  - { from: ben_energy_improved, to: time_2wk, relation: occurs_at }
+
+  # Dental health benefit occurs over time
+  - { from: ben_dental_health, to: body_oral_throat, relation: affects }
+
+  # Healthy eating helps weight management
+  - { from: cope_healthy_eating, to: concept_weight_management, relation: addresses }
+  - { from: cope_exercise, to: concept_weight_management, relation: addresses }
+
+  # Boredom trigger related to distraction coping
+  - { from: trig_boredom, to: cope_distraction, relation: interrupted_by }
+
+  # Stress trigger and stress management coping
+  - { from: trig_stress, to: cope_stress_management, relation: interrupted_by }
+  - { from: trig_emotional_upset, to: cope_support_network, relation: interrupted_by }
+
+  # Social smoking trigger and support network
+  - { from: trig_social_smoking, to: cope_support_network, relation: interrupted_by }
+  - { from: trig_seeing_others_smoke, to: cope_distraction, relation: interrupted_by }
+
+  # COPD disease associations
+  - { from: disease_copd, to: disease_lung_cancer, relation: associated_with }
+
+  # Health recovery is the overall goal of quitting
+  - { from: concept_quitting, to: concept_health_recovery, relation: leads_to }
+  - { from: concept_health_recovery, to: ben_health_normal, relation: leads_to }
+
+  # Financial benefit motivates quitting
+  - { from: concept_financial_benefit, to: concept_quitting, relation: motivates }
+
+  # Reward milestones link to milestones
+  - { from: cope_reward_milestone, to: mile_24h_free, relation: addresses }
+  - { from: cope_reward_milestone, to: mile_1wk_free, relation: addresses }
+  - { from: cope_reward_milestone, to: mile_1mo_free, relation: addresses }
+
+  # Morning routine trigger and delay tactic
+  - { from: trig_morning_routine, to: cope_delay_tactic, relation: interrupted_by }
+  - { from: trig_after_meals, to: cope_brush_teeth, relation: interrupted_by }
+  - { from: trig_after_meals, to: cope_drink_water, relation: interrupted_by }
+  - { from: trig_coffee, to: cope_drink_water, relation: interrupted_by }
+
+  # Quit line supports cessation
+  - { from: cope_quit_line, to: concept_cessation_support, relation: addresses }
+
+  # NRT medications are a type of cessation method
+  - { from: med_nicotine_patch, to: med_combination_nrt, relation: associated_with }
+  - { from: med_nicotine_gum, to: med_combination_nrt, relation: associated_with }

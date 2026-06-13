@@ -28,6 +28,9 @@ from qdrant_client.models import (
     VectorParams,
 )
 
+# Qdrant filter helpers not imported at module level to keep the import minimal
+# — used inside search() when topic_tags_should is provided.
+
 from app.config import settings
 from app.models.retrieval import RetrievedChunk
 from app.observability.logging import get_logger
@@ -52,6 +55,7 @@ async def search(
     collection: str,
     k: int = 5,
     filters: Optional[dict] = None,
+    topic_tags_should: Optional[list[str]] = None,
 ) -> list[RetrievedChunk]:
     """
     Perform a vector similarity search in the given Qdrant collection.
@@ -60,19 +64,37 @@ async def search(
         query_vector: The embedded query vector (384-dim for bge-small-en-v1.5).
         collection: Collection name (use settings.qdrant_kb_collection etc.).
         k: Number of results to return.
-        filters: Optional dict of {field: value} metadata filters.
+        filters: Optional dict of {field: value} MUST (AND) metadata filters.
+        topic_tags_should: Optional list of topic_tag values for OR filtering.
+            A chunk matches if its topic_tags array contains ANY of these values.
+            Combined with `filters` as: must(filters) AND should(topic_tags).
 
     Returns:
         List of RetrievedChunk objects sorted by relevance score (highest first).
     """
     client = get_qdrant_client()
     qdrant_filter: Optional[Filter] = None
+
+    must_conditions = []
     if filters:
-        conditions = [
+        must_conditions = [
             FieldCondition(key=key, match=MatchValue(value=val))
             for key, val in filters.items()
         ]
-        qdrant_filter = Filter(must=conditions)
+
+    should_conditions = []
+    if topic_tags_should:
+        should_conditions = [
+            FieldCondition(key="topic_tags", match=MatchValue(value=tag))
+            for tag in topic_tags_should
+        ]
+
+    if must_conditions and should_conditions:
+        qdrant_filter = Filter(must=must_conditions, should=should_conditions)
+    elif must_conditions:
+        qdrant_filter = Filter(must=must_conditions)
+    elif should_conditions:
+        qdrant_filter = Filter(should=should_conditions)
 
     try:
         hits: list[ScoredPoint] = await client.search(
