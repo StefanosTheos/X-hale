@@ -110,6 +110,11 @@ def create_app() -> FastAPI:
             content, content_type = metrics_response()
             return Response(content=content, media_type=content_type)
 
+    # Root — required by Hugging Face Spaces to surface the logs panel
+    @app.get("/", include_in_schema=False)
+    async def root():
+        return {"status": "ok", "service": "Hailey 2.0", "version": "2.0.0"}
+
     # Health check
     @app.get("/health", include_in_schema=False)
     async def health():
