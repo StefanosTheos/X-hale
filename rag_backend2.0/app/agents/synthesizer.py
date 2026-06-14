@@ -106,14 +106,12 @@ def _build_messages(state) -> list[dict]:
 
 def _post_process(raw: str, state) -> tuple[str, list[Citation]]:
     """Apply content filter and extract validated citations."""
-    # Citations are only meaningful when the medical agent ran — other specialists
-    # don't retrieve from the KB so their citation lists are empty or irrelevant.
+    # Build valid source_ids + deduplicated Citation objects from all specialist drafts
     valid_ids: set[str] = set()
     draft_citations: list[Citation] = []
-    medical_draft_json = state.get("specialist_drafts", {}).get("medical")
-    if medical_draft_json is not None:
+    for draft_json in state.get("specialist_drafts", {}).values():
         try:
-            draft = json.loads(medical_draft_json) if isinstance(medical_draft_json, str) else medical_draft_json
+            draft = json.loads(draft_json) if isinstance(draft_json, str) else draft_json
             for c in draft.get("citations", []):
                 sid = c.get("source_id", "") if isinstance(c, dict) else getattr(c, "source_id", "")
                 stype = c.get("source_type", "unknown") if isinstance(c, dict) else getattr(c, "source_type", "unknown")
@@ -129,7 +127,7 @@ def _post_process(raw: str, state) -> tuple[str, list[Citation]]:
     if cited_ids:
         citations = [Citation(source_id=sid, source_type="unknown") for sid in cited_ids]
     else:
-        # Synthesizer didn't emit the HTML comment block — fall back to medical KB sources
+        # Gemini didn't emit the HTML comment block — fall back to all retrieved sources
         logger.debug("citations_fallback_to_drafts", count=len(draft_citations))
         citations = draft_citations
 
