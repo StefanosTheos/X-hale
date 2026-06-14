@@ -1,149 +1,94 @@
-# X-hale Local Dev — Boot Instructions
+# X-hale — Boot Instructions
 
-Step-by-step checklist for testing the app on a physical Android device
-connected via USB cable. Follow this every time you start a dev session.
+Physical Android device via USB. Everything runs in **one terminal**.
 
 ---
 
-## Every-session checklist
-
-### Step 1 — Plug in the phone and verify ADB sees it
+## Start
 
 ```powershell
+# 1. Verify ADB sees the phone
 adb devices
-```
+# Expected: one line ending in "device" — if "unauthorized", unlock phone and accept the USB debugging prompt
 
-Expected output:
-```
-List of devices attached
-XXXXXXXXXXXXXXXX    device
-```
-
-If it shows `unauthorized`, unlock your phone and accept the USB debugging prompt.
-
----
-
-### Step 2 — Forward the backend port to the phone via USB
-
-This is the key step that lets the Flutter app on your phone reach the
-backend running on your laptop — no WiFi required.
-
-```powershell
+# 2. Forward backend port to phone
 adb reverse tcp:7860 tcp:7860
-```
+# Expected output: 7860
 
-Expected output: `7860`
-
-> This makes `http://localhost:7860` on the Android device route to
-> `localhost:7860` on your laptop. Re-run this if the phone disconnects.
-
----
-
-### Step 3 — Start the Python backend
-
-Open a **dedicated terminal** (keep it open for the whole session):
-
-```powershell
-Set-Location "C:\Users\steve\smoking2.0\rag_backend2.0"
-.\.venv\Scripts\uvicorn app.main:app --reload --port 7860
-```
-
-Wait for this line before continuing:
-```
-INFO:     Application startup complete.
-```
-
-> `--reload` watches for file changes and restarts automatically.
-> Remove it for a stable test session if you're not editing backend code.
-
-**Verify the backend is reachable from the laptop:**
-```powershell
+# 3. Start backend (no --reload — it watches the directory and restarts on any file change,
+#    which would drop active SSE connections mid-chat; logs go to home dir for the same reason)
+Start-Process `
+  -FilePath "C:\Users\steve\smoking2.0\rag_backend2.0\.venv\Scripts\uvicorn.exe" `
+  -ArgumentList "app.main:app --port 7860" `
+  -WorkingDirectory "C:\Users\steve\smoking2.0\rag_backend2.0" `
+  -RedirectStandardOutput "C:\Users\steve\uvicorn.log" `
+  -RedirectStandardError "C:\Users\steve\uvicorn_err.log" `
+  -NoNewWindow
+Start-Sleep 5
 Invoke-RestMethod http://localhost:7860/health
-```
-Expected: `{"status":"ok", ...}`
+# Expected: {"status":"ok", ...}
 
----
-
-### Step 4 — Run the Flutter app
-
-Open a **second terminal** (leave the backend terminal running):
-
-```powershell
+# 4. Run Flutter
 Set-Location "C:\Users\steve\smoking2.0"
 flutter run --dart-define=HAILEY_API_URL=http://localhost:7860
 ```
 
-Flutter will build, install on your connected phone, and launch the app.
+---
 
-> If you have multiple devices connected (emulator + phone), add `-d <device-id>`.
-> Get device IDs with `flutter devices`.
+## Stop
+
+```powershell
+# Press q in the terminal first, then:
+Stop-Process -Name uvicorn -Force -ErrorAction SilentlyContinue
+adb reverse --remove tcp:7860
+```
 
 ---
 
-### Step 5 — Hot reload / restart shortcuts
-
-While `flutter run` is running in the terminal:
+## Hot reload shortcuts (while flutter run is active)
 
 | Key | Action |
 |-----|--------|
-| `r` | Hot reload (preserves app state — fastest) |
-| `R` | Hot restart (full restart, clears state) |
+| `r` | Hot reload — fastest, preserves state |
+| `R` | Hot restart — full restart, clears state |
 | `q` | Quit |
-
----
-
-## Stopping the session
-
-1. Press `q` in the Flutter terminal to quit.
-2. `Ctrl+C` in the backend terminal to stop uvicorn.
-3. Optionally remove the ADB port forward:
-   ```powershell
-   adb reverse --remove tcp:7860
-   ```
 
 ---
 
 ## Troubleshooting
 
-### "Connection refused" or Hailey doesn't respond
-- Is the backend running? Check Step 3 terminal for errors.
-- Did you run `adb reverse`? Re-run Step 2.
-- Did the phone USB disconnect and reconnect? Re-run Steps 1 and 2.
-
-### ADB device shows "offline" or "unauthorized"
-- Unlock the phone screen and accept the USB debugging prompt.
-- Try a different USB cable (data cable, not charge-only).
-- Run `adb kill-server` then `adb start-server`, then `adb devices`.
-
-### Backend starts but crashes immediately
-- Check that `.env` is present and all keys are filled in.
-- Run:
-  ```powershell
-  Set-Location "C:\Users\steve\smoking2.0\rag_backend2.0"
-  .\.venv\Scripts\python.exe -c "from app.config import settings; print('Config OK')"
-  ```
-
-### Flutter build errors
-- Run `flutter pub get` to restore packages.
-- Run `flutter clean` then `flutter run ...` for a full rebuild.
-
-### Phone shows "Install failed" or app doesn't launch
-- Enable **Install via USB** in Developer Options.
-- On some Samsung devices: Developer Options → **USB configuration → MTP**.
-
----
-
-## Quick reference — full session in one copy-paste
-
-**Terminal 1 (backend):**
+**Hailey doesn't respond**
 ```powershell
-adb reverse tcp:7860 tcp:7860
+adb reverse tcp:7860 tcp:7860              # re-forward if phone reconnected
+Get-Content "C:\Users\steve\uvicorn.log" -Tail 20   # check backend logs
+```
+
+**Backend crashed mid-session**
+```powershell
+Stop-Process -Name uvicorn -Force -ErrorAction SilentlyContinue
+Start-Process `
+  -FilePath "C:\Users\steve\smoking2.0\rag_backend2.0\.venv\Scripts\uvicorn.exe" `
+  -ArgumentList "app.main:app --port 7860" `
+  -WorkingDirectory "C:\Users\steve\smoking2.0\rag_backend2.0" `
+  -RedirectStandardOutput "C:\Users\steve\uvicorn.log" `
+  -RedirectStandardError "C:\Users\steve\uvicorn_err.log" `
+  -NoNewWindow
+Start-Sleep 5
+Invoke-RestMethod http://localhost:7860/health
+```
+
+**Backend starts then exits immediately** — check `.env` is present and all keys are filled:
+```powershell
 Set-Location "C:\Users\steve\smoking2.0\rag_backend2.0"
-.\.venv\Scripts\uvicorn app.main:app --reload --port 7860
+.\.venv\Scripts\python -c "from app.config import settings; print('Config OK')"
 ```
 
-**Terminal 2 (Flutter — after backend shows "startup complete"):**
+**Flutter build errors**
 ```powershell
-Set-Location "C:\Users\steve\smoking2.0"
-flutter run --dart-define=HAILEY_API_URL=http://localhost:7860
+flutter pub get          # restore packages
+flutter clean            # nuclear option — full rebuild on next run
 ```
+
+**Phone shows "unauthorized"** — unlock screen, accept USB debugging prompt, then `adb devices` again.
+
+**Multiple devices connected** — add `-d <device-id>` to `flutter run`. Get IDs with `flutter devices`.
