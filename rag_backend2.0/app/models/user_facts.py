@@ -108,7 +108,6 @@ class ConversationTurn(BaseModel):
     content: str
     timestamp: datetime
     citations: list[dict] = Field(default_factory=list)
-    deeplinks: list[dict] = Field(default_factory=list)
 
 
 # ---------------------------------------------------------------------------

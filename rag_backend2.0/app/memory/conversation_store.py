@@ -8,7 +8,7 @@ Attributes (create in Appwrite Console):
   - content      (string, required, size 8000)
   - timestamp    (datetime, required, index)
   - turn_id      (string, required, unique)
-  - citations    (string, optional, size 4000)  ← JSON: {"c": [Citation], "d": [AppAction]}
+  - citations    (string, optional, size 4000)  ← JSON array of Citation dicts
 
 Composite index: (userId ASC, timestamp DESC) for efficient recent-history fetches.
 """
@@ -47,7 +47,6 @@ async def append_turn(
     role: str,
     content: str,
     citations: list[dict] | None = None,
-    deeplinks: list[dict] | None = None,
     turn_id: str | None = None,
 ) -> str:
     """
@@ -63,7 +62,7 @@ async def append_turn(
         "content": content,
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "turn_id": tid,
-        "citations": json.dumps({"c": citations or [], "d": deeplinks or []}),
+        "citations": json.dumps(citations or []),
     }
     await asyncio.to_thread(
         db.create_row,
@@ -101,16 +100,9 @@ async def get_recent_turns(user_id: str, limit: int | None = None) -> list[Conve
         d = doc.data if isinstance(doc.data, dict) else {}
         citations_raw = d.get("citations", "[]")
         try:
-            parsed = json.loads(citations_raw) if isinstance(citations_raw, str) else []
-            if isinstance(parsed, dict):
-                citations = parsed.get("c", [])
-                deeplinks = parsed.get("d", [])
-            else:
-                citations = parsed
-                deeplinks = []
+            citations = json.loads(citations_raw) if isinstance(citations_raw, str) else []
         except json.JSONDecodeError:
             citations = []
-            deeplinks = []
         turns.append(ConversationTurn(
             turn_id=d.get("turn_id", doc.id),
             user_id=user_id,
@@ -118,7 +110,6 @@ async def get_recent_turns(user_id: str, limit: int | None = None) -> list[Conve
             content=d["content"],
             timestamp=datetime.fromisoformat(d["timestamp"]),
             citations=citations,
-            deeplinks=deeplinks,
         ))
     return turns
 

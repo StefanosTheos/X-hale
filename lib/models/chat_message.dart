@@ -17,19 +17,11 @@ class ChatMessage {
     'content': content,
     'isUser': isUser,
     'timestamp': timestamp.toIso8601String(),
-    'citations': citations,
-    'deeplinks': deeplinks,
   };
 
   factory ChatMessage.fromJson(Map<String, dynamic> json) => ChatMessage(
     content: json['content'],
     isUser: json['isUser'],
     timestamp: DateTime.parse(json['timestamp']).toLocal(),
-    citations: (json['citations'] as List?)
-        ?.map((e) => e as Map<String, dynamic>)
-        .toList() ?? [],
-    deeplinks: (json['deeplinks'] as List?)
-        ?.map((e) => e as Map<String, dynamic>)
-        .toList() ?? [],
   );
 }

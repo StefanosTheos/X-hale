@@ -49,7 +49,6 @@ class HistoryTurn(BaseModel):
     content: str
     timestamp: datetime
     citations: list[dict] = Field(default_factory=list)
-    deeplinks: list[dict] = Field(default_factory=list)
 
 
 class HistoryResponse(BaseModel):

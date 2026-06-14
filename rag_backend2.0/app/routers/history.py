@@ -41,7 +41,6 @@ async def get_history(
                 content=t.content,
                 timestamp=t.timestamp,
                 citations=[{"source_id": c} if isinstance(c, str) else c for c in t.citations],
-                deeplinks=t.deeplinks,
             )
             for t in turns
         ],
