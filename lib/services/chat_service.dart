@@ -166,6 +166,12 @@ class ChatService {
           content: t['content'] as String,
           isUser: (t['role'] as String?) == 'user',
           timestamp: DateTime.parse(t['timestamp'] as String).toLocal(),
+          citations: (t['citations'] as List?)
+              ?.map((e) => e as Map<String, dynamic>)
+              .toList() ?? [],
+          deeplinks: (t['deeplinks'] as List?)
+              ?.map((e) => e as Map<String, dynamic>)
+              .toList() ?? [],
         );
       }).toList();
       messages.sort((a, b) => a.timestamp.compareTo(b.timestamp));

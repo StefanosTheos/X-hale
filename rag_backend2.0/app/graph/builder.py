@@ -117,6 +117,7 @@ async def output_node(state: HaileyState) -> HaileyState:
     user_input = state["user_input"]
     final_response = state.get("final_response", "")
     citations = state.get("citations", [])
+    deeplinks = state.get("deeplinks", [])
     turn_id = state.get("turn_id") or str(uuid.uuid4())
 
     # Save user message
@@ -132,6 +133,7 @@ async def output_node(state: HaileyState) -> HaileyState:
         role="assistant",
         content=final_response,
         citations=[c.model_dump() if hasattr(c, "model_dump") else c for c in citations],
+        deeplinks=[d.model_dump() if hasattr(d, "model_dump") else d for d in deeplinks],
         turn_id=turn_id,
     )
 

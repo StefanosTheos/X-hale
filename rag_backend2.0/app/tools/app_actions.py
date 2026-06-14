@@ -52,6 +52,9 @@ CRAVING_ACTIONS: list[AppAction] = [
 ]
 
 
+KNOWN_DEEPLINK_URLS: frozenset[str] = frozenset(a.deeplink for a in CRAVING_ACTIONS)
+
+
 def get_craving_actions(limit: int = 3) -> list[AppAction]:
     """Return the top craving-support actions."""
     return CRAVING_ACTIONS[:limit]
