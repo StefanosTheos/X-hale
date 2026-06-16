@@ -24,6 +24,7 @@ Rules:
 - tone_hint: always "factual_reassuring" for this agent.
 - raw_context: include a brief (≤150 words) paraphrase of the most relevant retrieved passage.
 - If retrieved content does not contain relevant information, set key_points to [] and explain in raw_context.
+- Do NOT include recommendations for external apps, websites, or third-party services (e.g. NHS app, Smokefree app) as key points. Cite the factual content from the source, not its app or product.
 """
 
 MEDICAL_USER_TEMPLATE = """User question: {user_input}

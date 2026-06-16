@@ -137,6 +137,11 @@ class _HaileyMemoryPageState extends ConsumerState<HaileyMemoryPage> {
 
   // ── Helpers ─────────────────────────────────────────────────────────────────
 
+  static String _formatKey(String raw) => raw
+      .split('_')
+      .map((w) => w.isEmpty ? '' : '${w[0].toUpperCase()}${w.substring(1)}')
+      .join(' ');
+
   static const _typeLabels = <String, String>{
     'trigger': 'Triggers',
     'coping_strategy_validated': 'What helps you',
@@ -318,7 +323,7 @@ class _HaileyMemoryPageState extends ConsumerState<HaileyMemoryPage> {
                   isDark: isDark,
                   onDelete: () => _confirmDelete(
                     fact['fact_id'] as String,
-                    fact['fact_key'] as String? ?? 'fact',
+                    _formatKey(fact['fact_key'] as String? ?? 'fact'),
                   ),
                 )),
             const SizedBox(height: 8),
@@ -381,16 +386,9 @@ class _FactTile extends StatelessWidget {
   final bool isDark;
   final VoidCallback onDelete;
 
-  static String _formatKey(String raw) {
-    return raw
-        .split('_')
-        .map((w) => w.isEmpty ? '' : '${w[0].toUpperCase()}${w.substring(1)}')
-        .join(' ');
-  }
-
   @override
   Widget build(BuildContext context) {
-    final key = _formatKey(fact['fact_key'] as String? ?? '');
+    final key = _HaileyMemoryPageState._formatKey(fact['fact_key'] as String? ?? '');
     final value = fact['fact_value'] as String? ?? '';
     final confidence = (fact['confidence'] as num?)?.toDouble() ?? 0.0;
 

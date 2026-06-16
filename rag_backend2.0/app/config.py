@@ -73,7 +73,7 @@ class Settings(BaseSettings):
     metrics_enabled: bool = True
 
     # ── Request limits ──────────────────────────────────────────────────────
-    request_timeout_seconds: int = 30
+    request_timeout_seconds: int = 60
     max_conversation_turns: int = 10
     max_user_facts: int = 30
 

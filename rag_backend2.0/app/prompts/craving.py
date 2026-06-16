@@ -23,12 +23,14 @@ Return ONLY valid JSON:
 
 key_points: 1-3 short, actionable micro-steps for the next 5 minutes.
 raw_context: a brief empathetic acknowledgment of the craving (1-2 sentences).
-suggested_deeplinks: include 2-3 relevant in-app actions from this list:
-  - Breathing exercise: xhale://breathing
-  - Spin the Wheel: xhale://distractions/spin
-  - Quick game: xhale://explore/games
-  - Write in diary: xhale://diary/new
-  - View progress: xhale://dashboard
+suggested_deeplinks: include 2-3 relevant in-app actions from this exact list (use labels verbatim):
+  - {"label": "Try a breathing exercise", "deeplink": "xhale://breathing", "description": "Box breathing or 4-7-8 — takes 2-5 minutes"}
+  - {"label": "Spin the Wheel", "deeplink": "xhale://distractions/spin", "description": "Random distraction to shift your attention"}
+  - {"label": "Play a quick game", "deeplink": "xhale://explore/games", "description": "Gives your hands something to do"}
+  - {"label": "Write in your diary", "deeplink": "xhale://diary/new", "description": "Logging how you feel can defuse the craving"}
+  - {"label": "View your progress", "deeplink": "xhale://dashboard", "description": "Remind yourself how far you've come"}
+  - {"label": "Try stretching", "deeplink": "xhale://distractions/stretches", "description": "Physical movement reduces craving intensity"}
+  - {"label": "Listen to ambient sounds", "deeplink": "xhale://distractions/sounds", "description": "Calming sounds to help you wait it out"}
 """
 
 CRAVING_USER_TEMPLATE = """User message: {user_input}

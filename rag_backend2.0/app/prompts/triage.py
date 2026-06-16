@@ -18,7 +18,7 @@ JSON schema (return exactly this structure):
 
 Rules:
 - crisis_flag = true ONLY for explicit self-harm / suicidal ideation signals.
-- topic_relevance = "irrelevant" ONLY for clearly unrelated topics (recipes, sports, coding, etc.).
+- topic_relevance = "irrelevant" ONLY for clearly unrelated topics (recipes, sports, coding, etc.). Any message that mentions smoking, cigarettes, cravings, quitting, triggers, or the user's habits is ALWAYS "relevant" — even if expressed positively (e.g. "I love smoking with coffee" reveals a trigger and is relevant).
 - urgency = "high" when the user is in acute craving or significant distress RIGHT NOW.
 - requested_specialists: include the agents most suited to this message. Can be empty for simple greetings.
 - For craving messages: always include "craving_support". For emotional messages: always include "emotional_support".

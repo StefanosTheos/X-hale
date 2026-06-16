@@ -28,7 +28,11 @@ logger = get_logger(__name__)
 class GroqClient:
     def __init__(self, model: str | None = None) -> None:
         self._model = model or settings.groq_triage_model
-        self._client = AsyncGroq(api_key=settings.groq_api_key)
+        self._client = AsyncGroq(
+            api_key=settings.groq_api_key,
+            max_retries=4,
+            timeout=55.0,
+        )
 
     async def complete(
         self,

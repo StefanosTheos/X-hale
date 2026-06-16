@@ -100,7 +100,9 @@ async def get_recent_turns(user_id: str, limit: int | None = None) -> list[Conve
         d = doc.data if isinstance(doc.data, dict) else {}
         citations_raw = d.get("citations", "[]")
         try:
-            citations = json.loads(citations_raw) if isinstance(citations_raw, str) else []
+            parsed = json.loads(citations_raw) if isinstance(citations_raw, str) else []
+            # Handle both old format (plain list) and new format ({"c": [...], "d": [...]})
+            citations = parsed.get("c", []) if isinstance(parsed, dict) else parsed
         except json.JSONDecodeError:
             citations = []
         turns.append(ConversationTurn(

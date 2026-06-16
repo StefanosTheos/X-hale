@@ -21,6 +21,7 @@ from app.safety.content_filter import filter_response
 logger = get_logger(__name__)
 
 _CITATION_PATTERN = re.compile(r"<!--\s*citations:\s*(\[.*?\])\s*-->", re.DOTALL)
+_INLINE_MARKER_PATTERN = re.compile(r"\[[a-z][a-z0-9_]+\]")
 
 
 def _format_specialist_drafts(drafts: dict[str, str]) -> str:
@@ -54,14 +55,15 @@ def _extract_citations(response_text: str, available_source_ids: set[str]) -> tu
     """
     match = _CITATION_PATTERN.search(response_text)
     if not match:
-        return response_text, []
+        clean = _INLINE_MARKER_PATTERN.sub("", response_text).strip()
+        return clean, []
     try:
         raw_ids: list[str] = json.loads(match.group(1))
         validated = [sid for sid in raw_ids if sid in available_source_ids]
-        clean_text = response_text[: match.start()].rstrip()
+        clean_text = _INLINE_MARKER_PATTERN.sub("", response_text[: match.start()]).strip()
         return clean_text, validated
     except json.JSONDecodeError:
-        return response_text, []
+        return _INLINE_MARKER_PATTERN.sub("", response_text).strip(), []
 
 
 async def synthesize(state) -> tuple[str, list[Citation]]:
