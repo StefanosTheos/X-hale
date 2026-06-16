@@ -1,0 +1,80 @@
+name: Benchmark Evaluation
+
+on:
+  schedule:
+    - cron: '0 3 * * 1-6'  # Mon–Sat 03:00 UTC — 5% nightly sample
+    - cron: '0 3 * * 0'    # Sunday 03:00 UTC — full sweep
+  workflow_dispatch:
+    inputs:
+      sample:
+        description: 'Sample fraction (1.0 = full, 0.05 = 5%)'
+        default: '0.05'
+      category:
+        description: 'Run only this category (leave blank for all)'
+        default: ''
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r finetune/eval/requirements-eval.txt
+
+      - name: Determine sample fraction
+        id: params
+        run: |
+          if [[ "${{ github.event_name }}" == "schedule" ]]; then
+            DAY=$(date -u +%u)   # 1=Mon … 7=Sun
+            if [[ "$DAY" == "7" ]]; then
+              echo "sample=1.0" >> "$GITHUB_OUTPUT"
+            else
+              echo "sample=0.05" >> "$GITHUB_OUTPUT"
+            fi
+            echo "category=" >> "$GITHUB_OUTPUT"
+          else
+            echo "sample=${{ github.event.inputs.sample || '0.05' }}" >> "$GITHUB_OUTPUT"
+            echo "category=${{ github.event.inputs.category }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Run benchmark
+        env:
+          HAILEY_API_URL: ${{ secrets.HAILEY_API_URL }}
+          APPWRITE_ENDPOINT: ${{ secrets.APPWRITE_ENDPOINT }}
+          APPWRITE_PROJECT_ID: ${{ secrets.APPWRITE_PROJECT_ID }}
+          TEST_USER_EMAIL: ${{ secrets.BENCHMARK_TEST_EMAIL }}
+          TEST_USER_PASSWORD: ${{ secrets.BENCHMARK_TEST_PASSWORD }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+        run: |
+          ARGS="--sample ${{ steps.params.outputs.sample }}"
+          CAT="${{ steps.params.outputs.category }}"
+          [[ -n "$CAT" ]] && ARGS="$ARGS --category $CAT"
+          python finetune/eval/run_benchmark.py $ARGS \
+            --output finetune/eval/results/latest.json
+
+      - name: Upload results artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-${{ github.run_id }}
+          path: finetune/eval/results/latest.json
+          retention-days: 90
+
+      - name: Fail if benchmark did not pass
+        run: |
+          PASSED=$(python -c "
+          import json, sys
+          d = json.load(open('finetune/eval/results/latest.json'))
+          total, passed = d['total'], d['passed']
+          pct = round(100*passed/total) if total else 0
+          print(f'{passed}/{total} ({pct}%)')
+          sys.exit(0 if pct >= 80 else 1)
+          ")
+          echo "Benchmark result: $PASSED"

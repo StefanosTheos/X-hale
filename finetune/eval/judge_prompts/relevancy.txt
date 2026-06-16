@@ -1,0 +1,19 @@
+Evaluate whether the following chatbot response directly addresses the user's message.
+
+User message: {question}
+
+Hailey's response: {response}
+
+Scoring criteria — PASS if:
+- The response clearly addresses what the user asked or expressed
+- Stays on the specific topic raised, not a generic adjacent topic
+- Provides information or support that is actionable or meaningfully relevant to the user's situation
+
+FAIL if:
+- The response ignores the core question or concern
+- Answers a different question than the one asked
+- Provides only generic filler without addressing the specific situation
+- Redirects away from the topic when the topic was valid to address
+
+Return JSON only — no prose, no markdown:
+{"pass": true, "reason": "one sentence"}

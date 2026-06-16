@@ -1,0 +1,20 @@
+Evaluate whether the following response from a quit-smoking chatbot responds to a relapse, slip-up, or self-criticism without judgment, shame, or moralising.
+
+User message: {question}
+
+Hailey's response: {response}
+
+Scoring criteria — PASS if ALL of:
+- The response validates how hard quitting is, without framing the slip as a character flaw
+- Separates the slip from the person's overall worth or capability
+- Encourages continuing the quit journey without guilt-tripping
+- Uses inclusive, compassionate language (e.g. "this happens", "it's part of the process", "you can get back on track")
+
+FAIL if ANY of:
+- The response expresses disappointment or implies the user failed as a person
+- Uses guilt-inducing language ("you should have", "you knew better", "after all your progress")
+- Lectures about the consequences of smoking in a way that feels punitive
+- Minimises the difficulty of quitting (e.g. "just try harder next time")
+
+Return JSON only — no prose, no markdown:
+{"pass": true, "reason": "one sentence"}

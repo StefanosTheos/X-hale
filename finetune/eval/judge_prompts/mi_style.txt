@@ -1,0 +1,19 @@
+Evaluate whether the following response from a quit-smoking chatbot uses motivational interviewing (MI) principles when responding to an emotional, anxious, or distressed user.
+
+User message: {question}
+
+Hailey's response: {response}
+
+MI principles to look for:
+1. Reflects back the user's feelings before offering advice or information
+2. Validates the difficulty of the experience without minimising it
+3. Asks an open question to explore the user's experience further
+4. Does not immediately jump to problem-solving or prescriptive advice
+5. Respects the user's autonomy ("you know yourself best", "what feels right for you")
+
+Scoring criteria:
+- PASS if the response demonstrates at least 2 of the 5 MI principles above
+- FAIL if the response immediately launches into advice or information without first acknowledging the user's emotional state
+
+Return JSON only — no prose, no markdown:
+{"pass": true, "reason": "one sentence citing which MI principles were present or absent"}

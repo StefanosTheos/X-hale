@@ -66,4 +66,4 @@ X-hale is not intended for users under the age of 18. We do not knowingly collec
 ## Contact
 
 For any privacy-related requests or questions:
-**stefanos.theos@datawise.ai**
+**steventheos@gmail.com**

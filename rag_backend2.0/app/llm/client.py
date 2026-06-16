@@ -74,8 +74,12 @@ def get_triage_client() -> "GroqClient":
     return GroqClient(model=settings.groq_triage_model)
 
 
-def get_synthesis_client() -> "GeminiClient":
-    """Return the LLM client for the synthesizer (streaming final response)."""
-    from app.llm.gemini_client import GeminiClient
+def get_synthesis_client() -> "GroqClient":
+    """Return the LLM client for the synthesizer (streaming final response).
+
+    Uses Groq llama-3.3-70b-versatile — higher daily quota than Gemini Flash
+    free tier (20 req/day), same interface as the triage client.
+    """
+    from app.llm.groq_client import GroqClient
     from app.config import settings
-    return GeminiClient(model=settings.gemini_synthesis_model)
+    return GroqClient(model=settings.groq_synthesis_model)

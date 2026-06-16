@@ -60,18 +60,17 @@ An agentic RAG system where specialist agents collaborate through a supervisor, 
 └─────────────────────────────────────────────────────────────────────┘
         │              │                  │                 │
         ▼              ▼                  ▼                 ▼
-   Groq API      Gemini Flash       Qdrant Cloud       Appwrite DB
-   (triage,      (synthesizer,      (kb_chunks,        (conv history,
-    specialists,  streaming)         health_benefit_     user facts,
-    memory                           chunks)             diary, profile)
-    curator)
+   Groq API                         Qdrant Cloud       Appwrite DB
+   (triage, specialists,            (kb_chunks,        (conv history,
+    synthesizer 70B,                 health_benefit_     user facts,
+    memory curator)                  chunks)             diary, profile)
         │
         ▼
    Cloudflare Workers AI
    (bge-small-en-v1.5 embeddings)
 ```
 
-**LLM split:** Groq `llama-3.1-8b-instant` handles triage, specialist drafts, and memory curation (structured JSON, low temperature, 30 RPM free). Gemini Flash handles the synthesizer only (quality streaming output, 1 call per turn).
+**LLM split:** Groq `llama-3.1-8b-instant` handles triage, specialist drafts, and memory curation (structured JSON, low temperature, 30 RPM free). Groq `llama-3.3-70b-versatile` handles the synthesizer (quality streaming output, 1 call per turn).
 
 ---
 
@@ -85,7 +84,7 @@ An agentic RAG system where specialist agents collaborate through a supervisor, 
 |---|---|---|
 | **Triage** | One JSON call → `{intent, emotion, topic_relevance, urgency, crisis_flag, requested_specialists[]}` | Groq 8B, temp 0 |
 | **Supervisor** | Reads triage + user memory, decides which specialists to invoke. Pure logic — no LLM call. | — |
-| **Synthesizer** | Composes final reply from specialist drafts + memory snapshot. Streams tokens. | Gemini Flash, temp 0.5 |
+| **Synthesizer** | Composes final reply from specialist drafts + memory snapshot. Streams tokens. | Groq 70B, temp 0.5 |
 
 #### Specialist agents (conditional)
 
@@ -101,7 +100,7 @@ An agentic RAG system where specialist agents collaborate through a supervisor, 
 
 | Agent | When | Role |
 |---|---|---|
-| **Memory Curator** | Post-reply, fire-and-forget. Skips `general_conversation` turns. | Extracts durable user facts, upserts to Appwrite |
+| **Memory Curator** | Post-reply, fire-and-forget. Skips `off_topic` and `unknown` turns. | Extracts durable user facts, upserts to Appwrite |
 | **Crisis Handler** | `crisis_flag=true` — deterministic Python, not LLM | Fixed vetted safety message + locale hotlines + one constrained empathy line |
 
 ### 3.2 LangGraph state
@@ -213,7 +212,7 @@ Retrieved by recency (last 10 turns) for prompt context.
 `fact_type` ∈ `{trigger, coping_strategy_validated, coping_strategy_failed, nrt_use, social_context, motivation, stage_of_change, past_attempt_history, physical_symptom_reported}`.
 
 **Lifecycle:**
-- Written by Memory Curator post-turn (skipped for `general_conversation`).
+- Written by Memory Curator post-turn (skipped for `off_topic` and `unknown` intents).
 - Read at turn start as `UserMemorySnapshot` — top N facts per type, ~30 total.
 - Facts aren't auto-deleted; user can audit and remove via "What does Hailey know about me?" screen (backend endpoints exist, Flutter screen pending).
 
@@ -292,15 +291,15 @@ Target roles when implemented: triage classifier (JSON schema adherence) and mem
 | Vector DB | Qdrant Cloud free tier (1 GB, ~1M vectors) |
 | Conv history + user facts | Appwrite (existing, free tier) |
 | LLM — triage/specialists | Groq `llama-3.1-8b-instant` |
-| LLM — synthesis | Gemini Flash |
+| LLM — synthesis | Groq `llama-3.3-70b-versatile` |
 | Embeddings | Cloudflare Workers AI `@cf/baai/bge-small-en-v1.5` |
 
 **Risks still open:**
 - Free-tier quotas tighten without notice. Instrument at 70% of any monthly quota.
-- Conversations contain sensitive mental-health data. Decide encryption-at-rest policy, data-export endpoint, and delete-all-my-data flow before launch.
+- Conversations contain sensitive mental-health data. Encryption-at-rest policy documented (PRIVACY.md — AES-256 via Appwrite Cloud). Data-export endpoint and delete-all-my-data Flutter screen still pending before public launch.
 - Crisis liability. The hotline list and legal language need a real review before public launch.
 - Memory Curator will sometimes record incorrect facts. The user-facts viewer + delete UI is the mitigation; set UX copy expectations accordingly.
-- HF Spaces cold-start (~10–20s on first request after idle). Add a UptimeRobot pinger.
+- ~~HF Spaces cold-start (~10–20s on first request after idle).~~ **Mitigated** — GitHub Actions keep-alive workflow pings `GET /health` every 5 minutes.
 
 ---
 
@@ -311,11 +310,12 @@ Done:
 - `Authorization: Bearer <appwrite-jwt>` on every request.
 - SSE consumer in `chat_service.dart` with `HaileyEvent` sealed class.
 - History loaded at chatbot page open; welcome message shown in all code paths.
+- Citation chips — expandable "Sources" list for medical answers, with human-readable labels for 30+ source IDs.
+- Suggested-action chips — tappable deeplink chips rendered below assistant bubbles when Craving agent returns app actions.
+- "What does Hailey know about me?" screen — `HaileyMemoryPage`: facts grouped by type, confidence bars, delete with confirmation dialog, pull-to-refresh. Backend endpoints (`GET /memory/`, `DELETE /memory/{fact_id}`) live.
 
 Pending:
-- Citation chips — expandable "Sources" list for medical answers.
-- Suggested-action chips — tappable deeplinks when Craving agent returns app actions.
-- "What does Hailey know about me?" screen — viewer for `chatbot_user_facts`. Backend endpoints (`GET /memory/`, `DELETE /memory/{fact_id}`) are live.
+- "Data & Privacy" Flutter screen — let users view PRIVACY.md, trigger data export, and delete all chatbot data. Backend `DELETE /history/` exists; export endpoint and Flutter UI still needed.
 
 ---
 
@@ -397,17 +397,36 @@ rag_backend2.0/
 │       └── retrieval.py
 │
 ├── ingestion/
+│   ├── bulk_ingest.py
 │   ├── chunk.py
 │   ├── ingest_kb.py
-│   ├── health_benefit_ingest.py
+│   ├── reingest_health_benefits.py
 │   ├── sources.yaml
-│   └── knowledge_graph.yaml  # Phase 3 — hand-curated KG
+│   ├── knowledge_graph.yaml  # Phase 3 — hand-curated KG
+│   └── README.md
 │
-├── finetune/                  # Phase 5 — offline, not in runtime image
+├── tests/
+│   ├── unit/
+│   │   ├── test_crisis_handler.py
+│   │   ├── test_hybrid_retriever.py
+│   │   ├── test_knowledge_graph.py
+│   │   ├── test_reflection_agent.py
+│   │   ├── test_relapse_risk_agent.py
+│   │   ├── test_reranker.py
+│   │   ├── test_routing.py
+│   │   ├── test_triage.py
+│   │   └── test_user_facts_extractor.py
+│   ├── integration/
+│   │   ├── test_appwrite_round_trip.py
+│   │   ├── test_chat_flow.py
+│   │   └── test_streaming.py
+│   └── conftest.py
+│
+├── finetune/                  # Phase 5 — not yet created; created when Phase 4 baselines exist
 │   ├── eval/
-│   │   ├── categories.yaml
-│   │   ├── judge_prompts/
-│   │   └── run_benchmark.py
+│   │   ├── categories.yaml    # ⬜ pending
+│   │   ├── judge_prompts/     # ⬜ pending
+│   │   └── run_benchmark.py   # ⬜ pending
 │   └── README.md
 │
 ├── Dockerfile
@@ -437,7 +456,7 @@ rag_backend2.0/
 - ✅ Triage Agent + Supervisor (pure logic, no LLM call).
 - ✅ Emotional Support + Craving Support agents.
 - ✅ Synthesizer (Gemini Flash, streaming).
-- ✅ Memory Curator (async, skips `general_conversation` turns).
+- ✅ Memory Curator (async, skips `off_topic` and `unknown` turns — runs on all substantive intents including `general_conversation` to catch personal disclosures).
 - ✅ User memory snapshot loaded at turn start (profile + facts + recent turns).
 - ✅ "What does Hailey know about me?" Flutter screen — live. Psychology icon in chatbot AppBar opens `HaileyMemoryPage`: facts grouped by type, confidence bars, delete with confirmation, pull-to-refresh.
 
@@ -449,13 +468,14 @@ rag_backend2.0/
 - ✅ Reflection Agent — reads last 30 days of diary entries, surfaces mood patterns and data-grounded observations.
 - ✅ Relapse-Risk Agent — reads `BehavioralSignals` (diary gaps, milestone rate, relapse flag), emits risk-informed intervention draft.
 
-### Phase 4 — Safety hardening + benchmarks — 🟡 PARTIAL
+### Phase 4 — Safety hardening + benchmarks — ✅ DONE
 
 - ✅ Crisis detector (regex layer 1) + deterministic Crisis Handler.
 - ✅ Hotline locale mapping (Greek + English).
-- ⬜ Gold test cases in `finetune/eval/categories.yaml`.
-- ⬜ Judge prompts + `run_benchmark.py`.
-- ⬜ GitHub Actions nightly benchmark run.
+- ✅ Unit + integration test suite in `tests/` — covers triage, routing, crisis handler, hybrid retriever, KG, reranker, reflection, relapse-risk, user-facts extractor, Appwrite round-trip, chat flow, SSE streaming.
+- ✅ Gold eval test cases in `finetune/eval/categories.yaml` — 102 cases across 10 categories (baseline; target is 30–50 per category, ~400 total).
+- ✅ LLM-as-judge prompts in `finetune/eval/judge_prompts/` (tone, relevancy, faithfulness, non_judgmental, mi_style) + `run_benchmark.py` Groq-based harness.
+- ✅ GitHub Actions nightly benchmark (`.github/workflows/benchmark.yml`) — Mon–Sat 5% sample, Sunday full sweep, 80% pass threshold.
 
 ### Phase 5 — Fine-tuning — 🔲 NOT STARTED
 

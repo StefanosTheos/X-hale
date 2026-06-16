@@ -1,5 +1,5 @@
 """
-Synthesizer Agent — the only agent using the 70B model.
+Synthesizer Agent — uses Groq llama-3.3-70b-versatile.
 
 Receives all specialist_drafts + user memory + conversation history.
 Composes one coherent reply in Hailey's voice and streams it token-by-token.
@@ -129,7 +129,7 @@ def _post_process(raw: str, state) -> tuple[str, list[Citation]]:
     if cited_ids:
         citations = [Citation(source_id=sid, source_type="unknown") for sid in cited_ids]
     else:
-        # Gemini didn't emit the HTML comment block — fall back to all retrieved sources
+        # Model didn't emit the HTML comment block — fall back to all retrieved sources
         logger.debug("citations_fallback_to_drafts", count=len(draft_citations))
         citations = draft_citations
 
