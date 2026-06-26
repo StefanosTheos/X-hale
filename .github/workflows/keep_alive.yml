@@ -1,4 +1,4 @@
-name: Keep HF Space alive
+name: Keep services alive
 
 on:
   schedule:
@@ -13,3 +13,12 @@ jobs:
         run: |
           curl -sf https://stefanostheos-hailey-backend.hf.space/health \
             || echo "Health check returned non-2xx — Space may be cold-starting"
+
+      - name: Ping Qdrant cluster
+        env:
+          QDRANT_API_KEY: ${{ secrets.QDRANT_API_KEY }}
+        run: |
+          curl -sf \
+            -H "api-key: $QDRANT_API_KEY" \
+            https://a36d962f-aa0e-4edd-8949-8c19de4981a4.europe-west3-0.gcp.cloud.qdrant.io/collections \
+            || echo "Qdrant ping returned non-2xx — cluster may be suspended"
