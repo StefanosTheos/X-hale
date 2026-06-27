@@ -39,7 +39,7 @@ class RetrievalResult(BaseModel):
         lines: list[str] = []
         for i, chunk in enumerate(self.chunks, 1):
             tag = f"[{chunk.source_type.upper()}:{chunk.source_id}]"
-            lines.append(f"[{i}] {tag}\n{chunk.content.strip()}")
+            lines.append(f"[{i}] {tag}\n{chunk.content[:400].strip()}")
         return "\n\n".join(lines)
 
 

@@ -30,7 +30,7 @@ class MedicalAgent(AgentBase):
             query=user_input,
             user_id=state["user_id"],
             strategy="factual",
-            k=5,
+            k=3,
             intent=state.get("intent", "unknown"),
         )
 
