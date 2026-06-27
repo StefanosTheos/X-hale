@@ -49,8 +49,8 @@ jobs:
           HAILEY_API_URL: ${{ secrets.HAILEY_API_URL }}
           APPWRITE_ENDPOINT: ${{ secrets.APPWRITE_ENDPOINT }}
           APPWRITE_PROJECT_ID: ${{ secrets.APPWRITE_PROJECT_ID }}
+          APPWRITE_API_KEY: ${{ secrets.APPWRITE_API_KEY }}
           TEST_USER_EMAIL: ${{ secrets.BENCHMARK_TEST_EMAIL }}
-          TEST_USER_PASSWORD: ${{ secrets.BENCHMARK_TEST_PASSWORD }}
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
         run: |
           ARGS="--sample ${{ steps.params.outputs.sample }}"
