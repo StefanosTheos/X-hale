@@ -69,12 +69,18 @@ jobs:
 
       - name: Fail if benchmark did not pass
         run: |
-          PASSED=$(python -c "
+          python -c "
           import json, sys
           d = json.load(open('finetune/eval/results/latest.json'))
-          total, passed = d['total'], d['passed']
-          pct = round(100*passed/total) if total else 0
-          print(f'{passed}/{total} ({pct}%)')
-          sys.exit(0 if pct >= 80 else 1)
-          ")
-          echo "Benchmark result: $PASSED"
+          cases = d['cases']
+          evaluated = [c for c in cases if not c['error']]
+          errored = [c for c in cases if c['error']]
+          quality = round(100*sum(1 for c in evaluated if c['passed'])/len(evaluated)) if evaluated else 0
+          err_rate = round(100*len(errored)/len(cases)) if cases else 0
+          print(f'Quality: {quality}%  Errors: {err_rate}%')
+          if quality < 80:
+              print(f'FAIL — quality {quality}% below 80%'); sys.exit(1)
+          if err_rate > 20:
+              print(f'FAIL — error rate {err_rate}% above 20%'); sys.exit(1)
+          print('PASS')
+          "

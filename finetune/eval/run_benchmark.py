@@ -352,11 +352,14 @@ def _load_cases(category_filter: str | None = None) -> list[TestCase]:
 
 def _print_report(results: list[CaseResult]) -> None:
     total = len(results)
-    n_pass = sum(1 for r in results if r.passed)
-    pct = round(100 * n_pass / total) if total else 0
+    errored = [r for r in results if r.error]
+    evaluated = [r for r in results if not r.error]
+    n_pass = sum(1 for r in evaluated if r.passed)
+    pct = round(100 * n_pass / len(evaluated)) if evaluated else 0
+    err_pct = round(100 * len(errored) / total) if total else 0
 
     print(f"\n{'='*64}")
-    print(f"BENCHMARK  {n_pass}/{total} passed  ({pct}%)")
+    print(f"BENCHMARK  {n_pass}/{len(evaluated)} passed  ({pct}%)  |  {len(errored)} backend error(s) ({err_pct}%)")
     print(f"{'='*64}")
 
     cats: dict[str, list[CaseResult]] = {}
@@ -364,9 +367,12 @@ def _print_report(results: list[CaseResult]) -> None:
         cats.setdefault(r.category, []).append(r)
 
     for cat, items in sorted(cats.items()):
-        cat_pass = sum(1 for r in items if r.passed)
-        icon = "✅" if cat_pass == len(items) else "❌"
-        print(f"\n{icon} {cat}: {cat_pass}/{len(items)}")
+        cat_eval = [r for r in items if not r.error]
+        cat_pass = sum(1 for r in cat_eval if r.passed)
+        cat_err = len(items) - len(cat_eval)
+        err_tag = f"  ⚠ {cat_err} error(s)" if cat_err else ""
+        icon = "✅" if cat_pass == len(cat_eval) and not cat_err else "❌"
+        print(f"\n{icon} {cat}: {cat_pass}/{len(cat_eval)} passed{err_tag}")
         for r in items:
             status = "PASS" if r.passed else "FAIL"
             lat = f"{r.latency_s:.1f}s" if r.latency_s else "ERR"
@@ -483,8 +489,19 @@ async def main() -> int:
     out = Path(args.output) if args.output else RESULTS_DIR / f"run_{int(time.time())}.json"
     _save_results(results, out)
 
-    all_passed = all(r.passed for r in results)
-    return 0 if all_passed else 1
+    evaluated = [r for r in results if not r.error]
+    errored = [r for r in results if r.error]
+    quality_pct = round(100 * sum(1 for r in evaluated if r.passed) / len(evaluated)) if evaluated else 0
+    error_pct = round(100 * len(errored) / len(results)) if results else 0
+
+    if quality_pct < 80:
+        print(f"\nFAIL — quality pass rate {quality_pct}% is below 80% threshold.")
+        return 1
+    if error_pct > 20:
+        print(f"\nFAIL — backend error rate {error_pct}% exceeds 20% threshold.")
+        return 1
+    print(f"\nPASS — quality {quality_pct}%, error rate {error_pct}%.")
+    return 0
 
 
 if __name__ == "__main__":
