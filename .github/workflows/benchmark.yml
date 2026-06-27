@@ -50,7 +50,7 @@ jobs:
           APPWRITE_ENDPOINT: ${{ secrets.APPWRITE_ENDPOINT }}
           APPWRITE_PROJECT_ID: ${{ secrets.APPWRITE_PROJECT_ID }}
           APPWRITE_API_KEY: ${{ secrets.APPWRITE_API_KEY }}
-          TEST_USER_EMAIL: ${{ secrets.BENCHMARK_TEST_EMAIL }}
+          BENCHMARK_TEST_USER_ID: ${{ secrets.BENCHMARK_TEST_USER_ID }}
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
         run: |
           ARGS="--sample ${{ steps.params.outputs.sample }}"

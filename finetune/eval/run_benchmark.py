@@ -118,39 +118,23 @@ class CaseResult:
 # ── Auth ──────────────────────────────────────────────────────────────────────
 
 async def _get_jwt(client: httpx.AsyncClient) -> str:
-    """Use Appwrite server API (API key) to mint a JWT for the test user.
+    """Mint a JWT for the test user via Appwrite server API.
 
-    The client-side session flow (POST /account/sessions/email) requires the
-    calling origin to be a registered Appwrite platform, which GitHub Actions
-    is not. The server API bypasses this restriction entirely.
+    Uses the user ID directly (stored as BENCHMARK_TEST_USER_ID secret) to
+    avoid a user-lookup call that requires users.read scope on the API key.
     """
     endpoint = os.environ["APPWRITE_ENDPOINT"].rstrip("/")
     project_id = os.environ["APPWRITE_PROJECT_ID"]
     api_key = os.environ["APPWRITE_API_KEY"]
-    email = os.environ["TEST_USER_EMAIL"]
+    user_id = os.environ["BENCHMARK_TEST_USER_ID"]
 
-    headers = {
-        "X-Appwrite-Project": project_id,
-        "X-Appwrite-Key": api_key,
-        "Content-Type": "application/json",
-    }
-
-    # Resolve email → user ID
-    list_resp = await client.get(
-        f"{endpoint}/users",
-        params={"queries[]": f'equal("email", ["{email}"])'},
-        headers=headers,
-    )
-    list_resp.raise_for_status()
-    users = list_resp.json().get("users", [])
-    if not users:
-        raise RuntimeError(f"Test user {email!r} not found in Appwrite project")
-    user_id = users[0]["$id"]
-
-    # Mint a JWT for that user (server privilege — no session required)
     jwt_resp = await client.post(
         f"{endpoint}/users/{user_id}/jwts",
-        headers=headers,
+        headers={
+            "X-Appwrite-Project": project_id,
+            "X-Appwrite-Key": api_key,
+            "Content-Type": "application/json",
+        },
     )
     jwt_resp.raise_for_status()
     return jwt_resp.json()["jwt"]
