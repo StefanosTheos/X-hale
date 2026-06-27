@@ -46,6 +46,46 @@ class HelpPage extends ConsumerWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 12,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.red.withAlpha(isDark ? 40 : 25),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: Colors.red.withAlpha(isDark ? 100 : 70),
+                          ),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '🆘  If you are in crisis',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13,
+                                color: isDark ? Colors.red[300] : Colors.red[800],
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              'Please contact a crisis line immediately:\n'
+                              '• 988 — US & Canada (call or text)\n'
+                              '• 116 123 — Samaritans, UK & Ireland (free, 24/7)\n'
+                              '• 1018 — KLIMAKA, Greece (24/7)',
+                              style: TextStyle(
+                                fontSize: 13,
+                                height: 1.6,
+                                color: isDark ? Colors.red[200] : Colors.red[900],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 20),
                       Text(
                         'You are NOT alone',
                         style: TextStyle(
