@@ -19,6 +19,10 @@ class HelpPage extends ConsumerWidget {
         isDark ? AppThemes.darkTextColor : const Color(0xff023E8A);
     final bodyTextColor =
         isDark ? AppThemes.darkSubtitleColor : AppThemes.lightSubtitleColor;
+    final crisisHeadingColor =
+        isDark ? Colors.red[300]! : Colors.red[800]!;
+    final crisisBodyColor =
+        isDark ? Colors.red[200]! : Colors.red[900]!;
 
     return Scaffold(
       appBar: const BackAppBar(title: 'Seek Help'),
@@ -46,104 +50,171 @@ class HelpPage extends ConsumerWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
+                      // ── Crisis banner ───────────────────────────────────
                       Container(
                         width: double.infinity,
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 12,
+                          horizontal: 16,
+                          vertical: 14,
                         ),
                         decoration: BoxDecoration(
-                          color: Colors.red.withAlpha(isDark ? 40 : 25),
-                          borderRadius: BorderRadius.circular(10),
+                          color: Colors.red.withAlpha(isDark ? 40 : 22),
+                          borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                            color: Colors.red.withAlpha(isDark ? 100 : 70),
+                            color: Colors.red.withAlpha(isDark ? 110 : 80),
+                            width: 1.2,
                           ),
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              '🆘  If you are in crisis',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 13,
-                                color: isDark ? Colors.red[300] : Colors.red[800],
-                              ),
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.emergency_rounded,
+                                  size: 16,
+                                  color: crisisHeadingColor,
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  'If you are in crisis',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                    letterSpacing: 0.2,
+                                    color: crisisHeadingColor,
+                                  ),
+                                ),
+                              ],
                             ),
-                            const SizedBox(height: 6),
-                            Text(
-                              'Please contact a crisis line immediately:\n'
-                              '• 988 — US & Canada (call or text)\n'
-                              '• 116 123 — Samaritans, UK & Ireland (free, 24/7)\n'
-                              '• 1018 — KLIMAKA, Greece (24/7)',
-                              style: TextStyle(
-                                fontSize: 13,
-                                height: 1.6,
-                                color: isDark ? Colors.red[200] : Colors.red[900],
-                              ),
+                            const SizedBox(height: 10),
+                            _CrisisLine(
+                              number: '988',
+                              label: 'US & Canada — call or text',
+                              color: crisisBodyColor,
+                            ),
+                            _CrisisLine(
+                              number: '116 123',
+                              label: 'Samaritans, UK & Ireland — free, 24/7',
+                              color: crisisBodyColor,
+                            ),
+                            _CrisisLine(
+                              number: '1018',
+                              label: 'KLIMAKA, Greece — 24/7',
+                              color: crisisBodyColor,
                             ),
                           ],
                         ),
                       ),
-                      const SizedBox(height: 20),
+
+                      const SizedBox(height: 24),
+
+                      // ── Heading ─────────────────────────────────────────
                       Text(
-                        'You are NOT alone',
+                        'You are not alone',
                         style: TextStyle(
                           fontSize: 22,
                           fontWeight: FontWeight.bold,
+                          letterSpacing: 0.2,
                           color: textColor,
                         ),
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 14),
                       Text(
                         'Quitting smoking is one of the bravest decisions you can make. '
-                        'It\'s a journey filled with challenges, but also with small victories each day.\n\n'
-                        'If today is tough, remember: every craving resisted makes you stronger. '
-                        'You have the strength to push through — one step at a time.',
+                        'Every craving you resist is a victory — and you don\'t have to do this alone.',
+                        textAlign: TextAlign.center,
                         style: TextStyle(
-                          fontSize: 16,
-                          height: 1.5,
+                          fontSize: 15,
+                          height: 1.6,
                           color: bodyTextColor,
                         ),
                       ),
-                      const SizedBox(height: 24),
+
+                      const SizedBox(height: 28),
+                      Divider(color: (bodyTextColor ?? Colors.grey).withAlpha(60)),
+                      const SizedBox(height: 20),
+
+                      // ── Quitlines ───────────────────────────────────────
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.phone_outlined, size: 18, color: textColor),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Smoking Quitlines',
+                            style: TextStyle(
+                              fontSize: 17,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 0.2,
+                              color: textColor,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+
+                      _QuitlineRow(
+                        flag: '🇺🇸',
+                        country: 'USA',
+                        number: '1-800-QUIT-NOW',
+                        note: 'free · 24/7',
+                        bodyColor: bodyTextColor,
+                        textColor: textColor,
+                      ),
+                      _QuitlineRow(
+                        flag: '🇬🇧',
+                        country: 'UK',
+                        number: '0300 123 1044',
+                        note: 'Mon–Fri 9am–8pm · Sat–Sun 11am–4pm',
+                        bodyColor: bodyTextColor,
+                        textColor: textColor,
+                      ),
+                      _QuitlineRow(
+                        flag: '🇨🇦',
+                        country: 'Canada',
+                        number: '1-866-366-3667',
+                        note: 'free',
+                        bodyColor: bodyTextColor,
+                        textColor: textColor,
+                      ),
+                      _QuitlineRow(
+                        flag: '🇦🇺',
+                        country: 'Australia',
+                        number: '13 7848',
+                        note: 'free callback at quit.org.au',
+                        bodyColor: bodyTextColor,
+                        textColor: textColor,
+                      ),
+                      _QuitlineRow(
+                        flag: '🇬🇷',
+                        country: 'Greece',
+                        number: '1135',
+                        note: 'ΕΟΔΥ · Mon–Fri 9am–4pm',
+                        bodyColor: bodyTextColor,
+                        textColor: textColor,
+                      ),
+
+                      const SizedBox(height: 28),
+                      Divider(color: (bodyTextColor ?? Colors.grey).withAlpha(60)),
+                      const SizedBox(height: 20),
+
+                      // ── Closing ─────────────────────────────────────────
                       Text(
-                        '📞 Smoking Quitlines:',
+                        'Support is always available',
                         style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
                           color: textColor,
                         ),
                       ),
                       const SizedBox(height: 10),
                       Text(
-                        '• USA: 1-800-QUIT-NOW (free, 24/7)',
-                        style: TextStyle(color: bodyTextColor),
-                      ),
-                      Text(
-                        '• UK: 0300 123 1044 (Mon–Fri 9am–8pm, Sat–Sun 11am–4pm)',
-                        style: TextStyle(color: bodyTextColor),
-                      ),
-                      Text(
-                        '• Canada: 1-866-366-3667 (free)',
-                        style: TextStyle(color: bodyTextColor),
-                      ),
-                      Text(
-                        '• Australia: 13 7848 — free callback at quit.org.au',
-                        style: TextStyle(color: bodyTextColor),
-                      ),
-                      Text(
-                        '• Greece: 1135 (ΕΟΔΥ, Mon–Fri 9am–4pm)',
-                        style: TextStyle(color: bodyTextColor),
-                      ),
-                      const SizedBox(height: 30),
-                      Text(
-                        'Need someone to talk to?\n\n'
-                        'You don\'t have to do this alone. Support is always available.\n'
-                        'Call a quitline, speak to a friend, or open the app — we\'re here for you.\n',
+                        'Call a quitline, speak to a friend, or open the app — we\'re here for you.',
+                        textAlign: TextAlign.center,
                         style: TextStyle(
-                          fontSize: 16,
-                          height: 1.5,
+                          fontSize: 14,
+                          height: 1.6,
                           color: bodyTextColor,
                         ),
                       ),
@@ -151,6 +222,116 @@ class HelpPage extends ConsumerWidget {
                   ),
                 ),
               ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Sub-widgets ───────────────────────────────────────────────────────────────
+
+class _CrisisLine extends StatelessWidget {
+  const _CrisisLine({
+    required this.number,
+    required this.label,
+    required this.color,
+  });
+
+  final String number;
+  final String label;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 5),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            number,
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 13,
+              color: color,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              label,
+              style: TextStyle(fontSize: 13, color: color, height: 1.4),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _QuitlineRow extends StatelessWidget {
+  const _QuitlineRow({
+    required this.flag,
+    required this.country,
+    required this.number,
+    required this.note,
+    required this.bodyColor,
+    required this.textColor,
+  });
+
+  final String flag;
+  final String country;
+  final String number;
+  final String note;
+  final Color? bodyColor;
+  final Color textColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(flag, style: const TextStyle(fontSize: 20)),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      country,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                        color: textColor,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      number,
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                        color: textColor,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  note,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: bodyColor,
+                    height: 1.4,
+                  ),
+                ),
+              ],
             ),
           ),
         ],

@@ -115,34 +115,38 @@ class _HaileyDataPrivacyPageState
               ),
               const SizedBox(height: 20),
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  ElevatedButton(
-                    onPressed: () => Navigator.pop(context),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor:
-                          AppThemes.elevatedButtonBackground(isDark),
-                      foregroundColor:
-                          isDark ? AppThemes.darkTextColor : Colors.black,
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12)),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () => Navigator.pop(context),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor:
+                            AppThemes.elevatedButtonBackground(isDark),
+                        foregroundColor:
+                            isDark ? AppThemes.darkTextColor : Colors.black,
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12)),
+                      ),
+                      child: const Text('Cancel'),
                     ),
-                    child: const Text('Cancel'),
                   ),
-                  ElevatedButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                      _deleteAllChatbotData();
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: isDark
-                          ? AppThemes.darkDeleteButtonColor
-                          : AppThemes.lightDeleteButtonColor,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12)),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                        _deleteAllChatbotData();
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: isDark
+                            ? AppThemes.darkDeleteButtonColor
+                            : AppThemes.lightDeleteButtonColor,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12)),
+                      ),
+                      child: const Text('Delete'),
                     ),
-                    child: const Text('Delete everything'),
                   ),
                 ],
               ),

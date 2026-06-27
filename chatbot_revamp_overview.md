@@ -300,8 +300,8 @@ Target roles when implemented: triage classifier (JSON schema adherence) and mem
 **Risks still open:**
 - Free-tier quotas tighten without notice. Knowledge graph expansion and web search fallback are currently disabled (`ENABLE_KNOWLEDGE_GRAPH=false`, `ENABLE_WEB_SEARCH_FALLBACK=false`) to stay within Groq free-tier TPM limits. Re-enable on a paid tier.
 - Retrieved chunks are capped at 400 chars in `format_for_prompt()` and medical specialist uses `k=3` to keep prompts within token budget. Increase both when on a paid tier.
-- Conversations contain sensitive mental-health data. Encryption-at-rest policy documented (PRIVACY.md — AES-256 via Appwrite Cloud). Data-export endpoint and delete-all-my-data Flutter screen still pending before public launch.
-- Crisis liability. The hotline list and legal language need a real review before public launch.
+- ~~Conversations contain sensitive mental-health data. Data-export endpoint and delete-all-my-data Flutter screen still pending before public launch.~~ **Done** — `GET /export/` (GDPR Article 20) and `DELETE /memory/` bulk-erase endpoints live; `HaileyDataPrivacyPage` Flutter screen ships with export-to-clipboard and delete-all-chatbot-data (confirmation dialog, calls both `DELETE /history/` and `DELETE /memory/`). Encryption-at-rest policy documented in `PRIVACY.md`.
+- ~~Crisis liability. The hotline list and legal language need a real review before public launch.~~ **Done** — all crisis lines and quitlines re-verified 2026-06-27. Corrections: KLIMAKA corrected to 1018 (was 10306); Crisis Text Line split by country (741741 US-only); Canada 988, Lifeline AU, SHOUT UK, and text lines for IE/CA added; IASP URL updated; UK quitline updated to 0300 123 1044; EU quitline removed (defunct); Greece quitline 1135 added. Crisis banner added to Flutter "Seek Help" page.
 - Memory Curator will sometimes record incorrect facts. The user-facts viewer + delete UI is the mitigation; set UX copy expectations accordingly.
 - ~~HF Spaces cold-start (~10–20s on first request after idle).~~ **Mitigated** — GitHub Actions keep-alive workflow pings `GET /health` and Qdrant `GET /collections` every 5 minutes.
 
@@ -317,9 +317,7 @@ Done:
 - Citation chips — expandable "Sources" list for medical answers, with human-readable labels for 30+ source IDs.
 - Suggested-action chips — tappable deeplink chips rendered below assistant bubbles when Craving agent returns app actions.
 - "What does Hailey know about me?" screen — `HaileyMemoryPage`: facts grouped by type, confidence bars, delete with confirmation dialog, pull-to-refresh. Backend endpoints (`GET /memory/`, `DELETE /memory/{fact_id}`) live.
-
-Pending:
-- "Data & Privacy" Flutter screen — let users view PRIVACY.md, trigger data export, and delete all chatbot data. Backend `DELETE /history/` exists; export endpoint and Flutter UI still needed.
+- "Data & Privacy" screen — `HaileyDataPrivacyPage`: inline privacy policy (expandable), export-to-clipboard (`GET /export/`), delete-all-chatbot-data with confirmation dialog (`DELETE /history/` + `DELETE /memory/`). Accessible from Settings. Backend: `GET /export/` (GDPR Article 20), `DELETE /memory/` bulk erase, `delete_all_facts()` in `user_facts_store.py`.
 
 ---
 
@@ -333,7 +331,8 @@ rag_backend2.0/
 │   ├── routers/
 │   │   ├── chat.py           # POST /chat (SSE)
 │   │   ├── history.py        # GET /history, DELETE /history
-│   │   ├── memory.py         # GET /memory, DELETE /memory/{fact_id}
+│   │   ├── memory.py         # GET /memory, DELETE /memory, DELETE /memory/{fact_id}
+│   │   ├── export.py         # GET /export (GDPR Article 20)
 │   │   └── kb.py             # GET /kb/{benefit_id}
 │   ├── auth/
 │   │   ├── appwrite_jwt.py
