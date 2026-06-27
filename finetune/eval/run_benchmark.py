@@ -135,6 +135,7 @@ async def _get_jwt(client: httpx.AsyncClient) -> str:
             "X-Appwrite-Key": benchmark_key,
             "Content-Type": "application/json",
         },
+        json={"duration": 900},
     )
     jwt_resp.raise_for_status()
     return jwt_resp.json()["jwt"]
@@ -467,8 +468,6 @@ async def main() -> int:
     api_url = os.environ["HAILEY_API_URL"]
 
     async with httpx.AsyncClient(timeout=90.0) as client:
-        print("Obtaining JWT for test account...")
-        jwt = await _get_jwt(client)
         print(f"Running {len(cases)} cases against {api_url}")
 
         results: list[CaseResult] = []
@@ -476,6 +475,7 @@ async def main() -> int:
             print(f"  [{i:>3}/{len(cases)}] {case.id} ...", end=" ", flush=True)
             if i > 1:
                 await asyncio.sleep(3)  # pace requests to avoid Groq rate limits
+            jwt = await _get_jwt(client)  # fresh JWT per case; avoids expiry during retries
             result = await _run_case(case, client, api_url, jwt)
             results.append(result)
             if result.error:

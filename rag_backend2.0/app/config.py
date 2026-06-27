@@ -65,8 +65,8 @@ class Settings(BaseSettings):
 
     # ── Feature flags ───────────────────────────────────────────────────────
     enable_reranker: bool = False
-    enable_knowledge_graph: bool = True
-    enable_web_search_fallback: bool = True
+    enable_knowledge_graph: bool = False
+    enable_web_search_fallback: bool = False
 
     # ── Observability ───────────────────────────────────────────────────────
     log_level: str = "INFO"
