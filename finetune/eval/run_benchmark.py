@@ -281,7 +281,7 @@ async def _run_case(
     jwt: str,
 ) -> CaseResult:
     last_exc: Exception | None = None
-    for attempt in range(2):  # one retry on transient errors
+    for attempt in range(3):  # up to 2 retries on transient errors
         try:
             response, citations, deeplinks, latency = await _call_chat(
                 client, api_url, jwt, case.input
@@ -290,8 +290,8 @@ async def _run_case(
             break
         except Exception as exc:
             last_exc = exc
-            if attempt == 0:
-                await asyncio.sleep(5)
+            if attempt < 2:
+                await asyncio.sleep(20)  # give Groq rate limits time to reset
 
     if last_exc is not None:
         return CaseResult(
@@ -474,6 +474,8 @@ async def main() -> int:
         results: list[CaseResult] = []
         for i, case in enumerate(cases, 1):
             print(f"  [{i:>3}/{len(cases)}] {case.id} ...", end=" ", flush=True)
+            if i > 1:
+                await asyncio.sleep(3)  # pace requests to avoid Groq rate limits
             result = await _run_case(case, client, api_url, jwt)
             results.append(result)
             if result.error:
