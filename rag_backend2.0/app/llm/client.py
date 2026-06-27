@@ -39,22 +39,32 @@ class LLMClient(Protocol):
     ) -> AsyncIterator[str]: ...
 
 
+_RETRYABLE_EXC = ("RateLimit", "InternalServer", "ServiceUnavailable", "BadGateway")
+_RETRYABLE_STATUS = {429, 500, 502, 503, 504}
+
+
 async def retry_with_backoff(
     coro_fn,
     max_attempts: int = 3,
-    base_delay: float = 1.0,
-    max_delay: float = 16.0,
+    base_delay: float = 2.0,
+    max_delay: float = 30.0,
 ) -> str:
-    """Retry an async function with exponential backoff on RateLimitError."""
+    """Retry an async function with exponential backoff on rate limits and transient 5xx errors."""
     last_exc: Exception | None = None
     for attempt in range(max_attempts):
         try:
             return await coro_fn()
         except Exception as exc:
             exc_name = type(exc).__name__
-            if "RateLimit" in exc_name or "429" in str(exc):
+            status = getattr(exc, "status_code", None)
+            is_retryable = (
+                any(e in exc_name for e in _RETRYABLE_EXC)
+                or "429" in str(exc)
+                or status in _RETRYABLE_STATUS
+            )
+            if is_retryable:
                 delay = min(base_delay * (2 ** attempt) + random.uniform(0, 1), max_delay)
-                logger.warning("llm_rate_limited", attempt=attempt + 1, delay=delay)
+                logger.warning("llm_error_retry", attempt=attempt + 1, delay=delay, exc=exc_name)
                 await asyncio.sleep(delay)
                 last_exc = exc
             else:

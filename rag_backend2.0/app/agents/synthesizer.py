@@ -73,7 +73,7 @@ async def synthesize(state) -> tuple[str, list[Citation]]:
     """
     client = get_synthesis_client()
     messages = _build_messages(state)
-    raw = await client.complete(messages=messages, temperature=0.5, max_tokens=2048)
+    raw = await client.complete(messages=messages, temperature=0.5, max_tokens=700)
     return _post_process(raw, state)
 
 
@@ -84,7 +84,7 @@ async def synthesize_stream(state) -> AsyncIterator[str]:
     """
     client = get_synthesis_client()
     messages = _build_messages(state)
-    async for token in client.stream(messages=messages, temperature=0.5, max_tokens=2048):
+    async for token in client.stream(messages=messages, temperature=0.5, max_tokens=700):
         yield token
 
 
