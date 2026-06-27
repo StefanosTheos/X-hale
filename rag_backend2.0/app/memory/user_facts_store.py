@@ -144,3 +144,26 @@ async def delete_fact(fact_id: str) -> None:
         fact_id,
     )
     logger.info("user_fact_deleted", fact_id=fact_id)
+
+
+async def delete_all_facts(user_id: str) -> int:
+    """Delete every fact belonging to user_id. Returns the count deleted."""
+    import asyncio
+    db, db_id = _build_client()
+    result = await asyncio.to_thread(
+        db.list_rows,
+        db_id,
+        settings.appwrite_user_facts_collection_id,
+        queries=[Query.equal("userId", user_id), Query.limit(100)],
+    )
+    count = 0
+    for doc in result.rows:
+        await asyncio.to_thread(
+            db.delete_row,
+            db_id,
+            settings.appwrite_user_facts_collection_id,
+            doc.id,
+        )
+        count += 1
+    logger.info("all_user_facts_deleted", user_id=user_id, count=count)
+    return count

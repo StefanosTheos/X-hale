@@ -91,6 +91,7 @@ def create_app() -> FastAPI:
 
     # Mount routers
     from app.routers.chat import router as chat_router
+    from app.routers.export import router as export_router
     from app.routers.history import router as history_router
     from app.routers.kb import router as kb_router
     from app.routers.memory import router as memory_router
@@ -98,6 +99,7 @@ def create_app() -> FastAPI:
     app.include_router(chat_router)
     app.include_router(history_router)
     app.include_router(memory_router)
+    app.include_router(export_router)
     app.include_router(kb_router)
 
     # Metrics endpoint

@@ -230,4 +230,37 @@ class ChatService {
       throw Exception('Failed to delete fact: ${response.statusCode}');
     }
   }
+
+  /// DELETE /memory/ — wipes all memory facts for the authenticated user.
+  static Future<void> clearAllMemory({required String jwt}) async {
+    final response = await http.delete(
+      Uri.parse('$_baseUrl/memory/'),
+      headers: {'Authorization': 'Bearer $jwt'},
+    );
+    if (response.statusCode != 204 && response.statusCode != 200) {
+      throw Exception('Failed to clear memory: ${response.statusCode}');
+    }
+  }
+
+  // -------------------------------------------------------------------------
+  // Data export
+  // -------------------------------------------------------------------------
+
+  /// GET /export/ — returns all user data (history + memory facts) as JSON.
+  static Future<Map<String, dynamic>> exportData({required String jwt}) async {
+    final response = await http.get(
+      Uri.parse('$_baseUrl/export/'),
+      headers: {
+        'Authorization': 'Bearer $jwt',
+        'Content-Type': 'application/json',
+      },
+    );
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body) as Map<String, dynamic>;
+    } else if (response.statusCode == 401) {
+      throw Exception('Session expired. Please sign in again.');
+    } else {
+      throw Exception('Export failed: ${response.statusCode}');
+    }
+  }
 }

@@ -3,6 +3,7 @@ import 'package:flutter/services.dart' show MaxLengthEnforcement;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:smoking/extensions/widget_ref_theme.dart';
+import 'package:smoking/pages/home_pages/hailey_data_privacy_page.dart';
 import 'package:smoking/pages/settings_pages/about_us.dart';
 import 'package:smoking/pages/settings_pages/faqs.dart';
 import 'package:smoking/pages/settings_pages/more_help.dart';
@@ -251,6 +252,19 @@ class _SettingsPageState extends ConsumerState<SettingsPage>
                           subtitle:
                               'Active: ${userState.theme == 'light' ? 'Light' : 'Dark'}',
                           onTap: showThemeDialog,
+                        ),
+                        buildSettingsCard(
+                          'Data & Privacy',
+                          subtitle: 'Privacy policy, export or delete your data',
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    const HaileyDataPrivacyPage(),
+                              ),
+                            );
+                          },
                         ),
                         buildSettingsCard(
                           'Contact Us',

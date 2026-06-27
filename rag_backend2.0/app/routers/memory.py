@@ -1,5 +1,6 @@
 """
-GET  /memory/           — returns the user's structured facts ("What does Hailey know about me?")
+GET  /memory/            — returns the user's structured facts ("What does Hailey know about me?")
+DELETE /memory/          — clears all facts for the authenticated user (GDPR erasure)
 DELETE /memory/{fact_id} — lets the user delete a specific fact (GDPR / trust)
 """
 from __future__ import annotations
@@ -7,7 +8,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.auth.dependencies import get_current_user
-from app.memory.user_facts_store import delete_fact, get_facts
+from app.memory.user_facts_store import delete_all_facts, delete_fact, get_facts
 from app.models.chat import MemoryFactResponse, MemoryResponse
 from app.observability.logging import get_logger
 
@@ -41,6 +42,13 @@ async def get_memory(
         ],
         total=len(facts),
     )
+
+
+@router.delete("/", status_code=status.HTTP_204_NO_CONTENT)
+async def clear_memory(user_id: str = Depends(get_current_user)):
+    """Delete all memory facts for the authenticated user."""
+    count = await delete_all_facts(user_id)
+    logger.info("memory_cleared", user_id=user_id, count=count)
 
 
 @router.delete("/{fact_id}", status_code=status.HTTP_204_NO_CONTENT)
