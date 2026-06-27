@@ -176,11 +176,11 @@ A curated YAML graph of ~200 nodes loaded into in-process NetworkX at startup. A
 3. Vector search restricted to entity-tagged chunks.
 4. Return vector hits + related concepts.
 
-Currently disabled (`ENABLE_KNOWLEDGE_GRAPH=false`). Integration point stubbed in `hybrid_retriever.py`.
+Currently **disabled** (`ENABLE_KNOWLEDGE_GRAPH=false`) to stay within Groq free-tier token-per-minute limits — KG expansion adds up to 3 extra chunks per query, which pushed medical prompts over the threshold. Re-enable when on a paid Groq tier. Integration point stubbed in `hybrid_retriever.py`.
 
 ### 4.3 Web search fallback
 
-DuckDuckGo fallback fires only when Qdrant returns fewer than 2 chunks **and** intent is not `general_conversation`. Controlled by `ENABLE_WEB_SEARCH_FALLBACK`.
+DuckDuckGo fallback fires only when Qdrant returns fewer than 2 chunks **and** intent is not `general_conversation`. Controlled by `ENABLE_WEB_SEARCH_FALLBACK`. Currently **disabled** for the same free-tier quota reason as the knowledge graph.
 
 ### 4.4 Hybrid retriever interface
 
@@ -274,10 +274,13 @@ Target roles when implemented: triage classifier (JSON schema adherence) and mem
 
 ### Harness
 
-- DeepEval for automated metrics.
+- Custom harness (`finetune/eval/run_benchmark.py`) — no DeepEval dependency.
+- Deterministic checks (citation present, no external app, crisis markers, word count) run in-process.
+- LLM-as-judge checks (`tone_warm_empathetic`, `answer_relevant`, `medically_faithful`, `non_judgmental`, `mi_style`) use Groq `llama-3.1-8b-instant` with structured JSON output.
 - Judge prompts in `finetune/eval/judge_prompts/`.
-- Test cases as YAML in `finetune/eval/categories.yaml`.
-- GitHub Actions nightly on 5% sample, weekly full sweep.
+- Test cases as YAML in `finetune/eval/categories.yaml` — 102 gold cases across 10 categories.
+- Pass thresholds: quality ≥ 80% **and** backend error rate ≤ 20% (evaluated independently).
+- GitHub Actions nightly on 5% sample (Mon–Sat), full sweep (Sunday). **Benchmark is currently passing.**
 
 ---
 
@@ -295,11 +298,12 @@ Target roles when implemented: triage classifier (JSON schema adherence) and mem
 | Embeddings | Cloudflare Workers AI `@cf/baai/bge-small-en-v1.5` |
 
 **Risks still open:**
-- Free-tier quotas tighten without notice. Instrument at 70% of any monthly quota.
+- Free-tier quotas tighten without notice. Knowledge graph expansion and web search fallback are currently disabled (`ENABLE_KNOWLEDGE_GRAPH=false`, `ENABLE_WEB_SEARCH_FALLBACK=false`) to stay within Groq free-tier TPM limits. Re-enable on a paid tier.
+- Retrieved chunks are capped at 400 chars in `format_for_prompt()` and medical specialist uses `k=3` to keep prompts within token budget. Increase both when on a paid tier.
 - Conversations contain sensitive mental-health data. Encryption-at-rest policy documented (PRIVACY.md — AES-256 via Appwrite Cloud). Data-export endpoint and delete-all-my-data Flutter screen still pending before public launch.
 - Crisis liability. The hotline list and legal language need a real review before public launch.
 - Memory Curator will sometimes record incorrect facts. The user-facts viewer + delete UI is the mitigation; set UX copy expectations accordingly.
-- ~~HF Spaces cold-start (~10–20s on first request after idle).~~ **Mitigated** — GitHub Actions keep-alive workflow pings `GET /health` every 5 minutes.
+- ~~HF Spaces cold-start (~10–20s on first request after idle).~~ **Mitigated** — GitHub Actions keep-alive workflow pings `GET /health` and Qdrant `GET /collections` every 5 minutes.
 
 ---
 
@@ -422,11 +426,13 @@ rag_backend2.0/
 │   │   └── test_streaming.py
 │   └── conftest.py
 │
-├── finetune/                  # Phase 5 — not yet created; created when Phase 4 baselines exist
+├── finetune/
 │   ├── eval/
-│   │   ├── categories.yaml    # ⬜ pending
-│   │   ├── judge_prompts/     # ⬜ pending
-│   │   └── run_benchmark.py   # ⬜ pending
+│   │   ├── categories.yaml        # 102 gold cases across 10 categories
+│   │   ├── judge_prompts/         # tone, relevancy, faithfulness, non_judgmental, mi_style
+│   │   ├── run_benchmark.py       # custom harness (httpx SSE + Groq judge)
+│   │   ├── requirements-eval.txt
+│   │   └── results/               # JSON run artefacts (90-day retention via Actions)
 │   └── README.md
 │
 ├── Dockerfile
