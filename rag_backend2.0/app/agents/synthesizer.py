@@ -1,5 +1,5 @@
 """
-Synthesizer Agent — uses Gemini 2.0 Flash.
+Synthesizer Agent — uses Groq llama-3.3-70b-versatile.
 
 Receives all specialist_drafts + user memory + conversation history.
 Composes one coherent reply in Hailey's voice and streams it token-by-token.
