@@ -4,7 +4,7 @@ Used by the Crisis Handler to select appropriate resources for the user's locale
 Add new locales as the app expands to new markets.
 
 IMPORTANT: Review hotline numbers periodically — they change.
-Last verified: 2025-05-27
+Last verified: 2026-06-27
 """
 from __future__ import annotations
 
@@ -25,49 +25,108 @@ class Hotline(BaseModel):
 HOTLINES: dict[str, list[Hotline]] = {
     "el": [
         Hotline(
-            name="KLIMAKA — Crisis Helpline",
+            name="KLIMAKA — Γραμμή Παρέμβασης για την Αυτοκτονία",
+            number="1018",
+            url="https://suicide-help.gr",
+            available_24_7=True,
+            description="Εθνική γραμμή κρίσης και πρόληψης αυτοκτονίας (24/7, δωρεάν)",
+        ),
+        Hotline(
+            name="Γραμμή Ψυχολογικής Υποστήριξης 10306",
             number="10306",
             url="https://www.klimaka.org.gr",
             available_24_7=True,
-            description="Greek national crisis and suicide prevention line",
+            description="Ψυχολογική υποστήριξη για άγχος, πένθος, οικογενειακές κρίσεις",
         ),
         Hotline(
-            name="SOS Line 197",
+            name="ΕΚΚΑ — Γραμμή Κοινωνικής Βοήθειας",
             number="197",
-            url="https://www.sos-line.gr",
-            available_24_7=False,
-            description="Mental health support line (Greece)",
+            url="https://www.ekka.org.gr",
+            available_24_7=True,
+            description="Έκτακτη κοινωνική βοήθεια (άστεγοι, ενδοοικογενειακή βία, τράφικινγκ)",
         ),
     ],
     "en": [
-        Hotline(
-            name="International Association for Suicide Prevention",
-            number="",
-            url="https://www.iasp.info/resources/Crisis_Centres/",
-            available_24_7=True,
-            description="Find a crisis centre in your country",
-        ),
-        Hotline(
-            name="Crisis Text Line (US/UK/CA/IE)",
-            number="",
-            sms="HOME to 741741",
-            url="https://www.crisistextline.org",
-            available_24_7=True,
-            description="Text-based crisis support",
-        ),
+        # ── United States ──────────────────────────────────────────────────────
         Hotline(
             name="988 Suicide & Crisis Lifeline (US)",
             number="988",
             url="https://988lifeline.org",
             available_24_7=True,
-            description="US national crisis line — call or text 988",
+            description="US national crisis line — call, text, or chat 988",
         ),
         Hotline(
-            name="Samaritans (UK/IE)",
+            name="Crisis Text Line (US)",
+            number="",
+            sms="HOME to 741741",
+            url="https://www.crisistextline.org",
+            available_24_7=True,
+            description="Free text-based crisis support (US and Puerto Rico)",
+        ),
+        # ── United Kingdom ─────────────────────────────────────────────────────
+        Hotline(
+            name="Samaritans (UK & Ireland)",
             number="116 123",
             url="https://www.samaritans.org",
             available_24_7=True,
-            description="Free, confidential support in the UK and Ireland",
+            description="Free, confidential support — call any time",
+        ),
+        Hotline(
+            name="Shout Crisis Text Line (UK)",
+            number="",
+            sms="SHOUT to 85258",
+            url="https://www.giveusashout.org",
+            available_24_7=True,
+            description="Free 24/7 text crisis support (UK)",
+        ),
+        # ── Canada ─────────────────────────────────────────────────────────────
+        Hotline(
+            name="9-8-8 Suicide Crisis Helpline (Canada)",
+            number="988",
+            url="https://988.ca",
+            available_24_7=True,
+            description="Canada's national crisis line — call or text 988 (English & French)",
+        ),
+        Hotline(
+            name="Crisis Text Line (Canada)",
+            number="",
+            sms="CONNECT to 686868",
+            url="https://www.kidshelphone.ca",
+            available_24_7=True,
+            description="Free text-based crisis support via Kids Help Phone",
+        ),
+        # ── Ireland ────────────────────────────────────────────────────────────
+        Hotline(
+            name="Text About It (Ireland)",
+            number="",
+            sms="HELLO to 50808",
+            url="https://text50808.ie",
+            available_24_7=True,
+            description="Free 24/7 text crisis support (Ireland)",
+        ),
+        # ── Australia ──────────────────────────────────────────────────────────
+        Hotline(
+            name="Lifeline (Australia)",
+            number="13 11 14",
+            sms="0477 13 11 14",
+            url="https://www.lifeline.org.au",
+            available_24_7=True,
+            description="Crisis support and suicide prevention (call or text 24/7)",
+        ),
+        Hotline(
+            name="Beyond Blue (Australia)",
+            number="1300 22 4636",
+            url="https://www.beyondblue.org.au",
+            available_24_7=True,
+            description="Anxiety, depression, and mental wellbeing support",
+        ),
+        # ── International directory ────────────────────────────────────────────
+        Hotline(
+            name="Find A Helpline (worldwide)",
+            number="",
+            url="https://findahelpline.com/i/iasp",
+            available_24_7=True,
+            description="Find a verified crisis centre in your country (150+ countries)",
         ),
     ],
 }

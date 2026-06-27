@@ -68,7 +68,7 @@ class HelpPage extends ConsumerWidget {
                       ),
                       const SizedBox(height: 24),
                       Text(
-                        '📞 International Quitlines:',
+                        '📞 Smoking Quitlines:',
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -77,23 +77,23 @@ class HelpPage extends ConsumerWidget {
                       ),
                       const SizedBox(height: 10),
                       Text(
-                        '• USA: 1-800-QUIT-NOW',
+                        '• USA: 1-800-QUIT-NOW (free, 24/7)',
                         style: TextStyle(color: bodyTextColor),
                       ),
                       Text(
-                        '• UK: 0800 022 4332',
+                        '• UK: 0300 123 1044 (Mon–Fri 9am–8pm, Sat–Sun 11am–4pm)',
                         style: TextStyle(color: bodyTextColor),
                       ),
                       Text(
-                        '• Canada: 1-866-366-3667',
+                        '• Canada: 1-866-366-3667 (free)',
                         style: TextStyle(color: bodyTextColor),
                       ),
                       Text(
-                        '• Australia: 13 7848',
+                        '• Australia: 13 7848 — free callback at quit.org.au',
                         style: TextStyle(color: bodyTextColor),
                       ),
                       Text(
-                        '• EU Quitline: +44 20 7833 9211',
+                        '• Greece: 1135 (ΕΟΔΥ, Mon–Fri 9am–4pm)',
                         style: TextStyle(color: bodyTextColor),
                       ),
                       const SizedBox(height: 30),
