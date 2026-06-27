@@ -280,11 +280,20 @@ async def _run_case(
     api_url: str,
     jwt: str,
 ) -> CaseResult:
-    try:
-        response, citations, deeplinks, latency = await _call_chat(
-            client, api_url, jwt, case.input
-        )
-    except Exception as exc:
+    last_exc: Exception | None = None
+    for attempt in range(2):  # one retry on transient errors
+        try:
+            response, citations, deeplinks, latency = await _call_chat(
+                client, api_url, jwt, case.input
+            )
+            last_exc = None
+            break
+        except Exception as exc:
+            last_exc = exc
+            if attempt == 0:
+                await asyncio.sleep(5)
+
+    if last_exc is not None:
         return CaseResult(
             case_id=case.id,
             category=case.category,
@@ -294,7 +303,7 @@ async def _run_case(
             deeplinks=[],
             latency_s=0.0,
             checks=[],
-            error=str(exc),
+            error=str(last_exc),
         )
 
     check_results: list[CheckResult] = []
