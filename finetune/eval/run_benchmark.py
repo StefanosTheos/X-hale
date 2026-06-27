@@ -125,14 +125,14 @@ async def _get_jwt(client: httpx.AsyncClient) -> str:
     """
     endpoint = os.environ["APPWRITE_ENDPOINT"].rstrip("/")
     project_id = os.environ["APPWRITE_PROJECT_ID"]
-    api_key = os.environ["APPWRITE_API_KEY"]
+    benchmark_key = os.environ["APPWRITE_BENCHMARK_KEY"]  # users.write scope only
     user_id = os.environ["BENCHMARK_TEST_USER_ID"]
 
     jwt_resp = await client.post(
         f"{endpoint}/users/{user_id}/jwts",
         headers={
             "X-Appwrite-Project": project_id,
-            "X-Appwrite-Key": api_key,
+            "X-Appwrite-Key": benchmark_key,
             "Content-Type": "application/json",
         },
     )
