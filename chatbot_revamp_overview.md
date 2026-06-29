@@ -171,7 +171,7 @@ Read-only from existing Appwrite collections (`users`, `diary`, `achievements`, 
 | Off-topic | Polite redirect |
 | Personalisation | References known user fact |
 
-**Target:** 30–50 gold cases per category (~400 total). Current baseline: 102 cases.
+**Target:** 30–50 gold cases per category (~400 total). Current: 300 cases (30 per category).
 
 **Harness:** Custom (`finetune/eval/run_benchmark.py`). Deterministic checks run in-process; LLM-as-judge (Groq 8B, structured JSON) covers tone, relevancy, faithfulness, non-judgmental, MI style. Pass threshold: quality ≥ 80% and error rate ≤ 20%. **Benchmark currently passing.** GitHub Actions nightly — 5% sample Mon–Sat, full sweep Sunday.
 
@@ -318,7 +318,7 @@ rag_backend2.0/
 │
 ├── finetune/
 │   ├── eval/
-│   │   ├── categories.yaml        # 102 gold cases across 10 categories
+│   │   ├── categories.yaml        # 300 gold cases across 10 categories (30 each)
 │   │   ├── judge_prompts/
 │   │   ├── run_benchmark.py
 │   │   ├── requirements-eval.txt
@@ -348,7 +348,7 @@ rag_backend2.0/
 
 ## 12. Next steps
 
-1. **Expand benchmark test suite** — grow from 102 to ~400 gold cases (30–50 per category). More coverage strengthens regression detection and gives Phase 5 meaningful baselines to beat.
+1. **Expand benchmark test suite** — grown from 102 to 300 gold cases (30 per category). Target is 50 per category (~500 total) for Phase 5 baselines.
 
 2. **Phase 5 fine-tuning** — build training datasets (synthesised triage + memory-curator examples), train LoRAs on Qwen 2.5 1.5B (triage) and Llama 3.2 3B (memory curator) via QLoRA/Unsloth, benchmark against current Groq baselines, deploy only if the gain justifies serving infrastructure.
 
