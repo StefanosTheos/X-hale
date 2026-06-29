@@ -171,7 +171,7 @@ Read-only from existing Appwrite collections (`users`, `diary`, `achievements`, 
 | Off-topic | Polite redirect |
 | Personalisation | References known user fact |
 
-**Target:** 30–50 gold cases per category (~400 total). Current: 300 cases (30 per category).
+**Current:** 300 cases (30 per category). Target for Phase 5 baselines: 50 per category (~500 total).
 
 **Harness:** Custom (`finetune/eval/run_benchmark.py`). Deterministic checks run in-process; LLM-as-judge (Groq 8B, structured JSON) covers tone, relevancy, faithfulness, non-judgmental, MI style. Pass threshold: quality ≥ 80% and error rate ≤ 20%. **Benchmark currently passing.** GitHub Actions nightly — 5% sample Mon–Sat, full sweep Sunday.
 
@@ -348,12 +348,10 @@ rag_backend2.0/
 
 ## 12. Next steps
 
-1. **Expand benchmark test suite** — grown from 102 to 300 gold cases (30 per category). Target is 50 per category (~500 total) for Phase 5 baselines.
+1. **Phase 5 fine-tuning** — build training datasets (synthesised triage + memory-curator examples), train LoRAs on Qwen 2.5 1.5B (triage) and Llama 3.2 3B (memory curator) via QLoRA/Unsloth, benchmark against current Groq baselines, deploy only if the gain justifies serving infrastructure.
 
-2. **Phase 5 fine-tuning** — build training datasets (synthesised triage + memory-curator examples), train LoRAs on Qwen 2.5 1.5B (triage) and Llama 3.2 3B (memory curator) via QLoRA/Unsloth, benchmark against current Groq baselines, deploy only if the gain justifies serving infrastructure.
+2. **Re-enable KG and web search fallback** — one-line config change each (`ENABLE_KNOWLEDGE_GRAPH=true`, `ENABLE_WEB_SEARCH_FALLBACK=true`) once on a paid Groq tier.
 
-3. **Re-enable KG and web search fallback** — one-line config change each (`ENABLE_KNOWLEDGE_GRAPH=true`, `ENABLE_WEB_SEARCH_FALLBACK=true`) once on a paid Groq tier.
+3. **Loosen chunk cap and medical k** — raise the 400-char chunk truncation in `format_for_prompt()` and increase medical specialist from `k=3` once token budget allows.
 
-4. **Loosen chunk cap and medical k** — raise the 400-char chunk truncation in `format_for_prompt()` and increase medical specialist from `k=3` once token budget allows.
-
-5. **App store submission** — Google Play listing, screenshots, store copy, and privacy policy link. Can run in parallel with the technical work above.
+4. **App store submission** — Google Play listing, screenshots, store copy, and privacy policy link. Can run in parallel with the technical work above.
