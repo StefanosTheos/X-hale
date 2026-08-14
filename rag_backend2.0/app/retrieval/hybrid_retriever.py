@@ -54,7 +54,13 @@ async def retrieve(
     if strategy == "benefit" and filters and "benefit_id" in filters:
         return await _benefit_retrieval(query, filters["benefit_id"])
 
-    chunks = await _vector_retrieval(query, strategy, filters, k)
+    try:
+        chunks = await _vector_retrieval(query, strategy, filters, k)
+    except Exception as exc:
+        # Public retrieval boundary: callers receive an empty, explicit result
+        # even if an unexpected lower-level provider error escapes its adapter.
+        logger.error("vector_retrieval_failed", user_id=user_id, error=str(exc))
+        chunks = []
 
     # Knowledge graph expansion: find related concepts and retrieve additional chunks
     # tagged with the expanded topic_tags, then merge with the vector results.

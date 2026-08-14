@@ -173,7 +173,7 @@ Read-only from existing Appwrite collections (`users`, `diary`, `achievements`, 
 
 **Current:** 300 cases (30 per category). Target for Phase 5 baselines: 50 per category (~500 total).
 
-**Harness:** Custom (`finetune/eval/run_benchmark.py`). Deterministic checks run in-process; LLM-as-judge (Groq GPT OSS 20B, structured JSON) covers tone, relevancy, faithfulness, non-judgmental, MI style. Pass threshold: quality ≥ 80% and error rate ≤ 20%. **Benchmark currently passing.** GitHub Actions nightly — 5% sample Mon–Sat, full sweep Sunday.
+**Harness:** Custom (`finetune/eval/run_benchmark.py`). Deterministic checks—including expected-theme coverage—run in-process; LLM-as-judge (Groq GPT OSS 20B, structured JSON) covers tone, relevancy, faithfulness, non-judgmental, and MI style. Pass threshold: quality ≥ 80% and error rate ≤ 20%. GitHub Actions runs a 5% sample Mon–Sat and a full sweep Sunday, retaining dated JSON artifacts for 365 days. No passing claim should be made without citing a retained run artifact.
 
 ---
 
@@ -359,7 +359,7 @@ An implementation audit on 14 August 2026 found that the major weaknesses identi
 
 3. [x] **Complete relapse-risk signals — completed 14 August 2026.** Activity now uses the latest real Appwrite user-row, diary, or conversation timestamp; the explicit in-app Relapse action records a structured authenticated event; and current relapse disclosures are also honored directly from triage. Missing data remains `unknown` and adds no score. The conservative score is explicitly a support-priority heuristic rather than a clinical risk prediction, with focused tests for activity, stored/current relapse reports, and failure behavior.
 
-4. **Repair and strengthen verification** — the unit suite currently reports **65 passed, 2 failed**: the crisis fallback test patches a symbol that is no longer module-level, while the retriever test exposes an unresolved exception-handling contract. Fix the tests/contract, run the integration suite, and retain a dated benchmark artifact before claiming that the 300-case benchmark is passing. `expected_themes` is currently informational only and should either become an automated grounded-content check or be removed.
+4. [ ] **Repair and strengthen verification — implementation complete; live benchmark pending.** The crisis fallback test now patches the correct lazy-import seam, retrieval has a public exception boundary, and `expected_themes` is an automated 40%-coverage check with focused tests. Benchmark JSON now records schema/version metadata and CI retains uniquely dated run artifacts for 365 days. Mark complete only after a post-change workflow produces a retained artifact meeting the quality/error thresholds.
 
 5. **Harden memory lifecycle and safety post-processing** — fact upserts do not enforce the documented “replace only at higher confidence” rule, `superseded_by` is unused, and bulk fact deletion is capped at 100 records without pagination. Make asynchronous memory curation durable/retriable. The content filter currently adds a disclaimer but does not block or regenerate unsafe medical output; define and test the intended enforcement policy.
 

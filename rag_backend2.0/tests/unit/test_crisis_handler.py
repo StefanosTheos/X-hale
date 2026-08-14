@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from app.agents.crisis_handler import handle_crisis
+from app.agents.crisis_handler import _EMPATHY_FALLBACK, handle_crisis
 from app.safety.crisis_detector import fast_crisis_check
 
 
@@ -43,13 +43,10 @@ async def test_crisis_handler_greek_locale():
 @pytest.mark.asyncio
 async def test_crisis_handler_llm_failure_fallback():
     """If LLM fails, crisis handler should use the hardcoded fallback and still return a message."""
-    with patch("app.agents.crisis_handler._generate_empathetic_opening",
-               new_callable=AsyncMock, side_effect=Exception("LLM down")):
-        # The outer handle_crisis catches errors from _generate_empathetic_opening
-        # but we patched it to raise — test that handle_crisis handles this gracefully
-        pass  # The function catches errors internally; this tests the production path
-    with patch("app.agents.crisis_handler.get_triage_client") as m:
-        m.side_effect = Exception("connection refused")
+    # get_triage_client is intentionally imported inside the fallback helper,
+    # so patch its defining module rather than a nonexistent handler attribute.
+    with patch("app.llm.client.get_triage_client", side_effect=Exception("connection refused")):
         message, is_crisis = await handle_crisis("u1", locale="en")
     assert is_crisis is True
+    assert message.startswith(_EMPATHY_FALLBACK)
     assert len(message) > 50

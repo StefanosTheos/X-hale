@@ -45,6 +45,8 @@ jobs:
           fi
 
       - name: Run benchmark
+        id: benchmark
+        continue-on-error: true
         env:
           HAILEY_API_URL: ${{ secrets.HAILEY_API_URL }}
           APPWRITE_ENDPOINT: ${{ secrets.APPWRITE_ENDPOINT }}
@@ -57,21 +59,22 @@ jobs:
           CAT="${{ steps.params.outputs.category }}"
           [[ -n "$CAT" ]] && ARGS="$ARGS --category $CAT"
           python finetune/eval/run_benchmark.py $ARGS \
-            --output finetune/eval/results/latest.json
+            --output finetune/eval/results/run_${{ github.run_id }}_${{ github.run_attempt }}.json
 
       - name: Upload results artifact
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: benchmark-${{ github.run_id }}
-          path: finetune/eval/results/latest.json
-          retention-days: 90
+          path: finetune/eval/results/run_${{ github.run_id }}_${{ github.run_attempt }}.json
+          retention-days: 365
 
       - name: Fail if benchmark did not pass
+        if: always()
         run: |
           python -c "
           import json, sys
-          d = json.load(open('finetune/eval/results/latest.json'))
+          d = json.load(open('finetune/eval/results/run_${{ github.run_id }}_${{ github.run_attempt }}.json'))
           cases = d['cases']
           evaluated = [c for c in cases if not c['error']]
           errored = [c for c in cases if c['error']]

@@ -35,5 +35,6 @@ async def test_retrieve_handles_embed_failure():
     with patch("app.retrieval.hybrid_retriever._vector_retrieval", new_callable=AsyncMock) as mock_vec:
         mock_vec.side_effect = Exception("Workers AI down")
         result = await retrieve("test query", "u1", strategy="factual")
-    # Should not raise — returns empty
-    assert result is not None
+    assert result.chunks == []
+    assert result.citations == []
+    assert result.strategy_used == "vector"

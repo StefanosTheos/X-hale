@@ -19,7 +19,8 @@
 #     non_judgmental            — no shame/moralising for relapses
 #     mi_style                  — motivational interviewing for emotional turns
 #
-# expected_themes: informational only — not automatically checked.
+# expected_themes: automatically checked for deterministic lexical coverage;
+# at least 40% (minimum one) must be represented in the response.
 # notes: context for reviewers; not used by the runner.
 
 categories:

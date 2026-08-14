@@ -29,6 +29,8 @@ import random
 import re
 import sys
 import time
+from datetime import datetime, timezone
+from math import ceil
 from dataclasses import dataclass, asdict, field
 from pathlib import Path
 
@@ -108,6 +110,7 @@ class CaseResult:
     deeplinks: list
     latency_s: float
     checks: list[CheckResult]
+    expected_themes: list[str] = field(default_factory=list)
     error: str | None = None
 
     @property
@@ -230,6 +233,47 @@ def _det_check(
     return CheckResult(name, False, f"unknown deterministic check: {name}")
 
 
+_THEME_STOPWORDS = frozenset({"a", "an", "and", "as", "at", "for", "in", "of", "on", "or", "the", "to", "with"})
+
+
+def _normalise_theme_tokens(value: str) -> set[str]:
+    """Normalise concept labels for deterministic expected-theme coverage."""
+    tokens = re.findall(r"[a-z0-9]+", value.lower())
+    normalised: set[str] = set()
+    for token in tokens:
+        if token in _THEME_STOPWORDS:
+            continue
+        # Lightweight stemming keeps the check dependency-free while matching
+        # common variants such as cravings/craving and improved/improvement.
+        for suffix in ("ments", "ment", "ing", "ed", "ies", "s"):
+            if token.endswith(suffix) and len(token) - len(suffix) >= 4:
+                token = token[:-len(suffix)]
+                break
+        normalised.add(token)
+    return normalised
+
+
+def _expected_theme_check(response: str, expected_themes: list[str]) -> CheckResult:
+    """Require deterministic lexical evidence for a representative theme subset."""
+    if not expected_themes:
+        return CheckResult("expected_theme_coverage", True, "no expected themes declared")
+
+    response_tokens = _normalise_theme_tokens(response)
+    matched: list[str] = []
+    for theme in expected_themes:
+        theme_tokens = _normalise_theme_tokens(theme)
+        if theme_tokens and theme_tokens.issubset(response_tokens):
+            matched.append(theme)
+
+    required = max(1, ceil(len(expected_themes) * 0.4))
+    passed = len(matched) >= required
+    return CheckResult(
+        "expected_theme_coverage",
+        passed,
+        f"matched {len(matched)}/{len(expected_themes)} themes; required {required}: {matched}",
+    )
+
+
 # ── LLM judge ────────────────────────────────────────────────────────────────
 
 _groq_client = None
@@ -304,6 +348,7 @@ async def _run_case(
             deeplinks=[],
             latency_s=0.0,
             checks=[],
+            expected_themes=case.expected_themes,
             error=str(last_exc),
         )
 
@@ -317,6 +362,8 @@ async def _run_case(
             result = CheckResult(check_name, False, f"unknown check: {check_name}")
         check_results.append(result)
 
+    check_results.append(_expected_theme_check(response, case.expected_themes))
+
     return CaseResult(
         case_id=case.id,
         category=case.category,
@@ -326,6 +373,7 @@ async def _run_case(
         deeplinks=deeplinks,
         latency_s=latency,
         checks=check_results,
+        expected_themes=case.expected_themes,
     )
 
 
@@ -406,7 +454,12 @@ def _print_report(results: list[CaseResult]) -> None:
 def _save_results(results: list[CaseResult], path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     data = {
+        "schema_version": 2,
+        "generated_at": datetime.now(timezone.utc).isoformat(),
         "timestamp": int(time.time()),
+        "judge_model": "openai/gpt-oss-20b",
+        "quality_threshold_pct": 80,
+        "maximum_error_rate_pct": 20,
         "total": len(results),
         "passed": sum(1 for r in results if r.passed),
         "cases": [
@@ -420,6 +473,7 @@ def _save_results(results: list[CaseResult], path: Path) -> None:
                 "error": r.error,
                 "citations": r.citations,
                 "deeplinks": r.deeplinks,
+                "expected_themes": r.expected_themes,
                 "checks": [asdict(c) for c in r.checks],
             }
             for r in results
