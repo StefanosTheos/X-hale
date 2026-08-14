@@ -15,6 +15,7 @@ import 'package:smoking/pages/utils/themes.dart';
 import 'package:smoking/providers/healthbenefits_provider.dart';
 import 'package:smoking/providers/milestone_provider.dart';
 import 'package:smoking/providers/user_provider.dart';
+import 'package:smoking/services/chat_service.dart';
 
 class AccountPage extends ConsumerStatefulWidget {
   const AccountPage({super.key, required this.account});
@@ -36,8 +37,9 @@ class _AccountPageState extends ConsumerState<AccountPage> {
     final userId = ref.watch(userProvider.select((u) => u.userId));
     final name = ref.watch(userProvider.select((u) => u.name));
     final avatarPath = ref.watch(userProvider.select((u) => u.avatarPath));
-    final achievementsCount =
-        ref.watch(userProvider.select((u) => u.achievementsCount));
+    final achievementsCount = ref.watch(
+      userProvider.select((u) => u.achievementsCount),
+    );
     final quitDate = ref.watch(userProvider.select((u) => u.quitDate));
     final userNotifier = ref.read(userProvider.notifier);
     final isDark = ref.isDark;
@@ -214,14 +216,31 @@ class _AccountPageState extends ConsumerState<AccountPage> {
                           subtitle:
                               'Current Quit Date: ${formatDate(quitDate.toLocal())}',
                           onTap: () async {
-                            final confirmed =
-                                await showRelapseConfirmDialog(context, isDark);
+                            final confirmed = await showRelapseConfirmDialog(
+                              context,
+                              isDark,
+                            );
                             if (!confirmed) return;
                             final newQuitDate = DateTime.now().toLocal();
                             await userNotifier.updatequitDate(newQuitDate);
+                            try {
+                              final jwt =
+                                  (await widget.account.createJWT()).jwt;
+                              await ChatService.recordRelapse(
+                                jwt: jwt,
+                                occurredAt: newQuitDate,
+                              );
+                            } catch (e) {
+                              // Progress reset remains authoritative even if the
+                              // optional chatbot support marker cannot be stored.
+                              if (kDebugMode) {
+                                debugPrint('Relapse support marker failed: $e');
+                              }
+                            }
                             await deleteAllMilestones();
-                            final milestoneNotifier =
-                                ref.read(milestoneProvider.notifier);
+                            final milestoneNotifier = ref.read(
+                              milestoneProvider.notifier,
+                            );
                             await milestoneNotifier
                                 .reinitializeWithNewStartDate(newQuitDate);
                             await ref
@@ -259,9 +278,9 @@ class _AccountPageState extends ConsumerState<AccountPage> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => SmokingPreferencesPage(
-                                  userId: userId,
-                                ),
+                                builder:
+                                    (context) =>
+                                        SmokingPreferencesPage(userId: userId),
                               ),
                             );
                           },
@@ -279,14 +298,15 @@ class _AccountPageState extends ConsumerState<AccountPage> {
                             if (pickedDate == null || !context.mounted) return;
                             final confirmed =
                                 await showQuitDateChangeConfirmDialog(
-                              context,
-                              isDark,
-                            );
+                                  context,
+                                  isDark,
+                                );
                             if (!confirmed) return;
                             await userNotifier.updatequitDate(pickedDate);
                             await deleteAllMilestones();
-                            final milestoneNotifier =
-                                ref.read(milestoneProvider.notifier);
+                            final milestoneNotifier = ref.read(
+                              milestoneProvider.notifier,
+                            );
                             await milestoneNotifier
                                 .reinitializeWithNewStartDate(pickedDate);
                             await ref
@@ -323,9 +343,10 @@ class _AccountPageState extends ConsumerState<AccountPage> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => ChangeAccountInfoPage(
-                                  account: widget.account,
-                                ),
+                                builder:
+                                    (context) => ChangeAccountInfoPage(
+                                      account: widget.account,
+                                    ),
                               ),
                             );
                           },
@@ -334,8 +355,10 @@ class _AccountPageState extends ConsumerState<AccountPage> {
                           title: 'Logout',
                           subtitle: 'Sign out of your account',
                           onTap: () async {
-                            final confirmed =
-                                await showLogoutConfirmDialog(context, isDark);
+                            final confirmed = await showLogoutConfirmDialog(
+                              context,
+                              isDark,
+                            );
                             if (!confirmed) return;
                             // Drop the push target BEFORE the session — once
                             // the session is gone we no longer have auth to
@@ -361,8 +384,9 @@ class _AccountPageState extends ConsumerState<AccountPage> {
                               }
                             }
                             try {
-                              await widget.account
-                                  .deleteSession(sessionId: 'current');
+                              await widget.account.deleteSession(
+                                sessionId: 'current',
+                              );
                               if (!context.mounted) return;
                               // Navigate AWAY from the account page first.
                               // Then defer the local UserState reset (and
@@ -378,8 +402,8 @@ class _AccountPageState extends ConsumerState<AccountPage> {
                               Navigator.pushAndRemoveUntil(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (_) =>
-                                      AuthPage(account: widget.account),
+                                  builder:
+                                      (_) => AuthPage(account: widget.account),
                                 ),
                                 (route) => false,
                               );

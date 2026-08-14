@@ -50,11 +50,26 @@ class ChatService {
   );
 
   static Map<String, String> _headers(String jwt) => {
-        'Content-Type': 'application/json',
-        'Accept': 'text/event-stream',
-        'Authorization': 'Bearer $jwt',
-        'Cache-Control': 'no-cache',
-      };
+    'Content-Type': 'application/json',
+    'Accept': 'text/event-stream',
+    'Authorization': 'Bearer $jwt',
+    'Cache-Control': 'no-cache',
+  };
+
+  /// Records an explicit relapse action for supportive follow-up by Hailey.
+  static Future<void> recordRelapse({
+    required String jwt,
+    required DateTime occurredAt,
+  }) async {
+    final response = await http.post(
+      Uri.parse('$_baseUrl/events/relapse'),
+      headers: _headers(jwt),
+      body: jsonEncode({'occurred_at': occurredAt.toUtc().toIso8601String()}),
+    );
+    if (response.statusCode != 204) {
+      throw Exception('Failed to record relapse event: ${response.statusCode}');
+    }
+  }
 
   // -------------------------------------------------------------------------
   // Chat — SSE streaming
@@ -76,7 +91,10 @@ class ChatService {
       final response = await client.send(request);
 
       if (response.statusCode == 401) {
-        yield HaileyErrorEvent('unauthorized', 'Session expired. Please sign in again.');
+        yield HaileyErrorEvent(
+          'unauthorized',
+          'Session expired. Please sign in again.',
+        );
         return;
       }
       if (response.statusCode != 200) {
@@ -114,11 +132,13 @@ class ChatService {
                 case 'done':
                   yield HaileyDoneEvent(
                     turnId: json['turn_id'] as String? ?? '',
-                    citations: (json['citations'] as List?)
+                    citations:
+                        (json['citations'] as List?)
                             ?.map((e) => e as Map<String, dynamic>)
                             .toList() ??
                         [],
-                    deeplinks: (json['deeplinks'] as List?)
+                    deeplinks:
+                        (json['deeplinks'] as List?)
                             ?.map((e) => e as Map<String, dynamic>)
                             .toList() ??
                         [],
@@ -161,13 +181,14 @@ class ChatService {
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body) as Map<String, dynamic>;
       final turns = (data['turns'] as List?) ?? [];
-      final messages = turns.map((t) {
-        return ChatMessage(
-          content: t['content'] as String,
-          isUser: (t['role'] as String?) == 'user',
-          timestamp: DateTime.parse(t['timestamp'] as String).toLocal(),
-        );
-      }).toList();
+      final messages =
+          turns.map((t) {
+            return ChatMessage(
+              content: t['content'] as String,
+              isUser: (t['role'] as String?) == 'user',
+              timestamp: DateTime.parse(t['timestamp'] as String).toLocal(),
+            );
+          }).toList();
       messages.sort((a, b) => a.timestamp.compareTo(b.timestamp));
       return messages;
     } else if (response.statusCode == 401) {

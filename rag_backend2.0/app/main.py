@@ -95,10 +95,12 @@ def create_app() -> FastAPI:
     from app.routers.history import router as history_router
     from app.routers.kb import router as kb_router
     from app.routers.memory import router as memory_router
+    from app.routers.events import router as events_router
 
     app.include_router(chat_router)
     app.include_router(history_router)
     app.include_router(memory_router)
+    app.include_router(events_router)
     app.include_router(export_router)
     app.include_router(kb_router)
 

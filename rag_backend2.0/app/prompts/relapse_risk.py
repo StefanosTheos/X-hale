@@ -42,7 +42,7 @@ RELAPSE_RISK_USER_TEMPLATE = """User message: {user_input}
 Behavioral signals:
 {signals}
 
-Risk score: {risk_score:.2f} (0.0 = low, 1.0 = high)
+Support-priority score: {risk_score:.2f} (non-clinical heuristic; do not present it to the user)
 
 User memory and history:
 {memory_context}

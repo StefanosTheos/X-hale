@@ -55,6 +55,7 @@ docker compose -f docker/compose.yml up
 | `DELETE` | `/history/` | Clear conversation history |
 | `GET` | `/memory/` | View Hailey's remembered facts about you |
 | `DELETE` | `/memory/{fact_id}` | Remove a specific fact |
+| `POST` | `/events/relapse` | Record the authenticated user's explicit relapse action |
 | `GET` | `/kb/{benefit_id}` | Get knowledge base content for a health benefit |
 | `GET` | `/health` | Health check |
 | `GET` | `/metrics` | Prometheus metrics |

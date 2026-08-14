@@ -19,6 +19,16 @@ from app.observability.logging import get_logger
 logger = get_logger(__name__)
 
 
+def _parse_datetime(value: object) -> datetime | None:
+    if not isinstance(value, str) or not value:
+        return None
+    try:
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+        return parsed if parsed.tzinfo else parsed.replace(tzinfo=timezone.utc)
+    except ValueError:
+        return None
+
+
 def _build_db() -> tuple[TablesDB, str]:
     client = Client()
     (
@@ -55,12 +65,7 @@ async def get_user_profile(user_id: str) -> UserProfile:
     # SDK v19+: user-defined fields are in doc.data (dict)
     d = docs[0].data if isinstance(docs[0].data, dict) else {}
 
-    quit_date: datetime | None = None
-    if d.get("quitDate"):
-        try:
-            quit_date = datetime.fromisoformat(d["quitDate"].replace("Z", "+00:00"))
-        except (ValueError, AttributeError):
-            pass
+    quit_date = _parse_datetime(d.get("quitDate"))
 
     days_quit = 0
     if quit_date:
@@ -72,15 +77,17 @@ async def get_user_profile(user_id: str) -> UserProfile:
         name=d.get("name", "there"),
         quit_date=quit_date,
         days_quit=days_quit,
-        cigs_per_day=d.get("cigsPerDay", 0),
-        cigs_per_pack=d.get("cigsPerPack", 20),
+        cigs_per_day=d.get("cigarettesPerDay", d.get("cigsPerDay", 0)),
+        cigs_per_pack=d.get("cigarettesPerPack", d.get("cigsPerPack", 20)),
         price_per_pack=float(d.get("pricePerPack", 0)),
         years_smoking=d.get("yearsSmoking", 0),
         total_cigs_avoided=d.get("totalCigsAvoided", 0),
         money_saved=float(d.get("moneySaved", 0)),
-        num_achievements=d.get("numAchievements", 0),
+        num_achievements=d.get("achievementsCount", d.get("numAchievements", 0)),
         num_milestones_completed=d.get("numMilestonesCompleted", 0),
-        num_diary_entries=d.get("numDiaryEntries", 0),
+        num_diary_entries=d.get("diaryCount", d.get("numDiaryEntries", 0)),
         num_health_benefits_reached=d.get("numHealthBenefit", 0),
-        locale=d.get("locale", "en"),
+        locale=d.get("language", d.get("locale", "en")),
+        record_created_at=_parse_datetime(docs[0].createdat),
+        record_updated_at=_parse_datetime(docs[0].updatedat),
     )

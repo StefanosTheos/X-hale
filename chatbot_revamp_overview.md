@@ -224,6 +224,7 @@ rag_backend2.0/
 │   │   ├── chat.py           # POST /chat (SSE)
 │   │   ├── history.py        # GET /history, DELETE /history
 │   │   ├── memory.py         # GET /memory, DELETE /memory, DELETE /memory/{fact_id}
+│   │   ├── events.py         # POST /events/relapse
 │   │   ├── export.py         # GET /export (GDPR Article 20)
 │   │   └── kb.py             # GET /kb/{benefit_id}
 │   ├── auth/
@@ -302,6 +303,8 @@ rag_backend2.0/
 ├── tests/
 │   ├── unit/
 │   │   ├── test_crisis_handler.py
+│   │   ├── test_behavioral_signals.py
+│   │   ├── test_events_router.py
 │   │   ├── test_hybrid_retriever.py
 │   │   ├── test_knowledge_graph.py
 │   │   ├── test_reflection_agent.py
@@ -354,7 +357,7 @@ An implementation audit on 14 August 2026 found that the major weaknesses identi
 
 2. [x] **Resolve execution and documentation drift — completed 14 August 2026.** Documentation now reflects sequential specialist dispatch, the GPT OSS 20B/120B split, the 139-node/206-edge KG, and character-based ingestion defaults. Stale Phase 3 stub/pass-through descriptions were removed across the backend documentation and code comments.
 
-3. **Complete relapse-risk signals** — `days_since_last_activity` is still hard-coded to `0`, and no reliable stored relapse marker is loaded. Connect these fields to real Appwrite activity/diary data, define the missing-data behavior, and validate the heuristic before presenting it as an operational risk estimate.
+3. [x] **Complete relapse-risk signals — completed 14 August 2026.** Activity now uses the latest real Appwrite user-row, diary, or conversation timestamp; the explicit in-app Relapse action records a structured authenticated event; and current relapse disclosures are also honored directly from triage. Missing data remains `unknown` and adds no score. The conservative score is explicitly a support-priority heuristic rather than a clinical risk prediction, with focused tests for activity, stored/current relapse reports, and failure behavior.
 
 4. **Repair and strengthen verification** — the unit suite currently reports **65 passed, 2 failed**: the crisis fallback test patches a symbol that is no longer module-level, while the retriever test exposes an unresolved exception-handling contract. Fix the tests/contract, run the integration suite, and retain a dated benchmark artifact before claiming that the 300-case benchmark is passing. `expected_themes` is currently informational only and should either become an automated grounded-content check or be removed.
 

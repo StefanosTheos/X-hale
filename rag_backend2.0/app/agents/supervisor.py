@@ -28,11 +28,8 @@ def decide_specialists(
     if triage.requested_specialists:
         specialists = list(triage.requested_specialists)
 
-    # Supervisor overrides / additions based on memory signals
-    if memory:
-        # Check behavioral risk (if memory indicates concerning patterns)
-        # Phase 3: relapse_risk agent will be wired in here
-        pass
+    # Behavioral signals are loaded inside RelapseRiskAgent when triage requests it;
+    # they are intentionally not fetched here to avoid duplicate Appwrite reads.
 
     # Ensure at least one specialist is invoked for relevant messages
     if not specialists and triage.topic_relevance == "relevant":

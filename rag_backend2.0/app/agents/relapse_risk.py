@@ -28,7 +28,11 @@ class RelapseRiskAgent(AgentBase):
         memory = state.get("user_memory")
         memory_context = memory.to_prompt_block() if memory else "(no memory)"
 
-        signals = await get_behavioral_signals(user_id)
+        triage = state.get("triage")
+        signals = await get_behavioral_signals(
+            user_id,
+            explicit_relapse_report=bool(triage and triage.intent == "relapse_concern"),
+        )
 
         client = get_triage_client()
         messages = [

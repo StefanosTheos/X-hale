@@ -45,6 +45,8 @@ async def get_recent_diary_entries(
     user_id: str,
     days: int = 14,
     limit: int = 20,
+    *,
+    raise_on_error: bool = False,
 ) -> list[DiaryEntry]:
     """
     Return diary entries from the last `days` days, newest first.
@@ -58,13 +60,15 @@ async def get_recent_diary_entries(
             settings.appwrite_diary_collection_id,
             queries=[
                 Query.equal("userId", user_id),
-                Query.greater_than("createdAt", since),
-                Query.order_desc("createdAt"),
+                Query.greater_than("date", since),
+                Query.order_desc("date"),
                 Query.limit(limit),
             ],
         )
     except Exception as exc:
         logger.warning("diary_fetch_failed", user_id=user_id, error=str(exc))
+        if raise_on_error:
+            raise
         return []
 
     entries: list[DiaryEntry] = []
@@ -72,14 +76,17 @@ async def get_recent_diary_entries(
         d = doc.data if isinstance(doc.data, dict) else {}
         tags_raw = d.get("tags", [])
         tags = tags_raw if isinstance(tags_raw, list) else []
-        created_at = datetime.now(timezone.utc)
+        created_at: datetime | None = None
         try:
-            created_at = datetime.fromisoformat(d.get("createdAt", "").replace("Z", "+00:00"))
+            created_at = datetime.fromisoformat(d.get("date", "").replace("Z", "+00:00"))
+            if created_at.tzinfo is None:
+                created_at = created_at.replace(tzinfo=timezone.utc)
         except (ValueError, AttributeError):
-            pass
+            logger.warning("diary_entry_invalid_date", entry_id=doc.id)
+            continue
         entries.append(DiaryEntry(
             entry_id=doc.id,
-            content=d.get("entry", d.get("content", "")),
+            content=d.get("text", d.get("entry", d.get("content", ""))),
             mood=d.get("mood", "neutral"),
             tags=tags,
             created_at=created_at,

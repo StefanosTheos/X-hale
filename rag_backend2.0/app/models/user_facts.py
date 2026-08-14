@@ -95,6 +95,8 @@ class UserProfile(BaseModel):
     num_diary_entries: int = 0
     num_health_benefits_reached: int = 0
     locale: str = "en"                     # used for hotline locale selection
+    record_created_at: Optional[datetime] = None
+    record_updated_at: Optional[datetime] = None
 
 
 # ---------------------------------------------------------------------------
