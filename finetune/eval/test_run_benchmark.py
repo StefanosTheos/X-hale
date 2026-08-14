@@ -11,6 +11,7 @@ from finetune.eval.run_benchmark import (
     _lexical_theme_check,
     _load_checkpoint,
     _select_shard,
+    _add_model_usage,
 )
 
 
@@ -79,6 +80,25 @@ def test_checkpoint_resume_retries_infrastructure_errors(tmp_path):
     results = _load_checkpoint(path, identity)
 
     assert [result.case_id for result in results] == ["quality-fail"]
+
+
+def test_backend_usage_accumulates_independently_per_model():
+    totals = {}
+    _add_model_usage(totals, {
+        "by_model": {
+            "openai/gpt-oss-20b": {"prompt_tokens": 1200, "completion_tokens": 300},
+            "openai/gpt-oss-120b": {"prompt_tokens": 800, "completion_tokens": 200},
+        }
+    })
+    _add_model_usage(totals, {
+        "by_model": {
+            "openai/gpt-oss-20b": {"prompt_tokens": 400, "completion_tokens": 100},
+        }
+    })
+    assert totals == {
+        "openai/gpt-oss-20b": 2000,
+        "openai/gpt-oss-120b": 1000,
+    }
 
 
 @pytest.mark.asyncio

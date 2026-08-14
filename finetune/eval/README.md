@@ -45,3 +45,17 @@ python finetune/eval/aggregate_benchmark.py path/to/shards/*.json \
 Aggregation fails if artifacts mix commits, suite definitions, shard counts, judge providers/models, duplicate case IDs, incomplete shards, or anything other than the exact current 300-case set.
 
 The GitHub `Benchmark Evaluation` workflow runs or resumes one shard. `Aggregate Benchmark Sweep` accepts comma-separated completed benchmark run IDs and creates the final retained artifact.
+
+## Automated free-tier campaign
+
+`Daily Full Benchmark Campaign` runs at 04:15 UTC each day and resumes one
+checkpoint containing the full deterministic 300-case suite. It checkpoints
+after every case and stops when any backend model reaches 170,000 tokens in
+that run, after five hours, or when an upstream quota is exhausted. This keeps
+a 15% margin below Groq's 200,000-token daily free-plan cap.
+
+The deployed backend must set `BENCHMARK_TEST_USER_ID` to the same dedicated
+Appwrite user stored in the GitHub Actions secret. Only that authenticated user
+receives request-level LLM usage metadata and skips post-response memory
+curation. Response generation, retrieval, safety checks, persistence, and
+evaluation remain unchanged.

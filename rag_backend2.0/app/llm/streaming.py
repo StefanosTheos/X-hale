@@ -35,16 +35,20 @@ def done_event(
     citations: list[Citation],
     deeplinks: list[AppAction],
     turn_id: str = "",
+    usage: dict | None = None,
 ) -> str:
     """Emit the terminal done event."""
     def _to_dict(obj):
         return obj if isinstance(obj, dict) else obj.model_dump()
 
-    return _sse_line("done", {
+    payload = {
         "citations": [_to_dict(c) for c in citations],
         "deeplinks": [_to_dict(d) for d in deeplinks],
         "turn_id": turn_id,
-    })
+    }
+    if usage is not None:
+        payload["usage"] = usage
+    return _sse_line("done", payload)
 
 
 def error_event(code: str, message: str) -> str:

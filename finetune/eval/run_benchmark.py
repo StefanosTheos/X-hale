@@ -114,6 +114,7 @@ class CaseResult:
     latency_s: float
     checks: list[CheckResult]
     expected_themes: list[str] = field(default_factory=list)
+    backend_usage: dict = field(default_factory=dict)
     error: str | None = None
 
     @property
@@ -127,7 +128,8 @@ class CaseResult:
             response=data.get("response", ""), citations=data.get("citations", []),
             deeplinks=data.get("deeplinks", []), latency_s=float(data.get("latency_s", 0)),
             checks=[CheckResult(**check) for check in data.get("checks", [])],
-            expected_themes=data.get("expected_themes", []), error=data.get("error"),
+            expected_themes=data.get("expected_themes", []),
+            backend_usage=data.get("backend_usage", {}), error=data.get("error"),
         )
 
 
@@ -164,12 +166,13 @@ async def _call_chat(
     api_url: str,
     jwt: str,
     user_input: str,
-) -> tuple[str, list, list, float]:
-    """Stream /chat SSE; return (text, citations, deeplinks, latency_s)."""
+) -> tuple[str, list, list, float, dict]:
+    """Stream /chat SSE; return text, metadata, latency, and backend LLM usage."""
     start = time.monotonic()
     tokens: list[str] = []
     citations: list = []
     deeplinks: list = []
+    backend_usage: dict = {}
     current_event: str | None = None
 
     async with client.stream(
@@ -194,13 +197,14 @@ async def _call_chat(
                 elif current_event == "done":
                     citations = payload.get("citations", [])
                     deeplinks = payload.get("deeplinks", [])
+                    backend_usage = payload.get("usage", {})
                 elif current_event == "error":
                     raise RuntimeError(
                         f"API error {payload.get('code')}: {payload.get('message')}"
                     )
                 current_event = None
 
-    return "".join(tokens), citations, deeplinks, time.monotonic() - start
+    return "".join(tokens), citations, deeplinks, time.monotonic() - start, backend_usage
 
 
 async def _clear_history(client: httpx.AsyncClient, api_url: str, jwt: str) -> None:
@@ -463,7 +467,7 @@ async def _run_case(
     last_exc: Exception | None = None
     for attempt in range(3):  # up to 2 retries on transient errors
         try:
-            response, citations, deeplinks, latency = await _call_chat(
+            response, citations, deeplinks, latency, backend_usage = await _call_chat(
                 client, api_url, jwt, case.input
             )
             last_exc = None
@@ -513,6 +517,7 @@ async def _run_case(
         latency_s=latency,
         checks=check_results,
         expected_themes=case.expected_themes,
+        backend_usage=backend_usage,
         error="; ".join(evaluation_errors) if evaluation_errors else None,
     )
 
@@ -560,6 +565,13 @@ def _is_quota_error(detail: str) -> bool:
         or "rate_limit_exceeded" in lowered and "token" in lowered
         or "resource_exhausted" in lowered and "quota" in lowered
     )
+
+
+def _add_model_usage(totals: dict[str, int], usage: dict) -> None:
+    """Accumulate per-model total tokens reported by the authenticated backend."""
+    for model, values in usage.get("by_model", {}).items():
+        totals[model] = totals.get(model, 0) + int(values.get("prompt_tokens", 0) or 0) \
+            + int(values.get("completion_tokens", 0) or 0)
 
 
 def _load_checkpoint(path: Path, expected: dict) -> list[CaseResult]:
@@ -641,7 +653,7 @@ def _print_report(results: list[CaseResult]) -> None:
 def _save_results(results: list[CaseResult], path: Path, metadata: dict) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     data = {
-        "schema_version": 3,
+        "schema_version": 4,
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "timestamp": int(time.time()),
         "quality_threshold_pct": 80,
@@ -661,6 +673,7 @@ def _save_results(results: list[CaseResult], path: Path, metadata: dict) -> None
                 "citations": r.citations,
                 "deeplinks": r.deeplinks,
                 "expected_themes": r.expected_themes,
+                "backend_usage": r.backend_usage,
                 "checks": [asdict(c) for c in r.checks],
             }
             for r in results
@@ -697,6 +710,14 @@ async def main() -> int:
         "--preserve-history",
         action="store_true",
         help="Do not clear test-user chat history between cases (disabled by default for isolation)",
+    )
+    parser.add_argument(
+        "--daily-model-token-budget", type=int, default=170_000,
+        help="Stop before any backend Groq model exceeds this run-local token budget",
+    )
+    parser.add_argument(
+        "--max-runtime-minutes", type=int, default=300,
+        help="Checkpoint and stop after this run-local elapsed time",
     )
     args = parser.parse_args()
 
@@ -746,6 +767,7 @@ async def main() -> int:
         "judge_model": _judge_model(),
         "complete": False,
         "stop_reason": None,
+        "daily_model_token_budget": args.daily_model_token_budget,
     }
     results = _load_checkpoint(out, metadata) if args.resume else []
     completed_ids = {result.case_id for result in results}
@@ -757,6 +779,8 @@ async def main() -> int:
 
         consecutive_errors = 0
         stopped_early = False
+        run_started = time.monotonic()
+        session_model_tokens: dict[str, int] = {}
         for i, case in enumerate(cases, 1):
             if case.id in completed_ids:
                 print(f"  [{i:>3}/{len(cases)}] {case.id} ... RESUMED")
@@ -783,6 +807,8 @@ async def main() -> int:
                     error=f"case setup error: {exc}",
                 )
             results.append(result)
+            _add_model_usage(session_model_tokens, result.backend_usage)
+            metadata["session_model_tokens"] = session_model_tokens
             completed_ids.add(result.case_id)
             consecutive_errors = consecutive_errors + 1 if result.error else 0
             metadata["stop_reason"] = None
@@ -796,7 +822,16 @@ async def main() -> int:
                 print(f"FAIL  ({result.latency_s:.1f}s)  failed: {', '.join(failed)}")
 
             if result.error and _is_quota_error(result.error):
-                metadata["stop_reason"] = "judge_quota_exhausted"
+                metadata["stop_reason"] = "quota_exhausted"
+                stopped_early = True
+            elif any(
+                tokens >= args.daily_model_token_budget
+                for tokens in session_model_tokens.values()
+            ):
+                metadata["stop_reason"] = "daily_model_token_budget_reached"
+                stopped_early = True
+            elif time.monotonic() - run_started >= args.max_runtime_minutes * 60:
+                metadata["stop_reason"] = "runtime_budget_reached"
                 stopped_early = True
             elif consecutive_errors >= args.stop_after_errors:
                 metadata["stop_reason"] = "consecutive_infrastructure_errors"

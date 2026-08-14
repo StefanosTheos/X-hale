@@ -137,12 +137,19 @@ async def output_node(state: HaileyState) -> HaileyState:
     # Lifecycle-managed, retriable curation — skip casual turns with nothing to extract.
     # The turn is persisted first, and shield keeps curation alive if the client disconnects.
     intent = state.get("triage").intent if state.get("triage") else "unknown"
-    if intent not in ("off_topic", "unknown"):
+    from app.config import settings
+    is_benchmark_user = bool(
+        settings.benchmark_test_user_id
+        and user_id == settings.benchmark_test_user_id
+    )
+    if intent not in ("off_topic", "unknown") and not is_benchmark_user:
         from app.memory.curation_tasks import schedule_memory_curation
         task = schedule_memory_curation(user_id, user_input, final_response, turn_id)
         curated = await asyncio.shield(task)
         if not curated:
             logger.error("memory_curation_exhausted", user_id=user_id, turn_id=turn_id)
+    elif is_benchmark_user:
+        logger.info("memory_curation_skipped_for_benchmark", user_id=user_id, turn_id=turn_id)
 
     return {**state, "turn_id": turn_id}
 

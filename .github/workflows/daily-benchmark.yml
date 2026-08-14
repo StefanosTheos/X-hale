@@ -1,0 +1,121 @@
+name: Daily Full Benchmark Campaign
+
+on:
+  schedule:
+    # 07:15 Athens during daylight-saving time. A stable daily start leaves a
+    # full 24-hour interval between free-tier consumption windows.
+    - cron: '15 4 * * *'
+  workflow_dispatch:
+    inputs:
+      force_new:
+        description: 'Ignore the latest compatible checkpoint'
+        type: boolean
+        default: false
+      daily_model_token_budget:
+        description: 'Per-model Groq token budget for this run'
+        default: '170000'
+
+permissions:
+  actions: read
+  contents: read
+
+concurrency:
+  group: daily-full-benchmark
+  cancel-in-progress: false
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    timeout-minutes: 330
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r finetune/eval/requirements-eval.txt
+
+      - name: Restore latest compatible campaign checkpoint
+        id: checkpoint
+        if: github.event_name == 'schedule' || inputs.force_new != true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          RUN_ID=$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts?name=benchmark-campaign&per_page=100" \
+            --jq '.artifacts | map(select(.expired == false)) | sort_by(.created_at) | reverse | .[0].workflow_run.id // empty')
+          if [[ -z "$RUN_ID" ]]; then
+            echo "No prior campaign artifact found."
+            exit 0
+          fi
+          mkdir -p finetune/eval/resume
+          gh run download "$RUN_ID" --name benchmark-campaign --dir finetune/eval/resume
+          FILE=$(find finetune/eval/resume -name '*.json' -print -quit)
+          if [[ -n "$FILE" && "$(jq -r '.source_commit' "$FILE")" == "$GITHUB_SHA" ]]; then
+            cp "$FILE" finetune/eval/campaign.json
+            echo "resume=true" >> "$GITHUB_OUTPUT"
+            echo "run_id=$RUN_ID" >> "$GITHUB_OUTPUT"
+          else
+            echo "Latest checkpoint belongs to another commit; starting a fresh campaign."
+          fi
+
+      - name: Continue benchmark campaign
+        id: benchmark
+        continue-on-error: true
+        env:
+          HAILEY_API_URL: ${{ secrets.HAILEY_API_URL }}
+          APPWRITE_ENDPOINT: ${{ secrets.APPWRITE_ENDPOINT }}
+          APPWRITE_PROJECT_ID: ${{ secrets.APPWRITE_PROJECT_ID }}
+          APPWRITE_BENCHMARK_KEY: ${{ secrets.APPWRITE_BENCHMARK_KEY }}
+          BENCHMARK_TEST_USER_ID: ${{ secrets.BENCHMARK_TEST_USER_ID }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          BENCHMARK_JUDGE_PROVIDER: ${{ vars.BENCHMARK_JUDGE_PROVIDER || 'gemini' }}
+          BENCHMARK_JUDGE_MODEL: ${{ vars.BENCHMARK_JUDGE_MODEL || 'gemini-3.5-flash-lite' }}
+        run: |
+          ARGS="--output finetune/eval/campaign.json --max-runtime-minutes 300"
+          if [[ "${{ steps.checkpoint.outputs.resume }}" == "true" ]]; then
+            ARGS="$ARGS --resume"
+          fi
+          BUDGET="${{ inputs.daily_model_token_budget }}"
+          [[ -z "$BUDGET" ]] && BUDGET="170000"
+          python finetune/eval/run_benchmark.py $ARGS --daily-model-token-budget "$BUDGET"
+
+      - name: Upload campaign checkpoint
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-campaign
+          path: finetune/eval/campaign.json
+          if-no-files-found: error
+          retention-days: 365
+
+      - name: Report campaign status
+        if: always()
+        run: |
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          path = Path("finetune/eval/campaign.json")
+          if not path.exists():
+              raise SystemExit("Campaign produced no checkpoint")
+          data = json.loads(path.read_text())
+          total = data.get("selected_total", 300)
+          completed = sum(1 for case in data.get("cases", []) if not case.get("error"))
+          summary = (
+              f"## Benchmark campaign\n\n"
+              f"- Completed: **{completed}/{total}**\n"
+              f"- Complete: **{data.get('complete', False)}**\n"
+              f"- Stop reason: **{data.get('stop_reason') or 'none'}**\n"
+              f"- This run's model tokens: `{data.get('session_model_tokens', {})}`\n"
+          )
+          with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as handle:
+              handle.write(summary)
+          if data.get("complete"):
+              evaluated = [c for c in data["cases"] if not c.get("error")]
+              quality = round(100 * sum(bool(c.get("passed")) for c in evaluated) / len(evaluated))
+              if quality < data.get("quality_threshold_pct", 80):
+                  raise SystemExit(f"Completed campaign quality {quality}% is below threshold")
+          PY

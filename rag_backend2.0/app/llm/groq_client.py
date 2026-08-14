@@ -20,6 +20,7 @@ from groq import AsyncGroq, RateLimitError
 
 from app.config import settings
 from app.observability.logging import get_logger
+from app.llm.usage import record_usage
 
 logger = get_logger(__name__)
 
@@ -56,6 +57,7 @@ class GroqClient:
                 self._client.chat.completions.create(**kwargs),
                 timeout=settings.request_timeout_seconds,
             )
+            record_usage(self._model, resp.usage)
             return resp.choices[0].message.content or ""
 
         from app.llm.client import retry_with_backoff
@@ -76,10 +78,14 @@ class GroqClient:
                     temperature=temperature,
                     max_tokens=max_tokens,
                     stream=True,
+                    stream_options={"include_usage": True},
                 ),
                 timeout=settings.request_timeout_seconds,
             )
             async for chunk in stream:
+                record_usage(self._model, getattr(chunk, "usage", None))
+                if not chunk.choices:
+                    continue
                 delta = chunk.choices[0].delta.content
                 if delta:
                     yield delta

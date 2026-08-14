@@ -56,7 +56,7 @@ def aggregate(paths: list[Path]) -> dict:
     quality = round(100 * sum(1 for case in evaluated if case.get("passed")) / len(evaluated)) if evaluated else 0
     error_rate = round(100 * len(errored) / len(cases))
     return {
-        "schema_version": 3,
+        "schema_version": 4,
         "aggregation_version": 1,
         "generated_at": datetime.now(timezone.utc).isoformat(),
         **identity,

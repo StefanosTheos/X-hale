@@ -29,6 +29,8 @@ from app.models.chat import ChatRequest
 from app.models.retrieval import AppAction, Citation
 from app.observability.logging import get_logger
 from app.observability.metrics import record_request
+from app.config import settings
+from app.llm.usage import begin_usage_tracking, end_usage_tracking
 
 logger = get_logger(__name__)
 router = APIRouter(prefix="/chat", tags=["chat"])
@@ -60,6 +62,7 @@ async def chat(
     turn_id = str(uuid.uuid4())
 
     async def generate():
+        usage, usage_token = begin_usage_tracking()
         try:
             # Status: triaging
             yield status_event("triaging")
@@ -135,12 +138,21 @@ async def chat(
             response_turn_id: str = final_state.get("turn_id", turn_id)
 
             record_request("ok")
-            yield done_event(citations=citations, deeplinks=deeplinks, turn_id=response_turn_id)
+            benchmark_usage = usage.as_dict() if (
+                settings.benchmark_test_user_id
+                and user_id == settings.benchmark_test_user_id
+            ) else None
+            yield done_event(
+                citations=citations, deeplinks=deeplinks,
+                turn_id=response_turn_id, usage=benchmark_usage,
+            )
 
         except Exception as exc:
             logger.error("chat_endpoint_error", user_id=user_id, error=str(exc))
             record_request("error")
             yield error_event("internal_error", "Something went wrong. Please try again.")
+        finally:
+            end_usage_tracking(usage_token)
 
     return StreamingResponse(
         generate(),

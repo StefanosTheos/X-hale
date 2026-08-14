@@ -63,6 +63,10 @@ class Settings(BaseSettings):
     appwrite_chat_messages_collection_id: str = ""
     appwrite_user_facts_collection_id: str = ""
 
+    # Authenticated Appwrite user reserved for benchmark execution. Its turns
+    # are persisted normally, but post-response memory curation is disabled.
+    benchmark_test_user_id: str = ""
+
     # ── Feature flags ───────────────────────────────────────────────────────
     enable_reranker: bool = False
     enable_knowledge_graph: bool = False
