@@ -348,10 +348,20 @@ rag_backend2.0/
 
 ## 12. Next steps
 
-1. **Phase 5 fine-tuning** — build training datasets (synthesised triage + memory-curator examples), train LoRAs on Qwen 2.5 1.5B (triage) and Llama 3.2 3B (memory curator) via QLoRA/Unsloth, benchmark against current Groq baselines, deploy only if the gain justifies serving infrastructure.
+An implementation audit on 14 August 2026 found that the major weaknesses identified in `chatbot_review.md` have been addressed (authentication, deployment URL configuration, structured retrieval and memory, safety routing, and automated tests). The remaining work is:
 
-2. **Re-enable KG and web search fallback** — one-line config change each (`ENABLE_KNOWLEDGE_GRAPH=true`, `ENABLE_WEB_SEARCH_FALLBACK=true`) once on a paid Groq tier.
+1. **Genuine streaming and accurate progress events — completed 14 August 2026.** `/chat/` now runs a preparation graph up to synthesis, streams tokens directly from the synthesis model, suppresses citation-control metadata, post-processes the accumulated response, and persists it before emitting `done`. Status events now follow completed triage, context loading, actual medical knowledge-base retrieval, composition, and saving; the artificial four-character stream and delay were removed.
 
-3. **Loosen chunk cap and medical k** — raise the 400-char chunk truncation in `format_for_prompt()` and increase medical specialist from `k=3` once token budget allows.
+2. **Resolve execution and documentation drift** — specialists currently run sequentially, not “in parallel where able.” Either introduce safe parallel fan-out/fan-in or correct this document. Update the retired Llama model names to the current GPT OSS configuration, the KG size (~139 nodes rather than ~200), and the ingestion description (the current defaults are character-based, not 400–600-token chunks). Remove stale “Phase 3 stub” and pass-through comments for the implemented reflection, relapse-risk, KG, and reranker components.
 
-4. **App store submission** — Google Play listing, screenshots, store copy, and privacy policy link. Can run in parallel with the technical work above.
+3. **Complete relapse-risk signals** — `days_since_last_activity` is still hard-coded to `0`, and no reliable stored relapse marker is loaded. Connect these fields to real Appwrite activity/diary data, define the missing-data behavior, and validate the heuristic before presenting it as an operational risk estimate.
+
+4. **Repair and strengthen verification** — the unit suite currently reports **65 passed, 2 failed**: the crisis fallback test patches a symbol that is no longer module-level, while the retriever test exposes an unresolved exception-handling contract. Fix the tests/contract, run the integration suite, and retain a dated benchmark artifact before claiming that the 300-case benchmark is passing. `expected_themes` is currently informational only and should either become an automated grounded-content check or be removed.
+
+5. **Harden memory lifecycle and safety post-processing** — fact upserts do not enforce the documented “replace only at higher confidence” rule, `superseded_by` is unused, and bulk fact deletion is capped at 100 records without pagination. Make asynchronous memory curation durable/retriable. The content filter currently adds a disclaimer but does not block or regenerate unsafe medical output; define and test the intended enforcement policy.
+
+6. **Validate citations rather than only formatting them** — the fallback can attach every retrieved source when the model emits no citation markers, so citation presence alone does not prove claim-level grounding. Add citation entailment/coverage checks and expose only sources actually supporting the final claims.
+
+7. **Capacity-gated features** — re-enable the KG and web fallback only after quota, latency, source-quality, and regression testing; then revisit the 400-character prompt cap and medical retrieval depth. Keep fine-tuning as a later evidence-driven experiment, benchmarked against the current GPT OSS baselines rather than the retired Llama models.
+
+8. **Release work** — after the above reliability checks, complete the Google Play listing, screenshots, privacy disclosures, and production monitoring.

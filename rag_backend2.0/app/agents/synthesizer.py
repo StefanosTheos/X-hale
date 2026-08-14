@@ -134,3 +134,8 @@ def _post_process(raw: str, state) -> tuple[str, list[Citation]]:
         citations = draft_citations
 
     return filtered_text, citations
+
+
+def post_process_synthesis(raw: str, state) -> tuple[str, list[Citation]]:
+    """Public post-processing entry point for router-driven streaming synthesis."""
+    return _post_process(raw, state)

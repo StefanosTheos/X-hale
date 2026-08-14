@@ -101,3 +101,20 @@ GoogleService-Info.plist
 
 # Qdrant local data volume (if ever run locally outside Docker)
 qdrant_storage/
+
+# Publication and presentation work products (not part of the application)
+/Elsevier_publication.md
+/ieee_presentation_plan.md
+/xhale_ieee_cibcb_2026.pptx
+/generate_ieee_presentation.js
+/presentation_media/
+/node_modules/
+/assets/icons/CIBCB-Icon-small.png
+/assets/icons/ntua-logo.jpg
+/assets/icons/papei-logo.jpg
+/assets/icons/xhale_landing_page.JPG
+/assets/icons/breathing.jpg
+/assets/icons/challenges.jpg
+/assets/icons/health_benefit.jpg
+/assets/icons/milestones.jpg
+/assets/icons/stretching.jpg

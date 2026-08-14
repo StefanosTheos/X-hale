@@ -168,7 +168,7 @@ async def irrelevant_node(state: HaileyState) -> HaileyState:
 
 # ── Graph assembly ────────────────────────────────────────────────────────────
 
-def _build_graph() -> StateGraph:
+def _build_graph(*, stop_before_synthesis: bool = False) -> StateGraph:
     g = StateGraph(HaileyState)
 
     # Add all nodes
@@ -180,8 +180,9 @@ def _build_graph() -> StateGraph:
     g.add_node("emotional_support_node", emotional_support_node)
     g.add_node("reflection_node", reflection_node)
     g.add_node("relapse_risk_node", relapse_risk_node)
-    g.add_node("synthesizer_node", synthesizer_node)
-    g.add_node("output_node", output_node)
+    if not stop_before_synthesis:
+        g.add_node("synthesizer_node", synthesizer_node)
+        g.add_node("output_node", output_node)
     g.add_node("crisis_handler_node", crisis_handler_node)
     g.add_node("clarification_node", clarification_node)
     g.add_node("irrelevant_node", irrelevant_node)
@@ -207,6 +208,8 @@ def _build_graph() -> StateGraph:
     # Supervisor → specialists (conditional fan-out)
     # We use a simpler sequential approach: supervisor sets the list,
     # and we route to each specialist one at a time via a dispatcher node.
+    synthesis_target = END if stop_before_synthesis else "synthesizer_node"
+
     g.add_conditional_edges(
         "supervisor_node",
         _specialist_dispatcher,
@@ -216,7 +219,7 @@ def _build_graph() -> StateGraph:
             "emotional_support_node": "emotional_support_node",
             "reflection_node": "reflection_node",
             "relapse_risk_node": "relapse_risk_node",
-            "synthesizer_node": "synthesizer_node",
+            "synthesizer_node": synthesis_target,
         },
     )
 
@@ -234,16 +237,21 @@ def _build_graph() -> StateGraph:
                 "emotional_support_node": "emotional_support_node",
                 "reflection_node": "reflection_node",
                 "relapse_risk_node": "relapse_risk_node",
-                "synthesizer_node": "synthesizer_node",
+                "synthesizer_node": synthesis_target,
             },
         )
 
     # Terminal paths
-    g.add_edge("synthesizer_node", "output_node")
-    g.add_edge("output_node", END)
-    g.add_edge("crisis_handler_node", "output_node")
-    g.add_edge("clarification_node", "output_node")
-    g.add_edge("irrelevant_node", "output_node")
+    if stop_before_synthesis:
+        g.add_edge("crisis_handler_node", END)
+        g.add_edge("clarification_node", END)
+        g.add_edge("irrelevant_node", END)
+    else:
+        g.add_edge("synthesizer_node", "output_node")
+        g.add_edge("output_node", END)
+        g.add_edge("crisis_handler_node", "output_node")
+        g.add_edge("clarification_node", "output_node")
+        g.add_edge("irrelevant_node", "output_node")
 
     return g
 
@@ -269,3 +277,10 @@ def get_compiled_graph():
     logger.info("compiling_langgraph")
     graph = _build_graph()
     return graph.compile()
+
+
+@lru_cache(maxsize=1)
+def get_compiled_preparation_graph():
+    """Return the graph that prepares a turn and stops before synthesis/persistence."""
+    logger.info("compiling_langgraph_preparation")
+    return _build_graph(stop_before_synthesis=True).compile()

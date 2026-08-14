@@ -21,8 +21,8 @@ class Settings(BaseSettings):
 
     # ── LLM ────────────────────────────────────────────────────────────────
     groq_api_key: str = ""
-    groq_triage_model: str = "llama-3.1-8b-instant"
-    groq_synthesis_model: str = "llama-3.3-70b-versatile"
+    groq_triage_model: str = "openai/gpt-oss-20b"
+    groq_synthesis_model: str = "openai/gpt-oss-120b"
     groq_triage_temperature: float = 0.0
     groq_synthesis_temperature: float = 0.5
 

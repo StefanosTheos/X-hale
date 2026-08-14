@@ -57,8 +57,8 @@ async def lifespan(app: FastAPI):
 
     # Pre-compile the LangGraph (avoids first-request cold start)
     try:
-        from app.graph.builder import get_compiled_graph
-        get_compiled_graph()
+        from app.graph.builder import get_compiled_preparation_graph
+        get_compiled_preparation_graph()
         logger.info("langgraph_compiled")
     except Exception as exc:
         logger.warning("langgraph_compile_warning", error=str(exc))
