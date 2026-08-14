@@ -16,6 +16,7 @@ from app.models.retrieval import Citation, SpecialistDraft
 from app.observability.logging import get_logger
 from app.prompts.system import HAILEY_SYSTEM
 from app.prompts.synthesizer import SYNTHESIZER_SYSTEM, SYNTHESIZER_USER_TEMPLATE
+from app.safety.citation_validator import validate_citations
 from app.safety.content_filter import filter_response
 
 logger = get_logger(__name__)
@@ -108,18 +109,23 @@ def _build_messages(state) -> list[dict]:
 
 def _post_process(raw: str, state) -> tuple[str, list[Citation]]:
     """Apply content filter and extract validated citations."""
-    # Build valid source_ids + deduplicated Citation objects from all specialist drafts
+    # Build source metadata and source-attributed claims from specialist drafts.
     valid_ids: set[str] = set()
-    draft_citations: list[Citation] = []
+    citation_by_id: dict[str, Citation] = {}
+    source_claims: dict[str, list[str]] = {}
     for draft_json in state.get("specialist_drafts", {}).values():
         try:
             draft = json.loads(draft_json) if isinstance(draft_json, str) else draft_json
             for c in draft.get("citations", []):
                 sid = c.get("source_id", "") if isinstance(c, dict) else getattr(c, "source_id", "")
-                stype = c.get("source_type", "unknown") if isinstance(c, dict) else getattr(c, "source_type", "unknown")
                 if sid and sid not in valid_ids:
                     valid_ids.add(sid)
-                    draft_citations.append(Citation(source_id=sid, source_type=stype))
+                    citation_by_id[sid] = c if isinstance(c, Citation) else Citation.model_validate(c)
+            for key_point in draft.get("key_points", []):
+                sid = key_point.get("source_id", "") if isinstance(key_point, dict) else getattr(key_point, "source_id", "")
+                claim = key_point.get("claim", "") if isinstance(key_point, dict) else getattr(key_point, "claim", "")
+                if sid in valid_ids and claim:
+                    source_claims.setdefault(sid, []).append(claim)
         except (json.JSONDecodeError, AttributeError):
             pass
 
@@ -128,14 +134,17 @@ def _post_process(raw: str, state) -> tuple[str, list[Citation]]:
     if was_blocked:
         logger.warning("unsafe_synthesis_blocked", reason=reason)
         cited_ids = []
-        draft_citations = []
+        source_claims = {}
 
-    if cited_ids:
-        citations = [Citation(source_id=sid, source_type="unknown") for sid in cited_ids]
-    else:
-        # Model didn't emit the HTML comment block — fall back to all retrieved sources
-        logger.debug("citations_fallback_to_drafts", count=len(draft_citations))
-        citations = draft_citations
+    validation = validate_citations(filtered_text, source_claims, citation_by_id, cited_ids)
+    citations = validation.citations
+    logger.info(
+        "citation_validation_complete",
+        declared=len(cited_ids),
+        exposed=len(citations),
+        represented_claims=validation.represented_claims,
+        sourced_claims=validation.sourced_claims,
+    )
 
     return filtered_text, citations
 

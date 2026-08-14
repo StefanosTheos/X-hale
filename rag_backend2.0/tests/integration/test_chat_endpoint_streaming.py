@@ -30,7 +30,11 @@ class _PreparationGraph:
                 "specialist_drafts": {
                     "medical": {
                         "key_points": [{"claim": "Recovery begins quickly.", "source_id": "nhs"}],
-                        "citations": [{"source_id": "nhs", "source_type": "government"}],
+                        "citations": [{
+                            "source_id": "nhs",
+                            "source_type": "government",
+                            "snippet": "Recovery begins quickly after quitting.",
+                        }],
                         "suggested_deeplinks": [],
                     }
                 }
