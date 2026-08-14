@@ -574,7 +574,10 @@ def _load_checkpoint(path: Path, expected: dict) -> list[CaseResult]:
             raise ValueError(
                 f"checkpoint {key} mismatch: {data.get(key)!r} != {expected[key]!r}"
             )
-    results = [CaseResult.from_dict(item) for item in data.get("cases", [])]
+    loaded = [CaseResult.from_dict(item) for item in data.get("cases", [])]
+    # Infrastructure failures are transient evidence, not completed evaluations.
+    # Preserve quality pass/fail outcomes, but retry errored cases on resume.
+    results = [result for result in loaded if result.error is None]
     ids = [result.case_id for result in results]
     if len(ids) != len(set(ids)):
         raise ValueError("checkpoint contains duplicate case IDs")

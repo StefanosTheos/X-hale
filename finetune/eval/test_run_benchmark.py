@@ -57,6 +57,30 @@ def test_checkpoint_rejects_mixed_commit(tmp_path):
         })
 
 
+def test_checkpoint_resume_retries_infrastructure_errors(tmp_path):
+    path = tmp_path / "checkpoint.json"
+    identity = {
+        "suite_hash": "hash", "shard_index": 0, "shard_count": 20,
+        "source_commit": "commit", "judge_provider": "gemini", "judge_model": "flash",
+    }
+    base = {
+        "category": "cat", "input": "input", "response": "response",
+        "citations": [], "deeplinks": [], "latency_s": 1, "checks": [],
+        "expected_themes": [],
+    }
+    path.write_text(json.dumps({
+        **identity,
+        "cases": [
+            {**base, "case_id": "quality-fail", "error": None},
+            {**base, "case_id": "transient-error", "error": "API unavailable"},
+        ],
+    }), encoding="utf-8")
+
+    results = _load_checkpoint(path, identity)
+
+    assert [result.case_id for result in results] == ["quality-fail"]
+
+
 @pytest.mark.asyncio
 async def test_combined_judge_uses_one_request_for_all_checks(monkeypatch):
     payload = {

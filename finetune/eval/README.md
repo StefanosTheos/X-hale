@@ -19,6 +19,7 @@ python finetune/eval/run_benchmark.py \
 ```
 
 Exit code `75` means the shard stopped early after quota exhaustion or consecutive infrastructure errors; the checkpoint remains resumable. A complete shard still applies the local 80% quality and 20% maximum-error gates.
+Resume retains completed quality pass/fail outcomes but automatically retries cases carrying infrastructure errors.
 
 ## Judge configuration
 
