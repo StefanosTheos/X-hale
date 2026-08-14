@@ -67,6 +67,8 @@ async def lifespan(app: FastAPI):
     yield
 
     # Shutdown
+    from app.memory.curation_tasks import drain_memory_curation_tasks
+    await drain_memory_curation_tasks()
     logger.info("hailey_backend_stopping")
 
 

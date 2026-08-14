@@ -76,3 +76,26 @@ async def test_chat_streams_model_tokens_then_saves_and_completes():
         assert saved_state["citations"][0].source_id == "nhs"
     finally:
         app.dependency_overrides.clear()
+
+
+@pytest.mark.asyncio
+async def test_chat_never_streams_blocked_medical_output():
+    async def _unsafe_tokens(_state):
+        yield "You should take this medication every morning."
+
+    app.dependency_overrides[get_current_user] = lambda: "user_test"
+    try:
+        with patch("app.routers.chat.get_compiled_preparation_graph", return_value=_PreparationGraph()), \
+             patch("app.routers.chat.synthesize_stream", side_effect=_unsafe_tokens), \
+             patch("app.routers.chat.output_node", new_callable=AsyncMock, side_effect=lambda state: state):
+            transport = httpx.ASGITransport(app=app)
+            async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+                response = await client.post(
+                    "/chat/", json={"message": "What should I use?", "locale": "en"},
+                    headers={"Authorization": "Bearer test"},
+                )
+
+        assert "You should take this medication" not in response.text
+        assert "doctor or pharmacist" in response.text
+    finally:
+        app.dependency_overrides.clear()

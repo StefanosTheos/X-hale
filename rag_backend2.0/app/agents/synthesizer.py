@@ -79,8 +79,8 @@ async def synthesize(state) -> tuple[str, list[Citation]]:
 
 async def synthesize_stream(state) -> AsyncIterator[str]:
     """
-    Streaming synthesis. Yields raw tokens as they arrive.
-    The router extracts citations from the accumulated full text when done.
+    Stream raw model tokens internally. The router buffers them until safety
+    post-processing completes, then emits only the validated response.
     """
     client = get_synthesis_client()
     messages = _build_messages(state)
@@ -124,7 +124,11 @@ def _post_process(raw: str, state) -> tuple[str, list[Citation]]:
             pass
 
     text, cited_ids = _extract_citations(raw, valid_ids)
-    filtered_text, _, _ = filter_response(text)
+    filtered_text, was_blocked, reason = filter_response(text)
+    if was_blocked:
+        logger.warning("unsafe_synthesis_blocked", reason=reason)
+        cited_ids = []
+        draft_citations = []
 
     if cited_ids:
         citations = [Citation(source_id=sid, source_type="unknown") for sid in cited_ids]

@@ -57,4 +57,20 @@ async def test_curate_memory_handles_llm_failure():
         mock_client.complete.side_effect = Exception("Groq timeout")
         mock_fn.return_value = mock_client
         # Should not raise
-        await curate_memory("u1", "test input", "test reply", "t1")
+        result = await curate_memory("u1", "test input", "test reply", "t1", max_attempts=1)
+        assert result is False
+
+
+@pytest.mark.asyncio
+async def test_curate_memory_retries_transient_failure():
+    with patch("app.agents.memory_curator.get_triage_client") as mock_fn, \
+         patch("app.agents.memory_curator.asyncio.sleep", new_callable=AsyncMock) as mock_sleep:
+        mock_client = AsyncMock()
+        mock_client.complete.side_effect = [Exception("temporary"), "[]"]
+        mock_fn.return_value = mock_client
+
+        result = await curate_memory("u1", "test input", "test reply", "t1")
+
+        assert result is True
+        assert mock_client.complete.await_count == 2
+        mock_sleep.assert_awaited_once_with(1)

@@ -5,7 +5,7 @@ Flow:
 1. Verify Appwrite JWT → get user_id
 2. Build initial HaileyState
 3. Run the preparation LangGraph through specialist drafting
-4. Stream synthesis-model tokens, post-process, persist, and emit done
+4. Buffer synthesis output, enforce safety, then stream the safe response
 
 SSE event types:
   event: status   data: {"state": "triaging"|"loading_context"|"searching_kb"|"composing"|"saving"}
@@ -15,7 +15,6 @@ SSE event types:
 """
 from __future__ import annotations
 
-import re
 import uuid
 
 from fastapi import APIRouter, Depends, Request
@@ -34,11 +33,6 @@ from app.observability.metrics import record_request
 logger = get_logger(__name__)
 router = APIRouter(prefix="/chat", tags=["chat"])
 
-_CITATION_START = "<!-- citations:"
-_STREAM_TAIL_SIZE = len(_CITATION_START) - 1
-_INLINE_MARKER_PATTERN = re.compile(r"\[[a-z][a-z0-9_]+\]")
-
-
 def _collect_deeplinks(state: HaileyState) -> list[AppAction]:
     """Collect specialist deeplinks without duplicating identical targets."""
     collected: list[AppAction] = []
@@ -52,20 +46,6 @@ def _collect_deeplinks(state: HaileyState) -> list[AppAction]:
                 seen.add(action.deeplink)
                 collected.append(action)
     return collected
-
-
-def _visible_stream_part(buffer: str, *, final: bool = False) -> tuple[str, str, bool]:
-    """Remove citation metadata while retaining a tail for split SSE/LLM tokens."""
-    marker_at = buffer.find(_CITATION_START)
-    if marker_at >= 0:
-        return _INLINE_MARKER_PATTERN.sub("", buffer[:marker_at]).rstrip(), "", True
-    if final:
-        return _INLINE_MARKER_PATTERN.sub("", buffer), "", False
-    if len(buffer) <= _STREAM_TAIL_SIZE:
-        return "", buffer, False
-    cut = len(buffer) - _STREAM_TAIL_SIZE
-    return _INLINE_MARKER_PATTERN.sub("", buffer[:cut]), buffer[cut:], False
-
 
 @router.post("/")
 async def chat(
@@ -133,31 +113,12 @@ async def chat(
                 yield token_event(response_text)
             else:
                 raw_parts: list[str] = []
-                pending = ""
-                metadata_started = False
-                streamed_text = ""
                 async for token in synthesize_stream(final_state):
                     raw_parts.append(token)
-                    if metadata_started:
-                        continue
-                    pending += token
-                    visible, pending, metadata_started = _visible_stream_part(pending)
-                    if visible:
-                        streamed_text += visible
-                        yield token_event(visible)
-
-                if not metadata_started:
-                    visible, _, _ = _visible_stream_part(pending, final=True)
-                    if visible:
-                        streamed_text += visible
-                        yield token_event(visible)
 
                 response_text, citations = post_process_synthesis("".join(raw_parts), final_state)
-                # The safety filter may append a disclaimer after generation.
-                if response_text.startswith(streamed_text):
-                    suffix = response_text[len(streamed_text):]
-                    if suffix:
-                        yield token_event(suffix)
+                # Safety must run before any model text reaches the client.
+                yield token_event(response_text)
                 final_state["final_response"] = response_text
                 final_state["citations"] = citations
                 final_state["deeplinks"] = _collect_deeplinks(final_state)

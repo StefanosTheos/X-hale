@@ -14,7 +14,7 @@ Node inventory:
   reflection_node       → runs ReflectionAgent with diary retrieval
   relapse_risk_node     → runs RelapseRiskAgent with behavioral signals
   synthesizer_node      → runs Synthesizer, sets state.final_response
-  output_node           → saves turn to Appwrite, fires memory curator
+  output_node           → saves turn to Appwrite, completes retriable memory curation
   crisis_handler_node   → deterministic crisis path, sets state.final_response
   clarification_node    → returns a clarification question, sets state.final_response
   irrelevant_node       → returns a polite redirect, sets state.final_response
@@ -22,7 +22,6 @@ Node inventory:
 from __future__ import annotations
 
 import asyncio
-import json
 import uuid
 from functools import lru_cache
 
@@ -111,7 +110,7 @@ async def synthesizer_node(state: HaileyState) -> HaileyState:
 
 
 async def output_node(state: HaileyState) -> HaileyState:
-    """Save the completed turn to Appwrite and fire the memory curator async."""
+    """Save the completed turn to Appwrite and complete retriable memory curation."""
     from app.memory.conversation_store import append_turn
     user_id = state["user_id"]
     user_input = state["user_input"]
@@ -135,11 +134,15 @@ async def output_node(state: HaileyState) -> HaileyState:
         turn_id=turn_id,
     )
 
-    # Fire-and-forget memory curation — skip for casual turns (nothing to extract)
+    # Lifecycle-managed, retriable curation — skip casual turns with nothing to extract.
+    # The turn is persisted first, and shield keeps curation alive if the client disconnects.
     intent = state.get("triage").intent if state.get("triage") else "unknown"
     if intent not in ("off_topic", "unknown"):
-        from app.agents.memory_curator import curate_memory
-        asyncio.ensure_future(curate_memory(user_id, user_input, final_response, turn_id))
+        from app.memory.curation_tasks import schedule_memory_curation
+        task = schedule_memory_curation(user_id, user_input, final_response, turn_id)
+        curated = await asyncio.shield(task)
+        if not curated:
+            logger.error("memory_curation_exhausted", user_id=user_id, turn_id=turn_id)
 
     return {**state, "turn_id": turn_id}
 

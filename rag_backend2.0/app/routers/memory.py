@@ -58,11 +58,10 @@ async def remove_fact(
 ):
     """
     Delete a specific user fact by its ID.
-    The user can only delete their own facts (fact ownership is not currently
-    enforced at DB level — Appwrite permissions should restrict this per-document).
+    Ownership is verified server-side before deletion.
     """
     try:
-        await delete_fact(fact_id)
+        await delete_fact(fact_id, user_id=user_id)
         logger.info("user_fact_deleted_by_user", user_id=user_id, fact_id=fact_id)
     except Exception as exc:
         logger.warning("user_fact_delete_failed", fact_id=fact_id, error=str(exc))
