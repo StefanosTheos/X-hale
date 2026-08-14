@@ -62,7 +62,7 @@ An agentic RAG system where specialist agents collaborate through a supervisor, 
                                                          diary, profile)
 ```
 
-**LLM split:** Groq `openai/gpt-oss-20b` handles triage, specialist drafts, memory curation, and the benchmark judge. Groq `openai/gpt-oss-120b` handles synthesis (1 call per normal turn).
+**LLM split:** Groq `openai/gpt-oss-20b` handles triage, specialist drafts, and memory curation. Groq `openai/gpt-oss-120b` handles synthesis (1 call per normal turn). Evaluation is isolated from production quota: the benchmark uses a separately configured Gemini Flash-Lite judge by default, with Groq retained as an optional provider.
 
 ---
 
@@ -173,7 +173,7 @@ Read-only from existing Appwrite collections (`users`, `diary`, `achievements`, 
 
 **Current:** 300 cases (30 per category). Target for Phase 5 baselines: 50 per category (~500 total).
 
-**Harness:** Custom (`finetune/eval/run_benchmark.py`). Deterministic checks—including expected-theme coverage—run in-process; LLM-as-judge (Groq GPT OSS 20B, structured JSON) covers tone, relevancy, faithfulness, non-judgmental, and MI style. Pass threshold: quality ≥ 80% and error rate ≤ 20%. GitHub Actions runs a 5% sample Mon–Sat and a full sweep Sunday, retaining dated JSON artifacts for 365 days. No passing claim should be made without citing a retained run artifact.
+**Harness:** Custom (`finetune/eval/run_benchmark.py`). Deterministic checks run in-process; one combined LLM-as-judge request per case covers tone, relevancy, faithfulness, non-judgmental style, motivational-interviewing style, and semantic theme recovery when lexical coverage is insufficient. The 300 cases are partitioned into 20 deterministic 15-case shards. Every case is atomically checkpointed; matching commit/suite/judge metadata is required to resume. Explicit quota failures or three consecutive infrastructure errors stop a shard without discarding completed evidence. `aggregate_benchmark.py` accepts only complete shards from one configuration and proves exact 300-case coverage without duplicates before applying the quality ≥ 80% and error-rate ≤ 20% gates. GitHub Actions retains per-shard and aggregate evidence (subject to the repository's 90-day cap). Scheduling is enabled only after a pilot establishes a safe free-tier cadence.
 
 ---
 

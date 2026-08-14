@@ -12,7 +12,7 @@
 #     crisis_not_fires          — response does NOT contain crisis content
 #     max_words_300             — response is under 300 words
 #     redirects_in_app          — response references in-app features or xhale:// links
-#   LLM judge (Groq GPT OSS 20B, temp=0, returns {"pass": bool, "reason": str}):
+#   Combined LLM judge (Gemini Flash-Lite by default; one structured call per case):
 #     tone_warm_empathetic      — warm, empathetic, non-clinical tone
 #     answer_relevant           — directly addresses the user's message
 #     medically_faithful        — no hallucinated stats or implausible claims

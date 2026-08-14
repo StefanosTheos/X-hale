@@ -1,17 +1,27 @@
 name: Benchmark Evaluation
 
 on:
-  schedule:
-    - cron: '0 3 * * 1-6'  # Mon–Sat 03:00 UTC — 5% nightly sample
-    - cron: '0 3 * * 0'    # Sunday 03:00 UTC — full sweep
   workflow_dispatch:
     inputs:
       sample:
-        description: 'Sample fraction (1.0 = full, 0.05 = 5%)'
-        default: '0.05'
+        description: 'Random sample fraction; use 1.0 for deterministic shard mode'
+        default: '1.0'
       category:
         description: 'Run only this category (leave blank for all)'
         default: ''
+      shard_count:
+        description: 'Number of deterministic shards'
+        default: '20'
+      shard_index:
+        description: 'Zero-based shard index'
+        default: '0'
+      resume_run_id:
+        description: 'Prior run ID containing an incomplete artifact to resume'
+        default: ''
+
+permissions:
+  actions: read
+  contents: read
 
 jobs:
   benchmark:
@@ -28,21 +38,24 @@ jobs:
       - name: Install dependencies
         run: pip install -r finetune/eval/requirements-eval.txt
 
-      - name: Determine sample fraction
+      - name: Determine execution parameters
         id: params
         run: |
-          if [[ "${{ github.event_name }}" == "schedule" ]]; then
-            DAY=$(date -u +%u)   # 1=Mon … 7=Sun
-            if [[ "$DAY" == "7" ]]; then
-              echo "sample=1.0" >> "$GITHUB_OUTPUT"
-            else
-              echo "sample=0.05" >> "$GITHUB_OUTPUT"
-            fi
-            echo "category=" >> "$GITHUB_OUTPUT"
-          else
-            echo "sample=${{ github.event.inputs.sample || '0.05' }}" >> "$GITHUB_OUTPUT"
-            echo "category=${{ github.event.inputs.category }}" >> "$GITHUB_OUTPUT"
-          fi
+          echo "sample=${{ github.event.inputs.sample || '1.0' }}" >> "$GITHUB_OUTPUT"
+          echo "category=${{ github.event.inputs.category }}" >> "$GITHUB_OUTPUT"
+          echo "shard_count=${{ github.event.inputs.shard_count || '20' }}" >> "$GITHUB_OUTPUT"
+          echo "shard_index=${{ github.event.inputs.shard_index || '0' }}" >> "$GITHUB_OUTPUT"
+          echo "resume_run_id=${{ github.event.inputs.resume_run_id }}" >> "$GITHUB_OUTPUT"
+
+      - name: Download prior checkpoint
+        if: steps.params.outputs.resume_run_id != ''
+        uses: actions/download-artifact@v4
+        with:
+          name: benchmark-${{ steps.params.outputs.resume_run_id }}
+          path: finetune/eval/resume
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: ${{ steps.params.outputs.resume_run_id }}
 
       - name: Run benchmark
         id: benchmark
@@ -54,12 +67,20 @@ jobs:
           APPWRITE_BENCHMARK_KEY: ${{ secrets.APPWRITE_BENCHMARK_KEY }}
           BENCHMARK_TEST_USER_ID: ${{ secrets.BENCHMARK_TEST_USER_ID }}
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          BENCHMARK_JUDGE_PROVIDER: ${{ vars.BENCHMARK_JUDGE_PROVIDER || 'gemini' }}
+          BENCHMARK_JUDGE_MODEL: ${{ vars.BENCHMARK_JUDGE_MODEL || 'gemini-3.5-flash-lite' }}
         run: |
-          ARGS="--sample ${{ steps.params.outputs.sample }}"
+          OUTPUT="finetune/eval/results/run_${{ github.run_id }}_${{ github.run_attempt }}.json"
+          ARGS="--sample ${{ steps.params.outputs.sample }} --shard-count ${{ steps.params.outputs.shard_count }} --shard-index ${{ steps.params.outputs.shard_index }}"
           CAT="${{ steps.params.outputs.category }}"
           [[ -n "$CAT" ]] && ARGS="$ARGS --category $CAT"
-          python finetune/eval/run_benchmark.py $ARGS \
-            --output finetune/eval/results/run_${{ github.run_id }}_${{ github.run_attempt }}.json
+          RESUME="${{ steps.params.outputs.resume_run_id }}"
+          if [[ -n "$RESUME" ]]; then
+            cp "$(find finetune/eval/resume -name '*.json' -print -quit)" "$OUTPUT"
+            ARGS="$ARGS --resume"
+          fi
+          python finetune/eval/run_benchmark.py $ARGS --output "$OUTPUT"
 
       - name: Upload results artifact
         if: always()
@@ -67,6 +88,7 @@ jobs:
         with:
           name: benchmark-${{ github.run_id }}
           path: finetune/eval/results/run_${{ github.run_id }}_${{ github.run_attempt }}.json
+          if-no-files-found: error
           retention-days: 365
 
       - name: Fail if benchmark did not pass
@@ -75,6 +97,8 @@ jobs:
           python -c "
           import json, sys
           d = json.load(open('finetune/eval/results/run_${{ github.run_id }}_${{ github.run_attempt }}.json'))
+          if not d.get('complete'):
+              print(f\"INCOMPLETE — {d.get('stop_reason')} ({len(d.get('cases', []))}/{d.get('selected_total')} cases)\"); sys.exit(1)
           cases = d['cases']
           evaluated = [c for c in cases if not c['error']]
           errored = [c for c in cases if c['error']]

@@ -14,7 +14,8 @@ Required env vars:
   APPWRITE_PROJECT_ID     from Appwrite console
   APPWRITE_BENCHMARK_KEY  Appwrite server key with users.write scope
   BENCHMARK_TEST_USER_ID  dedicated test Appwrite user's ID
-  GROQ_API_KEY            for LLM judge calls
+  GEMINI_API_KEY          for Gemini judge calls (recommended)
+  GROQ_API_KEY            only when BENCHMARK_JUDGE_PROVIDER=groq
 
 Optional:
   RESULTS_PATH            override default output path
@@ -23,6 +24,7 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import hashlib
 import json
 import os
 import random
@@ -117,6 +119,16 @@ class CaseResult:
     @property
     def passed(self) -> bool:
         return self.error is None and all(c.passed for c in self.checks)
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "CaseResult":
+        return cls(
+            case_id=data["case_id"], category=data["category"], input=data["input"],
+            response=data.get("response", ""), citations=data.get("citations", []),
+            deeplinks=data.get("deeplinks", []), latency_s=float(data.get("latency_s", 0)),
+            checks=[CheckResult(**check) for check in data.get("checks", [])],
+            expected_themes=data.get("expected_themes", []), error=data.get("error"),
+        )
 
 
 # ── Auth ──────────────────────────────────────────────────────────────────────
@@ -287,108 +299,157 @@ def _lexical_theme_check(response: str, expected_themes: list[str]) -> CheckResu
 
 # ── LLM judge ────────────────────────────────────────────────────────────────
 
-_groq_client = None
+_judge_client = None
 
 
-def _groq():
-    global _groq_client
-    if _groq_client is None:
+def _judge_provider() -> str:
+    return os.environ.get("BENCHMARK_JUDGE_PROVIDER", "groq").lower()
+
+
+def _judge_model() -> str:
+    default = "gemini-3.5-flash-lite" if _judge_provider() == "gemini" else "openai/gpt-oss-20b"
+    return os.environ.get("BENCHMARK_JUDGE_MODEL", default)
+
+
+def _judge():
+    global _judge_client
+    if _judge_client is not None:
+        return _judge_client
+    provider = _judge_provider()
+    if provider == "gemini":
+        from openai import AsyncOpenAI
+        _judge_client = AsyncOpenAI(
+            api_key=os.environ["GEMINI_API_KEY"],
+            base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
+        )
+    elif provider == "groq":
         from groq import AsyncGroq
-        _groq_client = AsyncGroq(api_key=os.environ["GROQ_API_KEY"])
-    return _groq_client
+        _judge_client = AsyncGroq(api_key=os.environ["GROQ_API_KEY"])
+    else:
+        raise ValueError(f"unsupported BENCHMARK_JUDGE_PROVIDER: {provider}")
+    return _judge_client
 
 
-async def _judge_check(name: str, question: str, response: str) -> CheckResult:
+def _rubric(name: str) -> str:
     prompt_file = JUDGE_PROMPTS_DIR / f"{name}.txt"
     if not prompt_file.exists():
-        return CheckResult(name, False, f"missing judge prompt: {name}.txt")
-
-    template = prompt_file.read_text(encoding="utf-8")
-    user_prompt = template.replace("{question}", question).replace("{response}", response)
-
-    schema = {
-        "name": "benchmark_judgment",
-        "strict": True,
-        "schema": {
-            "type": "object",
-            "properties": {
-                "pass": {"type": "boolean"},
-                "reason": {"type": "string"},
-            },
-            "required": ["pass", "reason"],
-            "additionalProperties": False,
-        },
-    }
-    try:
-        chat = await _groq().chat.completions.create(
-            model="openai/gpt-oss-20b",
-            messages=[{"role": "user", "content": "Return a strict evaluation judgment.\n\n" + user_prompt}],
-            temperature=0,
-            reasoning_effort="low",
-            include_reasoning=False,
-            response_format={"type": "json_schema", "json_schema": schema},
-            max_completion_tokens=512,
-        )
-        result = json.loads(chat.choices[0].message.content)
-        return CheckResult(name, bool(result["pass"]), str(result["reason"]))
-    except Exception as exc:
-        return CheckResult(name, False, f"judge infrastructure error: {exc}", True)
+        raise FileNotFoundError(f"missing judge prompt: {name}.txt")
+    text = prompt_file.read_text(encoding="utf-8")
+    criteria_at = text.find("Scoring criteria")
+    return_at = text.find("Return JSON")
+    if criteria_at < 0:
+        return text
+    return text[criteria_at:return_at if return_at >= 0 else len(text)].strip()
 
 
-async def _expected_theme_check(
+def _parse_json_object(content: str) -> dict:
+    """Accept strict JSON and tolerate a provider wrapping it in a code fence."""
+    start = content.find("{")
+    end = content.rfind("}")
+    if start < 0 or end < start:
+        raise ValueError("judge returned no JSON object")
+    return json.loads(content[start:end + 1])
+
+
+async def _judge_case(
     question: str,
     response: str,
+    check_names: list[str],
     expected_themes: list[str],
-) -> CheckResult:
-    """Use lexical matching first, then strict-schema semantic matching."""
+) -> list[CheckResult]:
+    """Evaluate every requested semantic criterion in one provider call."""
     lexical = _lexical_theme_check(response, expected_themes)
-    if lexical.passed or not expected_themes:
-        return lexical
+    needs_semantic_themes = bool(expected_themes) and not lexical.passed
+    if not check_names and not needs_semantic_themes:
+        return [lexical]
 
+    judgment_schema = {
+        "type": "object",
+        "properties": {
+            name: {
+                "type": "object",
+                "properties": {"pass": {"type": "boolean"}, "reason": {"type": "string"}},
+                "required": ["pass", "reason"],
+                "additionalProperties": False,
+            }
+            for name in check_names
+        },
+        "required": check_names,
+        "additionalProperties": False,
+    }
+    properties: dict = {"judgments": judgment_schema}
+    required = ["judgments"]
+    if needs_semantic_themes:
+        properties["matched_themes"] = {"type": "array", "items": {"type": "string"}}
+        properties["theme_reason"] = {"type": "string"}
+        required.extend(["matched_themes", "theme_reason"])
     schema = {
-        "name": "theme_coverage",
+        "name": "combined_benchmark_judgment",
         "strict": True,
         "schema": {
             "type": "object",
-            "properties": {
-                "matched_themes": {"type": "array", "items": {"type": "string"}},
-                "reason": {"type": "string"},
-            },
-            "required": ["matched_themes", "reason"],
+            "properties": properties,
+            "required": required,
             "additionalProperties": False,
         },
     }
+    rubrics = "\n\n".join(f"## {name}\n{_rubric(name)}" for name in check_names)
+    theme_instruction = (
+        "\nAlso identify expected themes substantively present using synonyms or equivalent advice. "
+        "Copy matched values exactly from the supplied list."
+        if needs_semantic_themes else ""
+    )
+    output_template: dict = {
+        "judgments": {
+            name: {"pass": True, "reason": "one short sentence"}
+            for name in check_names
+        }
+    }
+    if needs_semantic_themes:
+        output_template.update(matched_themes=[], theme_reason="one short sentence")
     prompt = (
-        "Identify which expected themes are substantively present in the answer, allowing clear synonyms "
-        "or equivalent advice. Return only themes copied exactly from the supplied list.\n\n"
-        f"Question: {question}\nAnswer: {response}\nExpected themes: {json.dumps(expected_themes)}"
+        "Evaluate the response once against every named rubric. Return only one JSON object matching "
+        "the supplied structure. Keep every reason to one short sentence. "
+        f"Required JSON shape: {json.dumps(output_template)}"
+        f"{theme_instruction}\n\nUser message: {question}\nHailey response: {response}\n"
+        f"Expected themes: {json.dumps(expected_themes if needs_semantic_themes else [])}\n\n{rubrics}"
     )
     try:
-        chat = await _groq().chat.completions.create(
-            model="openai/gpt-oss-20b",
+        kwargs = dict(
+            model=_judge_model(),
             messages=[{"role": "user", "content": prompt}],
             temperature=0,
-            reasoning_effort="low",
-            include_reasoning=False,
-            response_format={"type": "json_schema", "json_schema": schema},
             max_completion_tokens=512,
         )
-        result = json.loads(chat.choices[0].message.content)
+        if _judge_provider() == "groq":
+            kwargs.update(
+                reasoning_effort="low", include_reasoning=False,
+                response_format={"type": "json_schema", "json_schema": schema},
+            )
+        chat = await _judge().chat.completions.create(**kwargs)
+        result = _parse_json_object(chat.choices[0].message.content or "")
+        checks = [
+            CheckResult(name, bool(result["judgments"][name]["pass"]), str(result["judgments"][name]["reason"]))
+            for name in check_names
+        ]
+        if not needs_semantic_themes:
+            checks.append(lexical)
+            return checks
         allowed = set(expected_themes)
         matched = list(dict.fromkeys(t for t in result["matched_themes"] if t in allowed))
-        required = max(1, ceil(len(expected_themes) * 0.4))
-        return CheckResult(
-            "expected_theme_coverage",
-            len(matched) >= required,
-            f"semantic match {len(matched)}/{len(expected_themes)}; required {required}: {matched}. {result['reason']}",
-        )
+        theme_required = max(1, ceil(len(expected_themes) * 0.4))
+        checks.append(CheckResult(
+            "expected_theme_coverage", len(matched) >= theme_required,
+            f"semantic match {len(matched)}/{len(expected_themes)}; required {theme_required}: "
+            f"{matched}. {result['theme_reason']}",
+        ))
+        return checks
     except Exception as exc:
-        return CheckResult(
-            "expected_theme_coverage",
-            False,
-            f"theme-judge infrastructure error: {exc}",
-            True,
-        )
+        names = check_names + (["expected_theme_coverage"] if needs_semantic_themes else [])
+        return [
+            CheckResult(name, False, f"judge infrastructure error: {exc}", True)
+            for name in names
+        ]
 
 
 # ── Case runner ───────────────────────────────────────────────────────────────
@@ -427,16 +488,18 @@ async def _run_case(
         )
 
     check_results: list[CheckResult] = []
+    judge_names: list[str] = []
     for check_name in case.checks:
         if check_name in DETERMINISTIC_CHECKS:
             result = _det_check(check_name, response, citations, deeplinks)
+            check_results.append(result)
         elif check_name in JUDGE_CHECKS:
-            result = await _judge_check(check_name, case.input, response)
+            judge_names.append(check_name)
         else:
             result = CheckResult(check_name, False, f"unknown check: {check_name}")
-        check_results.append(result)
+            check_results.append(result)
 
-    check_results.append(await _expected_theme_check(case.input, response, case.expected_themes))
+    check_results.extend(await _judge_case(case.input, response, judge_names, case.expected_themes))
 
     evaluation_errors = [c.detail for c in check_results if c.infrastructure_error]
 
@@ -472,6 +535,50 @@ def _load_cases(category_filter: str | None = None) -> list[TestCase]:
                 notes=item.get("notes", ""),
             ))
     return cases
+
+
+def _suite_hash(cases: list[TestCase]) -> str:
+    """Stable identity for the selected case definitions and checks."""
+    payload = [asdict(case) for case in cases]
+    encoded = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode()
+    return hashlib.sha256(encoded).hexdigest()
+
+
+def _select_shard(cases: list[TestCase], shard_index: int, shard_count: int) -> list[TestCase]:
+    """Partition cases deterministically with no duplicates or omissions."""
+    if shard_count < 1:
+        raise ValueError("shard_count must be at least 1")
+    if not 0 <= shard_index < shard_count:
+        raise ValueError("shard_index must be in [0, shard_count)")
+    return [case for position, case in enumerate(cases) if position % shard_count == shard_index]
+
+
+def _is_quota_error(detail: str) -> bool:
+    lowered = detail.lower()
+    return (
+        "tokens per day" in lowered
+        or "rate_limit_exceeded" in lowered and "token" in lowered
+        or "resource_exhausted" in lowered and "quota" in lowered
+    )
+
+
+def _load_checkpoint(path: Path, expected: dict) -> list[CaseResult]:
+    if not path.exists():
+        return []
+    data = json.loads(path.read_text(encoding="utf-8"))
+    for key in (
+        "suite_hash", "shard_index", "shard_count", "source_commit",
+        "judge_provider", "judge_model",
+    ):
+        if data.get(key) != expected[key]:
+            raise ValueError(
+                f"checkpoint {key} mismatch: {data.get(key)!r} != {expected[key]!r}"
+            )
+    results = [CaseResult.from_dict(item) for item in data.get("cases", [])]
+    ids = [result.case_id for result in results]
+    if len(ids) != len(set(ids)):
+        raise ValueError("checkpoint contains duplicate case IDs")
+    return results
 
 
 # ── Reporting ─────────────────────────────────────────────────────────────────
@@ -528,17 +635,17 @@ def _print_report(results: list[CaseResult]) -> None:
             print(f"    {check_name:<30} {pct_check}%  ({sum(votes)}/{len(votes)})")
 
 
-def _save_results(results: list[CaseResult], path: Path) -> None:
+def _save_results(results: list[CaseResult], path: Path, metadata: dict) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     data = {
-        "schema_version": 2,
+        "schema_version": 3,
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "timestamp": int(time.time()),
-        "judge_model": "openai/gpt-oss-20b",
         "quality_threshold_pct": 80,
         "maximum_error_rate_pct": 20,
         "total": len(results),
         "passed": sum(1 for r in results if r.passed),
+        **metadata,
         "cases": [
             {
                 "case_id": r.case_id,
@@ -556,8 +663,9 @@ def _save_results(results: list[CaseResult], path: Path) -> None:
             for r in results
         ],
     }
-    path.write_text(json.dumps(data, indent=2, default=str), encoding="utf-8")
-    print(f"\nResults → {path}")
+    temporary = path.with_suffix(path.suffix + ".tmp")
+    temporary.write_text(json.dumps(data, indent=2, default=str), encoding="utf-8")
+    temporary.replace(path)
 
 
 # ── Main ──────────────────────────────────────────────────────────────────────
@@ -572,6 +680,16 @@ async def main() -> int:
     parser.add_argument("--dry-run", action="store_true", help="Validate YAML only, no API calls")
     parser.add_argument("--output", help="JSON results path (default: results/run_<ts>.json)")
     parser.add_argument("--seed", type=int, default=42, help="Random seed for sample selection")
+    parser.add_argument("--shard-count", type=int, default=1, help="Number of deterministic suite shards")
+    parser.add_argument("--shard-index", type=int, default=0, help="Zero-based shard to execute")
+    parser.add_argument(
+        "--resume", action="store_true",
+        help="Resume completed cases from --output; metadata must match the selected shard",
+    )
+    parser.add_argument(
+        "--stop-after-errors", type=int, default=3,
+        help="Checkpoint and stop after this many consecutive infrastructure errors",
+    )
     parser.add_argument(
         "--preserve-history",
         action="store_true",
@@ -579,13 +697,13 @@ async def main() -> int:
     )
     args = parser.parse_args()
 
-    cases = _load_cases(args.category)
-    print(f"Loaded {len(cases)} cases" + (f" for category '{args.category}'" if args.category else ""))
+    all_cases = _load_cases(args.category)
+    print(f"Loaded {len(all_cases)} cases" + (f" for category '{args.category}'" if args.category else ""))
 
     if args.dry_run:
         # Validate all check names
         unknown = set()
-        for c in cases:
+        for c in all_cases:
             for chk in c.checks:
                 if chk not in DETERMINISTIC_CHECKS and chk not in JUDGE_CHECKS:
                     unknown.add(chk)
@@ -596,20 +714,52 @@ async def main() -> int:
         return 0
 
     if args.sample < 1.0:
+        if args.shard_count != 1:
+            parser.error("--sample and deterministic sharding cannot be combined")
         rng = random.Random(args.seed)
-        n = max(1, int(len(cases) * args.sample))
-        cases = rng.sample(cases, n)
+        n = max(1, int(len(all_cases) * args.sample))
+        cases = rng.sample(all_cases, n)
         print(f"Sampled {len(cases)} cases (seed={args.seed})")
+    else:
+        try:
+            cases = _select_shard(all_cases, args.shard_index, args.shard_count)
+        except ValueError as exc:
+            parser.error(str(exc))
+        print(f"Selected shard {args.shard_index + 1}/{args.shard_count}: {len(cases)} cases")
 
     api_url = os.environ["HAILEY_API_URL"]
+    out = Path(args.output) if args.output else RESULTS_DIR / f"run_{int(time.time())}.json"
+    metadata = {
+        "suite_hash": _suite_hash(all_cases),
+        "suite_total": len(all_cases),
+        "shard_index": args.shard_index,
+        "shard_count": args.shard_count,
+        "selected_total": len(cases),
+        "category_filter": args.category,
+        "sample": args.sample,
+        "seed": args.seed,
+        "source_commit": os.environ.get("GITHUB_SHA", "local"),
+        "judge_provider": _judge_provider(),
+        "judge_model": _judge_model(),
+        "complete": False,
+        "stop_reason": None,
+    }
+    results = _load_checkpoint(out, metadata) if args.resume else []
+    completed_ids = {result.case_id for result in results}
+    if results:
+        print(f"Resuming {len(results)} completed case(s) from {out}")
 
     async with httpx.AsyncClient(timeout=90.0) as client:
         print(f"Running {len(cases)} cases against {api_url}")
 
-        results: list[CaseResult] = []
+        consecutive_errors = 0
+        stopped_early = False
         for i, case in enumerate(cases, 1):
+            if case.id in completed_ids:
+                print(f"  [{i:>3}/{len(cases)}] {case.id} ... RESUMED")
+                continue
             print(f"  [{i:>3}/{len(cases)}] {case.id} ...", end=" ", flush=True)
-            if i > 1:
+            if results:
                 await asyncio.sleep(3)  # pace requests to avoid Groq rate limits
             try:
                 jwt = await _get_jwt(client)  # fresh JWT per case; avoids expiry during retries
@@ -630,6 +780,10 @@ async def main() -> int:
                     error=f"case setup error: {exc}",
                 )
             results.append(result)
+            completed_ids.add(result.case_id)
+            consecutive_errors = consecutive_errors + 1 if result.error else 0
+            metadata["stop_reason"] = None
+            _save_results(results, out, metadata)
             if result.error:
                 print(f"ERROR: {result.error}")
             elif result.passed:
@@ -638,10 +792,24 @@ async def main() -> int:
                 failed = [c.name for c in result.checks if not c.passed]
                 print(f"FAIL  ({result.latency_s:.1f}s)  failed: {', '.join(failed)}")
 
-    _print_report(results)
+            if result.error and _is_quota_error(result.error):
+                metadata["stop_reason"] = "judge_quota_exhausted"
+                stopped_early = True
+            elif consecutive_errors >= args.stop_after_errors:
+                metadata["stop_reason"] = "consecutive_infrastructure_errors"
+                stopped_early = True
+            if stopped_early:
+                _save_results(results, out, metadata)
+                print(f"STOP — {metadata['stop_reason']}; resume this shard from the checkpoint.")
+                break
 
-    out = Path(args.output) if args.output else RESULTS_DIR / f"run_{int(time.time())}.json"
-    _save_results(results, out)
+    _print_report(results)
+    metadata["complete"] = len(completed_ids) == len(cases) and not stopped_early
+    _save_results(results, out, metadata)
+    print(f"\nResults → {out}")
+
+    if not metadata["complete"]:
+        return 75
 
     evaluated = [r for r in results if not r.error]
     errored = [r for r in results if r.error]

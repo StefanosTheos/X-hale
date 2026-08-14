@@ -1,0 +1,53 @@
+name: Aggregate Benchmark Sweep
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_ids:
+        description: 'Comma-separated benchmark run IDs containing all completed shards'
+        required: true
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  aggregate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r finetune/eval/requirements-eval.txt
+
+      - name: Download shard artifacts
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_IDS: ${{ github.event.inputs.run_ids }}
+        run: |
+          mkdir -p finetune/eval/shards
+          IFS=',' read -ra IDS <<< "$RUN_IDS"
+          for RAW_ID in "${IDS[@]}"; do
+            RUN_ID="$(echo "$RAW_ID" | xargs)"
+            gh run download "$RUN_ID" --name "benchmark-$RUN_ID" --dir "finetune/eval/shards/$RUN_ID"
+          done
+
+      - name: Verify and aggregate exact 300-case sweep
+        run: |
+          mapfile -t FILES < <(find finetune/eval/shards -name '*.json' -type f | sort)
+          python finetune/eval/aggregate_benchmark.py "${FILES[@]}" \
+            --output finetune/eval/results/full_sweep_${{ github.run_id }}.json
+
+      - name: Upload full-sweep evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: full-sweep-${{ github.run_id }}
+          path: finetune/eval/results/full_sweep_${{ github.run_id }}.json
+          if-no-files-found: error
+          retention-days: 365
