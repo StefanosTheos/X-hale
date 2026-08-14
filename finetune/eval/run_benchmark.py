@@ -12,8 +12,8 @@ Required env vars:
   HAILEY_API_URL          e.g. https://stefanostheos-hailey-backend.hf.space
   APPWRITE_ENDPOINT       e.g. https://cloud.appwrite.io/v1
   APPWRITE_PROJECT_ID     from Appwrite console
-  TEST_USER_EMAIL         dedicated test Appwrite account
-  TEST_USER_PASSWORD      dedicated test Appwrite account
+  APPWRITE_BENCHMARK_KEY  Appwrite server key with users.write scope
+  BENCHMARK_TEST_USER_ID  dedicated test Appwrite user's ID
   GROQ_API_KEY            for LLM judge calls
 
 Optional:
@@ -98,6 +98,7 @@ class CheckResult:
     name: str
     passed: bool
     detail: str = ""
+    infrastructure_error: bool = False
 
 
 @dataclass
@@ -190,6 +191,16 @@ async def _call_chat(
     return "".join(tokens), citations, deeplinks, time.monotonic() - start
 
 
+async def _clear_history(client: httpx.AsyncClient, api_url: str, jwt: str) -> None:
+    """Isolate benchmark cases while preserving seeded long-term memory facts."""
+    response = await client.delete(
+        f"{api_url.rstrip('/')}/history/",
+        headers={"Authorization": f"Bearer {jwt}"},
+        timeout=30.0,
+    )
+    response.raise_for_status()
+
+
 # ── Deterministic checks ──────────────────────────────────────────────────────
 
 def _det_check(
@@ -253,7 +264,7 @@ def _normalise_theme_tokens(value: str) -> set[str]:
     return normalised
 
 
-def _expected_theme_check(response: str, expected_themes: list[str]) -> CheckResult:
+def _lexical_theme_check(response: str, expected_themes: list[str]) -> CheckResult:
     """Require deterministic lexical evidence for a representative theme subset."""
     if not expected_themes:
         return CheckResult("expected_theme_coverage", True, "no expected themes declared")
@@ -295,26 +306,89 @@ async def _judge_check(name: str, question: str, response: str) -> CheckResult:
     template = prompt_file.read_text(encoding="utf-8")
     user_prompt = template.replace("{question}", question).replace("{response}", response)
 
+    schema = {
+        "name": "benchmark_judgment",
+        "strict": True,
+        "schema": {
+            "type": "object",
+            "properties": {
+                "pass": {"type": "boolean"},
+                "reason": {"type": "string"},
+            },
+            "required": ["pass", "reason"],
+            "additionalProperties": False,
+        },
+    }
     try:
         chat = await _groq().chat.completions.create(
             model="openai/gpt-oss-20b",
-            messages=[
-                {
-                    "role": "system",
-                    "content": "You are a strict evaluation judge. Return only valid JSON.",
-                },
-                {"role": "user", "content": user_prompt},
-            ],
+            messages=[{"role": "user", "content": "Return a strict evaluation judgment.\n\n" + user_prompt}],
             temperature=0,
-            response_format={"type": "json_object"},
-            max_tokens=200,
+            reasoning_effort="low",
+            include_reasoning=False,
+            response_format={"type": "json_schema", "json_schema": schema},
+            max_completion_tokens=512,
         )
         result = json.loads(chat.choices[0].message.content)
-        passed = bool(result.get("pass", False))
-        reason = str(result.get("reason", ""))
-        return CheckResult(name, passed, reason)
+        return CheckResult(name, bool(result["pass"]), str(result["reason"]))
     except Exception as exc:
-        return CheckResult(name, False, f"judge error: {exc}")
+        return CheckResult(name, False, f"judge infrastructure error: {exc}", True)
+
+
+async def _expected_theme_check(
+    question: str,
+    response: str,
+    expected_themes: list[str],
+) -> CheckResult:
+    """Use lexical matching first, then strict-schema semantic matching."""
+    lexical = _lexical_theme_check(response, expected_themes)
+    if lexical.passed or not expected_themes:
+        return lexical
+
+    schema = {
+        "name": "theme_coverage",
+        "strict": True,
+        "schema": {
+            "type": "object",
+            "properties": {
+                "matched_themes": {"type": "array", "items": {"type": "string"}},
+                "reason": {"type": "string"},
+            },
+            "required": ["matched_themes", "reason"],
+            "additionalProperties": False,
+        },
+    }
+    prompt = (
+        "Identify which expected themes are substantively present in the answer, allowing clear synonyms "
+        "or equivalent advice. Return only themes copied exactly from the supplied list.\n\n"
+        f"Question: {question}\nAnswer: {response}\nExpected themes: {json.dumps(expected_themes)}"
+    )
+    try:
+        chat = await _groq().chat.completions.create(
+            model="openai/gpt-oss-20b",
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0,
+            reasoning_effort="low",
+            include_reasoning=False,
+            response_format={"type": "json_schema", "json_schema": schema},
+            max_completion_tokens=512,
+        )
+        result = json.loads(chat.choices[0].message.content)
+        allowed = set(expected_themes)
+        matched = list(dict.fromkeys(t for t in result["matched_themes"] if t in allowed))
+        required = max(1, ceil(len(expected_themes) * 0.4))
+        return CheckResult(
+            "expected_theme_coverage",
+            len(matched) >= required,
+            f"semantic match {len(matched)}/{len(expected_themes)}; required {required}: {matched}. {result['reason']}",
+        )
+    except Exception as exc:
+        return CheckResult(
+            "expected_theme_coverage",
+            False,
+            f"theme-judge infrastructure error: {exc}",
+            True,
+        )
 
 
 # ── Case runner ───────────────────────────────────────────────────────────────
@@ -362,7 +436,9 @@ async def _run_case(
             result = CheckResult(check_name, False, f"unknown check: {check_name}")
         check_results.append(result)
 
-    check_results.append(_expected_theme_check(response, case.expected_themes))
+    check_results.append(await _expected_theme_check(case.input, response, case.expected_themes))
+
+    evaluation_errors = [c.detail for c in check_results if c.infrastructure_error]
 
     return CaseResult(
         case_id=case.id,
@@ -374,6 +450,7 @@ async def _run_case(
         latency_s=latency,
         checks=check_results,
         expected_themes=case.expected_themes,
+        error="; ".join(evaluation_errors) if evaluation_errors else None,
     )
 
 
@@ -495,6 +572,11 @@ async def main() -> int:
     parser.add_argument("--dry-run", action="store_true", help="Validate YAML only, no API calls")
     parser.add_argument("--output", help="JSON results path (default: results/run_<ts>.json)")
     parser.add_argument("--seed", type=int, default=42, help="Random seed for sample selection")
+    parser.add_argument(
+        "--preserve-history",
+        action="store_true",
+        help="Do not clear test-user chat history between cases (disabled by default for isolation)",
+    )
     args = parser.parse_args()
 
     cases = _load_cases(args.category)
@@ -529,8 +611,24 @@ async def main() -> int:
             print(f"  [{i:>3}/{len(cases)}] {case.id} ...", end=" ", flush=True)
             if i > 1:
                 await asyncio.sleep(3)  # pace requests to avoid Groq rate limits
-            jwt = await _get_jwt(client)  # fresh JWT per case; avoids expiry during retries
-            result = await _run_case(case, client, api_url, jwt)
+            try:
+                jwt = await _get_jwt(client)  # fresh JWT per case; avoids expiry during retries
+                if not args.preserve_history:
+                    await _clear_history(client, api_url, jwt)
+                result = await _run_case(case, client, api_url, jwt)
+            except Exception as exc:
+                result = CaseResult(
+                    case_id=case.id,
+                    category=case.category,
+                    input=case.input,
+                    response="",
+                    citations=[],
+                    deeplinks=[],
+                    latency_s=0.0,
+                    checks=[],
+                    expected_themes=case.expected_themes,
+                    error=f"case setup error: {exc}",
+                )
             results.append(result)
             if result.error:
                 print(f"ERROR: {result.error}")
