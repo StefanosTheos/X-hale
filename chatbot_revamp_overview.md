@@ -41,7 +41,7 @@ An agentic RAG system where specialist agents collaborate through a supervisor, 
 │  User Context Loader (memory + profile + recent diary)              │
 │         │                                                           │
 │         ▼                                                           │
-│  Supervisor → Specialist(s) (parallel where able):                  │
+│  Supervisor → Specialist(s) (sequential conditional dispatch):     │
 │     • Medical Information Agent    (tools: vector search)           │
 │     • Craving Support Agent        (tools: app actions)             │
 │     • Emotional Support Agent      (tools: memory, MI prompts)      │
@@ -62,7 +62,7 @@ An agentic RAG system where specialist agents collaborate through a supervisor, 
                                                          diary, profile)
 ```
 
-**LLM split:** Groq `llama-3.1-8b-instant` handles triage, specialist drafts, and memory curation. Groq `llama-3.3-70b-versatile` handles synthesis (1 call per turn).
+**LLM split:** Groq `openai/gpt-oss-20b` handles triage, specialist drafts, memory curation, and the benchmark judge. Groq `openai/gpt-oss-120b` handles synthesis (1 call per normal turn).
 
 ---
 
@@ -74,9 +74,9 @@ An agentic RAG system where specialist agents collaborate through a supervisor, 
 
 | Agent | Role | Model |
 |---|---|---|
-| **Triage** | Classifies intent, emotion, urgency, crisis_flag | Groq 8B, temp 0 |
+| **Triage** | Classifies intent, emotion, urgency, crisis_flag | Groq GPT OSS 20B, temp 0 |
 | **Supervisor** | Selects specialists from triage result. No LLM call. | — |
-| **Synthesizer** | Composes final reply from specialist drafts, streams tokens | Groq 70B, temp 0.5 |
+| **Synthesizer** | Composes final reply from specialist drafts, streams tokens | Groq GPT OSS 120B, temp 0.5 |
 
 #### Specialists (conditional)
 
@@ -103,7 +103,7 @@ An agentic RAG system where specialist agents collaborate through a supervisor, 
 4. `topic_relevance == "irrelevant"` → polite redirect → done.
 5. `intent == "needs_clarification"` → clarification turn → done.
 6. Supervisor selects specialists.
-7. Specialists run in parallel where outputs are independent.
+7. Requested specialists run sequentially in supervisor-defined order, accumulating drafts in shared state.
 8. Synthesizer composes one reply, streams over SSE.
 9. Memory Curator processes the turn async.
 
@@ -116,14 +116,14 @@ An agentic RAG system where specialist agents collaborate through a supervisor, 
 **Stack:** Qdrant Cloud (free tier). Embeddings: `@cf/baai/bge-small-en-v1.5` via Cloudflare Workers AI.
 
 **Collections:**
-- `kb_chunks` — chunked KB content, 400–600 tokens with 100-token overlap.
+- `kb_chunks` — chunked KB content, targeting 500 characters with 100-character overlap (approximately 125 and 25 tokens respectively for typical English text).
 - `health_benefit_chunks` — health-benefit corpus, tagged with `benefit_id` for metadata-filter fetches.
 
 All agents call `retrieve(query, user_id, strategy, intent, k)` — they never talk to Qdrant directly.
 
 ### Knowledge graph (Phase 3 — currently disabled)
 
-~200-node YAML graph loaded into in-process NetworkX at startup. Adds relationship traversal that pure vector retrieval misses. **Disabled** (`ENABLE_KNOWLEDGE_GRAPH=false`) to stay within Groq free-tier TPM limits — KG expansion adds up to 3 extra chunks per query. Re-enable on a paid tier.
+The 139-node, 206-edge YAML graph is loaded into in-process NetworkX at startup. It adds relationship traversal that pure vector retrieval misses. **Disabled** (`ENABLE_KNOWLEDGE_GRAPH=false`) to stay within Groq free-tier TPM limits — KG expansion adds up to 3 extra chunks per query. Re-enable after capacity and regression testing.
 
 ### Web search fallback (currently disabled)
 
@@ -173,7 +173,7 @@ Read-only from existing Appwrite collections (`users`, `diary`, `achievements`, 
 
 **Current:** 300 cases (30 per category). Target for Phase 5 baselines: 50 per category (~500 total).
 
-**Harness:** Custom (`finetune/eval/run_benchmark.py`). Deterministic checks run in-process; LLM-as-judge (Groq 8B, structured JSON) covers tone, relevancy, faithfulness, non-judgmental, MI style. Pass threshold: quality ≥ 80% and error rate ≤ 20%. **Benchmark currently passing.** GitHub Actions nightly — 5% sample Mon–Sat, full sweep Sunday.
+**Harness:** Custom (`finetune/eval/run_benchmark.py`). Deterministic checks run in-process; LLM-as-judge (Groq GPT OSS 20B, structured JSON) covers tone, relevancy, faithfulness, non-judgmental, MI style. Pass threshold: quality ≥ 80% and error rate ≤ 20%. **Benchmark currently passing.** GitHub Actions nightly — 5% sample Mon–Sat, full sweep Sunday.
 
 ---
 
@@ -184,8 +184,8 @@ Read-only from existing Appwrite collections (`users`, `diary`, `achievements`, 
 | Backend (FastAPI + LangGraph) | Hugging Face Spaces (Docker, public, no spin-down) |
 | Vector DB | Qdrant Cloud free tier |
 | Conv history + user facts | Appwrite (free tier) |
-| LLM — triage/specialists | Groq `llama-3.1-8b-instant` |
-| LLM — synthesis | Groq `llama-3.3-70b-versatile` |
+| LLM — triage/specialists | Groq `openai/gpt-oss-20b` |
+| LLM — synthesis | Groq `openai/gpt-oss-120b` |
 | Embeddings | Cloudflare Workers AI `@cf/baai/bge-small-en-v1.5` |
 
 **HF deploy command:**
@@ -350,9 +350,9 @@ rag_backend2.0/
 
 An implementation audit on 14 August 2026 found that the major weaknesses identified in `chatbot_review.md` have been addressed (authentication, deployment URL configuration, structured retrieval and memory, safety routing, and automated tests). The remaining work is:
 
-1. **Genuine streaming and accurate progress events — completed 14 August 2026.** `/chat/` now runs a preparation graph up to synthesis, streams tokens directly from the synthesis model, suppresses citation-control metadata, post-processes the accumulated response, and persists it before emitting `done`. Status events now follow completed triage, context loading, actual medical knowledge-base retrieval, composition, and saving; the artificial four-character stream and delay were removed.
+1. [x] **Genuine streaming and accurate progress events — completed 14 August 2026.** `/chat/` now runs a preparation graph up to synthesis, streams tokens directly from the synthesis model, suppresses citation-control metadata, post-processes the accumulated response, and persists it before emitting `done`. Status events now follow completed triage, context loading, actual medical knowledge-base retrieval, composition, and saving; the artificial four-character stream and delay were removed.
 
-2. **Resolve execution and documentation drift** — specialists currently run sequentially, not “in parallel where able.” Either introduce safe parallel fan-out/fan-in or correct this document. Update the retired Llama model names to the current GPT OSS configuration, the KG size (~139 nodes rather than ~200), and the ingestion description (the current defaults are character-based, not 400–600-token chunks). Remove stale “Phase 3 stub” and pass-through comments for the implemented reflection, relapse-risk, KG, and reranker components.
+2. [x] **Resolve execution and documentation drift — completed 14 August 2026.** Documentation now reflects sequential specialist dispatch, the GPT OSS 20B/120B split, the 139-node/206-edge KG, and character-based ingestion defaults. Stale Phase 3 stub/pass-through descriptions were removed across the backend documentation and code comments.
 
 3. **Complete relapse-risk signals** — `days_since_last_activity` is still hard-coded to `0`, and no reliable stored relapse marker is loaded. Connect these fields to real Appwrite activity/diary data, define the missing-data behavior, and validate the heuristic before presenting it as an operational risk estimate.
 

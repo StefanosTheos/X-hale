@@ -75,9 +75,8 @@ async def retry_with_backoff(
 def get_triage_client() -> "GroqClient":
     """Return the fast LLM client for triage, specialists, and memory curator.
 
-    Uses Groq (llama-3.1-8b-instant, 30 RPM free tier) — all callers need
-    structured JSON at temperature≈0, which Groq handles well and cheaply.
-    Keeps Gemini quota reserved solely for the synthesizer.
+    Uses the configured Groq triage model (currently openai/gpt-oss-20b).
+    These callers primarily require reliable structured JSON at low temperature.
     """
     from app.llm.groq_client import GroqClient
     from app.config import settings
@@ -87,8 +86,8 @@ def get_triage_client() -> "GroqClient":
 def get_synthesis_client() -> "GroqClient":
     """Return the LLM client for the synthesizer (streaming final response).
 
-    Uses Groq llama-3.3-70b-versatile — higher daily quota than Gemini Flash
-    free tier (20 req/day), same interface as the triage client.
+    Uses the configured Groq synthesis model (currently openai/gpt-oss-120b)
+    through the same client interface as triage.
     """
     from app.llm.groq_client import GroqClient
     from app.config import settings

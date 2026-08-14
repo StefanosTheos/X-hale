@@ -1,6 +1,6 @@
 """
 Read-only access to the user's diary entries from Appwrite.
-Used by the Reflection Agent (Phase 3 stub) and the Memory Curator.
+Used by the Reflection Agent and the Memory Curator.
 """
 from __future__ import annotations
 

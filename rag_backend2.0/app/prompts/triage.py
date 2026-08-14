@@ -1,6 +1,6 @@
 """
 Triage agent prompt. Returns a strict JSON object with 6 fields.
-Model: llama-3.1-8b-instant, temperature=0, json_mode=True.
+Model: configured triage model (GPT OSS 20B by default), temperature=0, json_mode=True.
 """
 
 TRIAGE_SYSTEM = """You are a clinical conversation triage classifier for a quit-smoking support chatbot.

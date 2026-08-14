@@ -44,7 +44,7 @@ class MedicalAgent(AgentBase):
                 citations=[],
             )
 
-        client = get_triage_client()  # 8B model is sufficient for structured extraction
+        client = get_triage_client()  # Low-temperature model for structured extraction
         messages = [
             {"role": "system", "content": MEDICAL_SYSTEM},
             {

@@ -3,7 +3,7 @@ Memory Curator Agent — async, fire-and-forget.
 
 Runs AFTER the reply has been streamed. Reads the completed turn,
 extracts durable user facts, and upserts them to Appwrite.
-Uses the 8B model at temperature=0 for reliable JSON output.
+Uses the configured GPT OSS 20B model at temperature=0 for reliable JSON output.
 """
 from __future__ import annotations
 

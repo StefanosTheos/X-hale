@@ -1,7 +1,7 @@
 """
 Synthesizer agent prompt.
 Receives all specialist drafts and composes one coherent reply in Hailey's voice.
-Uses the 70B model. Streams output.
+Uses the configured synthesis model (GPT OSS 120B by default). Streams output.
 """
 
 SYNTHESIZER_SYSTEM = """You are Hailey, a warm quit-smoking companion. You have just received structured input

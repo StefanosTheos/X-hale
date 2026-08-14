@@ -11,8 +11,8 @@ Strategy options:
   "emotional"   → no retrieval (emotional support uses user memory, not KB)
   "web"         → fallback web search if KB returns too few results
 
-Phase 3 note: knowledge graph expansion and entity extraction are not yet
-implemented. The TODO blocks below mark where they will be wired in.
+Knowledge-graph expansion, entity extraction, optional reranking, and optional
+web fallback are implemented and controlled through feature flags.
 """
 from __future__ import annotations
 
@@ -76,7 +76,7 @@ async def retrieve(
     if len(chunks) < 2 and strategy in ("factual", "exploratory") and intent in _web_intents:
         chunks = await _web_fallback(query, chunks)
 
-    # Rerank if enabled (currently a pass-through stub)
+    # Rerank when enabled; otherwise rerank() returns the original ordering.
     from app.retrieval.reranker import rerank
     chunks = await rerank(query, chunks)
 

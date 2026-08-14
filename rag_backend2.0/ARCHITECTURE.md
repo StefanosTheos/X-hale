@@ -10,7 +10,7 @@ The design rationale is in `chatbot_revamp_overview.md` (project root).
 | 0 | ✅ Complete | Auth, URL config, logging |
 | 1 | ✅ Complete | FastAPI foundation, Qdrant, Appwrite history, Medical agent, SSE |
 | 2 | ✅ Complete | Multi-agent supervisor, Emotional + Craving agents, Memory Curator |
-| 3 | ✅ Complete | Knowledge graph (enabled), entity extractor, Reflection + Relapse-Risk agents, reranker (off by default) |
+| 3 | ✅ Complete | Knowledge graph and entity extractor (off by default), Reflection + Relapse-Risk agents, reranker (off by default) |
 | 4 | 🟡 Partial | Crisis handler done; benchmark harness (eval categories, judge prompts, CI) pending |
 | 5 | ⏳ Deferred | Fine-tuning pipeline |
 
@@ -22,7 +22,7 @@ POST /chat/
   ├─ Auth: verify Appwrite JWT → get user_id
   │
   ├─ [status: triaging]
-  │   └─ Triage node: fast_crisis_check (sync) → LLM classify (8B, temp=0)
+  │   └─ Triage node: fast_crisis_check (sync) → GPT OSS 20B classify (temp=0)
   │       → TriageResult {intent, emotion, urgency, crisis_flag, specialists[]}
   │
   ├─ If crisis_flag → Crisis Handler (deterministic) → output_node → SSE done
@@ -36,13 +36,14 @@ POST /chat/
   ├─ Supervisor: decide_specialists(triage, memory) → requested_specialists[]
   │
   ├─ Specialist nodes (sequential dispatch):
-  │   ├─ medical_node: retrieve (Qdrant) → 8B extract key_points → SpecialistDraft
-  │   ├─ craving_support_node: 8B urge-surfing script + deeplinks
-  │   ├─ emotional_support_node: 8B MI-style reflection
-  │   └─ (reflection_node, relapse_risk_node: Phase 3 stubs)
+  │   ├─ medical_node: retrieve (Qdrant) → GPT OSS 20B key_points → SpecialistDraft
+  │   ├─ craving_support_node: GPT OSS 20B urge-surfing script + deeplinks
+  │   ├─ emotional_support_node: GPT OSS 20B MI-style reflection
+  │   ├─ reflection_node: diary retrieval + GPT OSS 20B theme analysis
+  │   └─ relapse_risk_node: behavioral signals + GPT OSS 20B support draft
   │
   ├─ [status: composing]
-  │   └─ synthesizer_node: 70B Groq → final reply (citations extracted, content-filtered)
+  │   └─ router-driven GPT OSS 120B stream → final reply (citations extracted, content-filtered)
   │
   ├─ [status: saving]
   │   └─ output_node: append turns to Appwrite + fire memory_curator (async)
@@ -55,8 +56,8 @@ POST /chat/
 | Layer | Technology | Free Tier |
 |---|---|---|
 | API server | FastAPI + LangGraph | HF Spaces (16 GB CPU, no spin-down) |
-| Large LLM | Groq llama-3.3-70b-versatile | Yes (Groq free tier) |
-| Small LLM | Groq llama-3.1-8b-instant | Yes (same quota) |
+| Synthesis LLM | Groq `openai/gpt-oss-120b` | Subject to Groq account quota |
+| Routing/specialist LLM | Groq `openai/gpt-oss-20b` | Subject to the same account quota |
 | Embeddings | Cloudflare Workers AI bge-small-en-v1.5 | Yes (10k/day) |
 | Vector store | Qdrant Cloud | Yes (1 GB, no spin-down) |
 | Conv. history | Appwrite chatbot_messages | Yes (existing project) |
@@ -68,15 +69,15 @@ POST /chat/
 
 | Agent | Model | Call type | Purpose |
 |---|---|---|---|
-| Triage | 8B, temp=0 | JSON completion | Classify intent/emotion/urgency/crisis |
+| Triage | GPT OSS 20B, temp=0 | JSON completion | Classify intent/emotion/urgency/crisis |
 | Supervisor | Pure Python | No LLM | Decide which specialists to invoke |
-| Medical | 8B, temp=0 | JSON completion | Extract evidence-based key points from KB |
-| Craving Support | 8B, temp=0.1 | JSON completion | Urge-surfing script + deeplinks |
-| Emotional Support | 8B, temp=0.3 | JSON completion | MI-style reflective draft |
-| Reflection | STUB | — | Phase 3: diary pattern analysis |
-| Relapse-Risk | STUB | — | Phase 3: behavioral signals |
-| Synthesizer | 70B, temp=0.5 | Streaming | Compose final reply in Hailey's voice |
-| Memory Curator | 8B, temp=0 | JSON completion | Extract durable user facts (async) |
+| Medical | GPT OSS 20B, temp=0 | JSON completion | Extract evidence-based key points from KB |
+| Craving Support | GPT OSS 20B, temp=0.1 | JSON completion | Urge-surfing script + deeplinks |
+| Emotional Support | GPT OSS 20B, temp=0.3 | JSON completion | MI-style reflective draft |
+| Reflection | GPT OSS 20B, temp=0.3 | JSON completion | Diary pattern analysis |
+| Relapse-Risk | GPT OSS 20B, temp=0.2 | JSON completion | Interpret behavioral signals and draft support |
+| Synthesizer | GPT OSS 120B, temp=0.5 | Streaming | Compose final reply in Hailey's voice |
+| Memory Curator | GPT OSS 20B, temp=0 | JSON completion | Extract durable user facts (async) |
 | Crisis Handler | Deterministic | One constrained sentence | Fixed safety message + hotlines |
 
 ## Memory Architecture
@@ -97,5 +98,5 @@ All Phase 3 features are implemented. Two remain off by default:
 
 | Flag | Default | Notes |
 |---|---|---|
-| `ENABLE_KNOWLEDGE_GRAPH` | `true` | 139-node domain graph; entity extractor uses keyword matching (no ML dep) |
+| `ENABLE_KNOWLEDGE_GRAPH` | `false` | 139-node/206-edge domain graph; entity extractor uses keyword matching (no ML dep) |
 | `ENABLE_RERANKER` | `false` | `BAAI/bge-reranker-base` cross-encoder; enable when KB exceeds ~250 diverse chunks |

@@ -1,7 +1,7 @@
 """
 Text chunking utility for ingestion into Qdrant.
 
-Splits documents into 400-600 token chunks with 100-token overlap.
+Splits documents into 500-character chunks with 100-character overlap by default.
 Each chunk is tagged with source metadata and gets a stable UUID derived
 from (source_id, chunk_index) so re-ingestion is idempotent.
 """

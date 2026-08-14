@@ -11,8 +11,8 @@ Node inventory:
   medical_node          → runs MedicalAgent, adds to state.specialist_drafts
   craving_support_node  → runs CravingSupportAgent
   emotional_support_node→ runs EmotionalSupportAgent
-  reflection_node       → stub (Phase 3)
-  relapse_risk_node     → stub (Phase 3)
+  reflection_node       → runs ReflectionAgent with diary retrieval
+  relapse_risk_node     → runs RelapseRiskAgent with behavioral signals
   synthesizer_node      → runs Synthesizer, sets state.final_response
   output_node           → saves turn to Appwrite, fires memory curator
   crisis_handler_node   → deterministic crisis path, sets state.final_response

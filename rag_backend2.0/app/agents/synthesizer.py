@@ -1,5 +1,5 @@
 """
-Synthesizer Agent — uses Groq llama-3.3-70b-versatile.
+Synthesizer Agent — uses the configured Groq synthesis model (GPT OSS 120B by default).
 
 Receives all specialist_drafts + user memory + conversation history.
 Composes one coherent reply in Hailey's voice and streams it token-by-token.

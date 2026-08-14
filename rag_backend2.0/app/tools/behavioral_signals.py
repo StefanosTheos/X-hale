@@ -1,5 +1,5 @@
 """
-Behavioral signal extraction for the Relapse-Risk Agent (Phase 3 stub uses this).
+Behavioral signal extraction for the Relapse-Risk Agent.
 Reads Appwrite metadata to detect declining engagement patterns.
 
 Signals tracked:

@@ -7,7 +7,7 @@ Provides:
 - get_by_metadata(collection, filters, limit): metadata-only fetch (no vector needed)
 
 Two collections:
-  - kb_chunks: global knowledge base (400-600 token chunks, source-tagged)
+  - kb_chunks: global knowledge base (500-character chunks by default, source-tagged)
   - health_benefit_chunks: benefit-specific content, tagged with benefit_id
 
 Single AsyncQdrantClient instance shared across the process.

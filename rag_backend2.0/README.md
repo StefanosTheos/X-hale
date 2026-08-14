@@ -22,8 +22,8 @@ Flutter App  →  HTTPS + Appwrite JWT  →  FastAPI (HF Spaces)
                                          Triage → Supervisor → Specialists → Synthesizer
                                               │              │
                                          Groq API        Qdrant Cloud (kb_chunks)
-                                         (8B triage,     CF Workers AI (embeddings)
-                                          70B synthesis) Appwrite (history, user facts)
+                                         (GPT OSS 20B,  CF Workers AI (embeddings)
+                                          120B synth)   Appwrite (history, user facts)
 ```
 
 ## Quick Start (local)

@@ -2,9 +2,8 @@
 Groq API client implementing the LLMClient protocol.
 
 Used for:
-- Triage agent: llama-3.1-8b-instant, temperature=0, json_mode=True
-- Synthesizer: llama-3.3-70b-versatile, temperature=0.5, streaming
-- Crisis one-liner: llama-3.1-8b-instant, tightly constrained prompt
+- Triage, specialists, memory curator, crisis opener: openai/gpt-oss-20b
+- Synthesizer: openai/gpt-oss-120b, temperature=0.5, streaming
 
 Handles:
 - 429 retry / exponential backoff (delegated to retry_with_backoff)

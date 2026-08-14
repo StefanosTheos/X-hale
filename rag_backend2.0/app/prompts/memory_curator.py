@@ -1,7 +1,7 @@
 """
 Memory Curator agent prompt.
 Extracts durable user facts from a completed conversation turn.
-Model: llama-3.1-8b-instant, temperature=0, json_mode=True.
+Model: configured triage model (GPT OSS 20B by default), temperature=0, json_mode=True.
 """
 
 MEMORY_CURATOR_SYSTEM = """You are a memory extraction system for a quit-smoking support chatbot.
