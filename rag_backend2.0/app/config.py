@@ -38,6 +38,7 @@ class Settings(BaseSettings):
     cf_small_model: str = "@cf/meta/llama-3.2-3b-instruct"
     cf_workers_ai_daily_quota: int = 10_000
     cf_workers_ai_base_url: str = "https://api.cloudflare.com/client/v4/accounts"
+    enable_local_embedding_fallback: bool = True
 
     # ── Qdrant ──────────────────────────────────────────────────────────────
     qdrant_url: str = "http://localhost:6333"

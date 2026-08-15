@@ -115,8 +115,8 @@
   **Fix:** Align the example and code defaults, log resolved non-secret flags at startup, and preserve them in benchmark metadata. Do not change the evaluated Space configuration during the active campaign.
 
 - [x] **#29 — Resolved: startup validation, liveness, and dependency readiness are separated.**
-  Missing mandatory Groq, Cloudflare, Appwrite, or Qdrant configuration now prevents startup, as does failure to compile the LangGraph. `/health` and `/live` report process liveness only, while cached `/ready` checks Appwrite row access, both configured Qdrant collections, Groq API access, and the active Cloudflare embedding route; it returns HTTP 503 until all dependencies are ready. Transient provider failure no longer falsely reports readiness or forces Docker to restart an otherwise live process.
-  **Operational note:** A forced or cache-expired readiness check performs one small Cloudflare embedding request; the result is cached for 60 seconds.
+  Missing mandatory Groq, Cloudflare, Appwrite, or Qdrant configuration now prevents startup, as does failure to compile the LangGraph. `/health` and `/live` report process liveness only, while cached `/ready` checks Appwrite row access, both configured Qdrant collections, Groq API access, the primary Cloudflare embedding route, and a local FastEmbed route using the same `BAAI/bge-small-en-v1.5` model. Readiness requires every core dependency plus at least one usable embedding route and returns HTTP 503 otherwise. Transient failure of the primary embedding provider therefore degrades to the explicitly enabled local route without falsely declaring the entire service unavailable or forcing Docker to restart an otherwise live process.
+  **Operational note:** A forced or cache-expired readiness check performs one small embedding request against each route; the result is cached for 60 seconds. The local model is downloaded during the container build rather than at first request.
 
 - [ ] **#30 — The declared request-latency histogram is never observed.**
   Prometheus exposes the metric definition but the runtime does not populate it, leaving only external benchmark latency.

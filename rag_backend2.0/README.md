@@ -59,7 +59,7 @@ docker compose -f docker/compose.yml up
 | `GET` | `/kb/{benefit_id}` | Get knowledge base content for a health benefit |
 | `GET` | `/health` | Backward-compatible process liveness check |
 | `GET` | `/live` | Process liveness check |
-| `GET` | `/ready` | Cached Appwrite, Qdrant, Groq, and Cloudflare readiness check; HTTP 503 when unavailable |
+| `GET` | `/ready` | Cached Appwrite, Qdrant, Groq, and embedding-provider readiness check; accepts the same-model local fallback when Cloudflare is unavailable and returns HTTP 503 if no usable path remains |
 | `GET` | `/metrics` | Prometheus metrics |
 
 ## SSE Event Types (POST /chat/)

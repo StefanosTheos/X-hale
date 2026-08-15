@@ -15,6 +15,10 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Cache the exact 384-dimensional fallback model in the image so readiness
+# does not depend on a model download after the Space starts.
+RUN python -c "from fastembed import TextEmbedding; TextEmbedding(model_name='BAAI/bge-small-en-v1.5')"
+
 # Copy application code (only what the runtime needs)
 COPY app/ ./app/
 

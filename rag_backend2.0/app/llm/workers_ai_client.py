@@ -12,6 +12,7 @@ from __future__ import annotations
 import time
 import asyncio
 import ssl
+from functools import lru_cache
 from typing import AsyncIterator
 
 import requests
@@ -84,23 +85,52 @@ async def _post_json(url: str, payload: dict, timeout: float = 30.0) -> dict:
     return await asyncio.to_thread(_post_json_sync, url, payload, timeout)
 
 
+@lru_cache(maxsize=1)
+def _local_embedding_model():
+    from fastembed import TextEmbedding
+
+    return TextEmbedding(model_name="BAAI/bge-small-en-v1.5")
+
+
+def _embed_local_sync(texts: list[str]) -> list[list[float]]:
+    vectors = _local_embedding_model().embed(texts)
+    return [vector.tolist() for vector in vectors]
+
+
+async def embed_local(texts: list[str]) -> list[list[float]]:
+    """Generate 384-d BGE embeddings locally when Workers AI is unreachable."""
+    return await asyncio.to_thread(_embed_local_sync, texts)
+
+
 async def embed(text: str) -> list[float]:
     """
     Embed a single text string using bge-small-en-v1.5.
     Returns a 384-dimensional float vector.
     """
     url = _base_url(settings.cf_embedding_model)
-    data = await _post_json(url, {"text": [text]})
-    _increment_quota(1)
-    return data["result"]["data"][0]
+    try:
+        data = await _post_json(url, {"text": [text]})
+        _increment_quota(1)
+        return data["result"]["data"][0]
+    except requests.RequestException as exc:
+        if not settings.enable_local_embedding_fallback:
+            raise
+        logger.warning("workers_ai_embedding_fallback", error_type=type(exc).__name__)
+        return (await embed_local([text]))[0]
 
 
 async def embed_batch(texts: list[str]) -> list[list[float]]:
     """Embed a list of texts in a single Workers AI call."""
     url = _base_url(settings.cf_embedding_model)
-    data = await _post_json(url, {"text": texts})
-    _increment_quota(len(texts))
-    return data["result"]["data"]
+    try:
+        data = await _post_json(url, {"text": texts})
+        _increment_quota(len(texts))
+        return data["result"]["data"]
+    except requests.RequestException as exc:
+        if not settings.enable_local_embedding_fallback:
+            raise
+        logger.warning("workers_ai_embedding_batch_fallback", error_type=type(exc).__name__)
+        return await embed_local(texts)
 
 
 class WorkersAIClient:

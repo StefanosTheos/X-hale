@@ -78,14 +78,25 @@ async def _check_groq() -> None:
 
 
 async def _check_cloudflare() -> None:
-    # This uses one embedding inference so readiness validates the exact active
-    # account, token, route, and model rather than only checking DNS/config.
-    from app.llm.workers_ai_client import embed
+    # Call the primary provider directly so readiness distinguishes it from
+    # the local fallback used by the application.
+    from app.llm.workers_ai_client import _base_url, _post_json
 
-    vector = await embed("X-hale readiness probe")
+    data = await _post_json(_base_url(settings.cf_embedding_model), {"text": ["X-hale readiness probe"]})
+    vector = data["result"]["data"][0]
     if len(vector) != settings.qdrant_vector_size:
         raise RuntimeError(
             f"embedding dimension {len(vector)} != configured {settings.qdrant_vector_size}"
+        )
+
+
+async def _check_local_embeddings() -> None:
+    from app.llm.workers_ai_client import embed_local
+
+    vector = (await embed_local(["X-hale local readiness probe"]))[0]
+    if len(vector) != settings.qdrant_vector_size:
+        raise RuntimeError(
+            f"local embedding dimension {len(vector)} != configured {settings.qdrant_vector_size}"
         )
 
 
@@ -109,6 +120,7 @@ async def check_readiness(*, force: bool = False) -> dict:
             "qdrant": _check_qdrant,
             "groq": _check_groq,
             "cloudflare": _check_cloudflare,
+            "local_embeddings": _check_local_embeddings,
         }
         if missing:
             for name in checks:
@@ -126,7 +138,18 @@ async def check_readiness(*, force: bool = False) -> dict:
                 else:
                     components[name] = "ready"
 
-        ready = all(value == "ready" for value in components.values())
+        core_ready = all(
+            components.get(name) == "ready"
+            for name in ("configuration", "appwrite", "qdrant", "groq")
+        )
+        embeddings_ready = (
+            components.get("cloudflare") == "ready"
+            or (
+                settings.enable_local_embedding_fallback
+                and components.get("local_embeddings") == "ready"
+            )
+        )
+        ready = core_ready and embeddings_ready
         payload = {"status": "ready" if ready else "not_ready", "components": components}
         _readiness_cache = (time.monotonic() + _READINESS_TTL_SECONDS, payload)
         if not ready:

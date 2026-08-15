@@ -16,6 +16,7 @@ async def test_readiness_reports_all_dependencies_ready():
         patch.object(health, "_check_qdrant", new=AsyncMock()),
         patch.object(health, "_check_groq", new=AsyncMock()),
         patch.object(health, "_check_cloudflare", new=AsyncMock()),
+        patch.object(health, "_check_local_embeddings", new=AsyncMock()),
     ):
         result = await health.check_readiness(force=True)
 
@@ -32,12 +33,36 @@ async def test_readiness_is_not_ready_when_one_provider_fails():
         patch.object(health, "_check_qdrant", new=AsyncMock(side_effect=RuntimeError("offline"))),
         patch.object(health, "_check_groq", new=AsyncMock()),
         patch.object(health, "_check_cloudflare", new=AsyncMock()),
+        patch.object(health, "_check_local_embeddings", new=AsyncMock()),
     ):
         result = await health.check_readiness(force=True)
 
     assert result["status"] == "not_ready"
     assert result["components"]["qdrant"] == "not_ready"
     assert "offline" not in str(result)  # provider details stay in server logs
+
+
+@pytest.mark.asyncio
+async def test_readiness_accepts_local_embedding_fallback_when_cloudflare_fails():
+    health.clear_readiness_cache()
+    with (
+        patch.object(health, "missing_required_settings", return_value=[]),
+        patch.object(health, "_check_appwrite", new=AsyncMock()),
+        patch.object(health, "_check_qdrant", new=AsyncMock()),
+        patch.object(health, "_check_groq", new=AsyncMock()),
+        patch.object(
+            health,
+            "_check_cloudflare",
+            new=AsyncMock(side_effect=RuntimeError("provider unavailable")),
+        ),
+        patch.object(health, "_check_local_embeddings", new=AsyncMock()),
+        patch.object(health.settings, "enable_local_embedding_fallback", True),
+    ):
+        result = await health.check_readiness(force=True)
+
+    assert result["status"] == "ready"
+    assert result["components"]["cloudflare"] == "not_ready"
+    assert result["components"]["local_embeddings"] == "ready"
 
 
 @pytest.mark.asyncio
