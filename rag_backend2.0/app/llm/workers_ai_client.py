@@ -61,7 +61,6 @@ def _headers() -> dict:
 def _post_json_sync(url: str, payload: dict, timeout: float = 30.0) -> dict:
     """POST through requests; its transport is reliable in the Space runtime."""
     with requests.Session() as session:
-        session.trust_env = False
         response = session.post(url, headers=_headers(), json=payload, timeout=timeout)
         response.raise_for_status()
         return response.json()
