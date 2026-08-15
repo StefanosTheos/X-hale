@@ -42,6 +42,25 @@ def _build_client() -> tuple[TablesDB, str]:
     return TablesDB(client), settings.appwrite_database_id
 
 
+def _turn_from_row(row: object, user_id: str) -> ConversationTurn:
+    """Convert an Appwrite row to the domain model used by history/export."""
+    d = row.data if isinstance(row.data, dict) else {}
+    citations_raw = d.get("citations", "[]")
+    try:
+        parsed = json.loads(citations_raw) if isinstance(citations_raw, str) else []
+        citations = parsed.get("c", []) if isinstance(parsed, dict) else parsed
+    except json.JSONDecodeError:
+        citations = []
+    return ConversationTurn(
+        turn_id=d.get("turn_id", row.id),
+        user_id=user_id,
+        role=d["role"],
+        content=d["content"],
+        timestamp=datetime.fromisoformat(d["timestamp"]),
+        citations=citations,
+    )
+
+
 async def append_turn(
     user_id: str,
     role: str,
@@ -95,24 +114,36 @@ async def get_recent_turns(user_id: str, limit: int | None = None) -> list[Conve
     docs = result.rows
     # Reverse to get oldest-first order
     docs = list(reversed(docs))
+    return [_turn_from_row(doc, user_id) for doc in docs]
+
+
+async def get_all_turns(user_id: str, page_size: int = 100) -> list[ConversationTurn]:
+    """Return every conversation turn for export, oldest first, using cursor pagination."""
+    import asyncio
+    if not 1 <= page_size <= 100:
+        raise ValueError("page_size must be between 1 and 100")
+    db, db_id = _build_client()
     turns: list[ConversationTurn] = []
-    for doc in docs:
-        d = doc.data if isinstance(doc.data, dict) else {}
-        citations_raw = d.get("citations", "[]")
-        try:
-            parsed = json.loads(citations_raw) if isinstance(citations_raw, str) else []
-            # Handle both old format (plain list) and new format ({"c": [...], "d": [...]})
-            citations = parsed.get("c", []) if isinstance(parsed, dict) else parsed
-        except json.JSONDecodeError:
-            citations = []
-        turns.append(ConversationTurn(
-            turn_id=d.get("turn_id", doc.id),
-            user_id=user_id,
-            role=d["role"],
-            content=d["content"],
-            timestamp=datetime.fromisoformat(d["timestamp"]),
-            citations=citations,
-        ))
+    cursor: str | None = None
+    while True:
+        queries = [
+            Query.equal("userId", user_id),
+            Query.order_asc("timestamp"),
+            Query.limit(page_size),
+        ]
+        if cursor is not None:
+            queries.append(Query.cursor_after(cursor))
+        result = await asyncio.to_thread(
+            db.list_rows,
+            db_id,
+            settings.appwrite_chat_messages_collection_id,
+            queries=queries,
+        )
+        rows = result.rows
+        turns.extend(_turn_from_row(row, user_id) for row in rows)
+        if len(rows) < page_size:
+            break
+        cursor = rows[-1].id
     return turns
 
 

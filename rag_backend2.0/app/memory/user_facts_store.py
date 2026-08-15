@@ -43,6 +43,28 @@ def _build_client() -> tuple[TablesDB, str]:
     return TablesDB(client), settings.appwrite_database_id
 
 
+def _fact_from_row(row: object, user_id: str) -> UserFact:
+    """Convert an Appwrite row to a structured fact without dropping provenance."""
+    d = row.data if isinstance(row.data, dict) else {}
+    source_raw = d.get("source_turn_ids", "[]")
+    try:
+        source_ids = json.loads(source_raw) if isinstance(source_raw, str) else []
+    except json.JSONDecodeError:
+        source_ids = []
+    return UserFact(
+        fact_id=row.id,
+        user_id=user_id,
+        fact_type=d["fact_type"],
+        fact_key=d["fact_key"],
+        fact_value=d["fact_value"],
+        confidence=d.get("confidence", 0.7),
+        source_turn_ids=source_ids,
+        first_observed=datetime.fromisoformat(d["first_observed"]) if d.get("first_observed") else None,
+        last_confirmed=datetime.fromisoformat(d["last_confirmed"]) if d.get("last_confirmed") else None,
+        superseded_by=d.get("superseded_by"),
+    )
+
+
 async def get_facts(user_id: str, fact_type: str | None = None) -> list[UserFact]:
     """Return active facts for a user, optionally filtered by fact_type."""
     import asyncio
@@ -60,26 +82,36 @@ async def get_facts(user_id: str, fact_type: str | None = None) -> list[UserFact
         settings.appwrite_user_facts_collection_id,
         queries=queries,
     )
+    return [_fact_from_row(doc, user_id) for doc in result.rows]
+
+
+async def get_all_facts(user_id: str, page_size: int = 100) -> list[UserFact]:
+    """Return every active and superseded fact for export using cursor pagination."""
+    import asyncio
+    if not 1 <= page_size <= 100:
+        raise ValueError("page_size must be between 1 and 100")
+    db, db_id = _build_client()
     facts: list[UserFact] = []
-    for doc in result.rows:
-        d = doc.data if isinstance(doc.data, dict) else {}
-        source_raw = d.get("source_turn_ids", "[]")
-        try:
-            source_ids = json.loads(source_raw) if isinstance(source_raw, str) else []
-        except json.JSONDecodeError:
-            source_ids = []
-        facts.append(UserFact(
-            fact_id=doc.id,
-            user_id=user_id,
-            fact_type=d["fact_type"],
-            fact_key=d["fact_key"],
-            fact_value=d["fact_value"],
-            confidence=d.get("confidence", 0.7),
-            source_turn_ids=source_ids,
-            first_observed=datetime.fromisoformat(d["first_observed"]) if d.get("first_observed") else None,
-            last_confirmed=datetime.fromisoformat(d["last_confirmed"]) if d.get("last_confirmed") else None,
-            superseded_by=d.get("superseded_by"),
-        ))
+    cursor: str | None = None
+    while True:
+        queries = [
+            Query.equal("userId", user_id),
+            Query.order_asc("$createdAt"),
+            Query.limit(page_size),
+        ]
+        if cursor is not None:
+            queries.append(Query.cursor_after(cursor))
+        result = await asyncio.to_thread(
+            db.list_rows,
+            db_id,
+            settings.appwrite_user_facts_collection_id,
+            queries=queries,
+        )
+        rows = result.rows
+        facts.extend(_fact_from_row(row, user_id) for row in rows)
+        if len(rows) < page_size:
+            break
+        cursor = rows[-1].id
     return facts
 
 

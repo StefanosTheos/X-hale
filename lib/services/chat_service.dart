@@ -284,4 +284,36 @@ class ChatService {
       throw Exception('Export failed: ${response.statusCode}');
     }
   }
+
+  /// DELETE /account/ — permanently removes the X-hale account and its
+  /// Appwrite-owned application data. The backend requires explicit consent.
+  static Future<Map<String, dynamic>> deleteAccount({
+    required String jwt,
+  }) async {
+    final response = await http.delete(
+      Uri.parse('$_baseUrl/account/'),
+      headers: {
+        'Authorization': 'Bearer $jwt',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({'confirmation': 'DELETE'}),
+    );
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body) as Map<String, dynamic>;
+    }
+    if (response.statusCode == 401) {
+      throw Exception('Session expired. Please sign in again.');
+    }
+    String detail = 'Account deletion failed: ${response.statusCode}';
+    try {
+      final decoded = jsonDecode(response.body) as Map<String, dynamic>;
+      final rawDetail = decoded['detail'];
+      if (rawDetail is Map && rawDetail['message'] != null) {
+        detail = rawDetail['message'].toString();
+      } else if (rawDetail != null) {
+        detail = rawDetail.toString();
+      }
+    } catch (_) {}
+    throw Exception(detail);
+  }
 }

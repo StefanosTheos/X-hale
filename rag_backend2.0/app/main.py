@@ -33,27 +33,13 @@ async def lifespan(app: FastAPI):
     """Startup and shutdown hooks."""
     logger.info("hailey_backend_starting", version="2.0.0")
 
-    # Validate required config
-    missing = []
-    if not settings.groq_api_key:
-        missing.append("GROQ_API_KEY")
-    if not settings.appwrite_project_id:
-        missing.append("APPWRITE_PROJECT_ID")
-    if not settings.appwrite_api_key:
-        missing.append("APPWRITE_API_KEY")
-    if not settings.qdrant_url:
-        missing.append("QDRANT_URL")
+    # Missing credentials/identifiers are deployment errors, not transient
+    # provider outages: fail before accepting traffic.
+    from app.health import check_readiness, missing_required_settings
+    missing = missing_required_settings()
     if missing:
-        logger.warning("missing_required_env_vars", vars=missing)
-
-    # Warm the Qdrant connection
-    try:
-        from app.retrieval.vector_store import get_qdrant_client
-        client = get_qdrant_client()
-        collections = await client.get_collections()
-        logger.info("qdrant_connected", collections=[c.name for c in collections.collections])
-    except Exception as exc:
-        logger.warning("qdrant_warmup_failed", error=str(exc))
+        logger.error("missing_required_env_vars", vars=missing)
+        raise RuntimeError(f"Missing required runtime configuration: {', '.join(missing)}")
 
     # Pre-compile the LangGraph (avoids first-request cold start)
     try:
@@ -61,7 +47,14 @@ async def lifespan(app: FastAPI):
         get_compiled_preparation_graph()
         logger.info("langgraph_compiled")
     except Exception as exc:
-        logger.warning("langgraph_compile_warning", error=str(exc))
+        logger.error("langgraph_compile_failed", error=str(exc))
+        raise RuntimeError("LangGraph compilation failed") from exc
+
+    # Transient provider failure does not crash the process: liveness remains
+    # available and /ready returns 503 until dependencies recover.
+    readiness = await check_readiness(force=True)
+    if readiness["status"] != "ready":
+        logger.warning("hailey_backend_started_not_ready", components=readiness["components"])
 
     logger.info("hailey_backend_ready")
     yield
@@ -98,12 +91,14 @@ def create_app() -> FastAPI:
     from app.routers.kb import router as kb_router
     from app.routers.memory import router as memory_router
     from app.routers.events import router as events_router
+    from app.routers.account import router as account_router
 
     app.include_router(chat_router)
     app.include_router(history_router)
     app.include_router(memory_router)
     app.include_router(events_router)
     app.include_router(export_router)
+    app.include_router(account_router)
     app.include_router(kb_router)
 
     # Metrics endpoint
@@ -121,10 +116,24 @@ def create_app() -> FastAPI:
     async def root():
         return {"status": "ok", "service": "Hailey 2.0", "version": "2.0.0"}
 
-    # Health check
+    # Backward-compatible process liveness. Dependency state is exposed only
+    # through /ready so Docker does not restart a healthy process during a
+    # transient provider outage.
     @app.get("/health", include_in_schema=False)
     async def health():
-        return {"status": "ok", "version": "2.0.0"}
+        return {"status": "alive", "version": "2.0.0"}
+
+    @app.get("/live", include_in_schema=False)
+    async def live():
+        return {"status": "alive", "version": "2.0.0"}
+
+    @app.get("/ready", include_in_schema=False)
+    async def ready():
+        from fastapi.responses import JSONResponse
+        from app.health import check_readiness
+
+        result = await check_readiness()
+        return JSONResponse(content=result, status_code=200 if result["status"] == "ready" else 503)
 
     return app
 

@@ -57,7 +57,9 @@ docker compose -f docker/compose.yml up
 | `DELETE` | `/memory/{fact_id}` | Remove a specific fact |
 | `POST` | `/events/relapse` | Record the authenticated user's explicit relapse action |
 | `GET` | `/kb/{benefit_id}` | Get knowledge base content for a health benefit |
-| `GET` | `/health` | Health check |
+| `GET` | `/health` | Backward-compatible process liveness check |
+| `GET` | `/live` | Process liveness check |
+| `GET` | `/ready` | Cached Appwrite, Qdrant, Groq, and Cloudflare readiness check; HTTP 503 when unavailable |
 | `GET` | `/metrics` | Prometheus metrics |
 
 ## SSE Event Types (POST /chat/)

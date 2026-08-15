@@ -55,6 +55,14 @@ async def verify_appwrite_jwt(token: str) -> Optional[str]:
     return user_id
 
 
+async def invalidate_user_tokens(user_id: str) -> None:
+    """Remove cached JWT verifications for an account that has been deleted."""
+    async with _cache_lock:
+        stale = [token_hash for token_hash, (cached_user, _) in _cache.items() if cached_user == user_id]
+        for token_hash in stale:
+            del _cache[token_hash]
+
+
 def _verify_jwt_sync(token: str) -> Optional[str]:
     """Synchronous JWT verification via the Appwrite SDK (requests transport)."""
     client = Client()

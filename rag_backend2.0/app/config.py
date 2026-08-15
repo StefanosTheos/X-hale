@@ -58,6 +58,15 @@ class Settings(BaseSettings):
     appwrite_achievements_collection_id: str = ""
     appwrite_milestones_collection_id: str = ""
     appwrite_health_benefits_collection_id: str = ""
+    appwrite_forum_collection_id: str = "685d31d9003c29f13421"
+    appwrite_challenges_collection_id: str = "685d3233002933bc80d6"
+    appwrite_challenge_entries_collection_id: str = "685d32bb0023444507f9"
+    appwrite_motivations_collection_id: str = "685d314700303649367a"
+    appwrite_friendships_collection_id: str = "6880cd730012d3aac2cc"
+    appwrite_friend_requests_collection_id: str = "6880ce0d000a1ad99b58"
+    appwrite_direct_messages_collection_id: str = "6880ce5800193d799b9f"
+    appwrite_messages_misc_collection_id: str = "686d38950033f3fcd785"
+    appwrite_user_avatars_bucket_id: str = "6a031c95003375921887"
 
     # New collections (create manually — see ARCHITECTURE.md)
     appwrite_chat_messages_collection_id: str = ""
