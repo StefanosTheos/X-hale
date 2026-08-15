@@ -121,7 +121,8 @@ async def check_readiness(*, force: bool = False) -> dict:
             for name, result in zip(checks, results):
                 if isinstance(result, BaseException):
                     components[name] = "not_ready"
-                    errors[name] = str(result)
+                    detail = str(result) or "no provider message"
+                    errors[name] = f"{type(result).__name__}: {detail}"
                 else:
                     components[name] = "ready"
 

@@ -63,7 +63,7 @@ async def embed(text: str) -> list[float]:
     Returns a 384-dimensional float vector.
     """
     url = _base_url(settings.cf_embedding_model)
-    async with httpx.AsyncClient(timeout=10.0) as client:
+    async with httpx.AsyncClient(timeout=30.0) as client:
         resp = await client.post(url, headers=_headers(), json={"text": [text]})
         resp.raise_for_status()
     _increment_quota(1)
@@ -74,7 +74,7 @@ async def embed(text: str) -> list[float]:
 async def embed_batch(texts: list[str]) -> list[list[float]]:
     """Embed a list of texts in a single Workers AI call."""
     url = _base_url(settings.cf_embedding_model)
-    async with httpx.AsyncClient(timeout=15.0) as client:
+    async with httpx.AsyncClient(timeout=30.0) as client:
         resp = await client.post(url, headers=_headers(), json={"text": texts})
         resp.raise_for_status()
     _increment_quota(len(texts))
