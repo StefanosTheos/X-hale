@@ -10,9 +10,10 @@ Tracks per-day quota usage and logs a warning at 70%.
 from __future__ import annotations
 
 import time
+import asyncio
 from typing import AsyncIterator
 
-import httpx
+import requests
 
 from app.config import settings
 from app.observability.logging import get_logger
@@ -57,28 +58,35 @@ def _headers() -> dict:
     return {"Authorization": f"Bearer {settings.cf_workers_ai_token}"}
 
 
+def _post_json_sync(url: str, payload: dict, timeout: float = 30.0) -> dict:
+    """POST through requests; its transport is reliable in the Space runtime."""
+    with requests.Session() as session:
+        session.trust_env = False
+        response = session.post(url, headers=_headers(), json=payload, timeout=timeout)
+        response.raise_for_status()
+        return response.json()
+
+
+async def _post_json(url: str, payload: dict, timeout: float = 30.0) -> dict:
+    return await asyncio.to_thread(_post_json_sync, url, payload, timeout)
+
+
 async def embed(text: str) -> list[float]:
     """
     Embed a single text string using bge-small-en-v1.5.
     Returns a 384-dimensional float vector.
     """
     url = _base_url(settings.cf_embedding_model)
-    async with httpx.AsyncClient(timeout=30.0, trust_env=False) as client:
-        resp = await client.post(url, headers=_headers(), json={"text": [text]})
-        resp.raise_for_status()
+    data = await _post_json(url, {"text": [text]})
     _increment_quota(1)
-    data = resp.json()
     return data["result"]["data"][0]
 
 
 async def embed_batch(texts: list[str]) -> list[list[float]]:
     """Embed a list of texts in a single Workers AI call."""
     url = _base_url(settings.cf_embedding_model)
-    async with httpx.AsyncClient(timeout=30.0, trust_env=False) as client:
-        resp = await client.post(url, headers=_headers(), json={"text": texts})
-        resp.raise_for_status()
+    data = await _post_json(url, {"text": texts})
     _increment_quota(len(texts))
-    data = resp.json()
     return data["result"]["data"]
 
 
@@ -101,11 +109,8 @@ class WorkersAIClient:
             "max_tokens": max_tokens,
             "temperature": temperature,
         }
-        async with httpx.AsyncClient(timeout=30.0, trust_env=False) as client:
-            resp = await client.post(url, headers=_headers(), json=payload)
-            resp.raise_for_status()
+        data = await _post_json(url, payload)
         _increment_quota(1)
-        data = resp.json()
         return data.get("result", {}).get("response", "")
 
     async def stream(
