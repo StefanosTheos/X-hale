@@ -11,9 +11,11 @@ from __future__ import annotations
 
 import time
 import asyncio
+import ssl
 from typing import AsyncIterator
 
 import requests
+from requests.adapters import HTTPAdapter
 
 from app.config import settings
 from app.observability.logging import get_logger
@@ -58,9 +60,21 @@ def _headers() -> dict:
     return {"Authorization": f"Bearer {settings.cf_workers_ai_token}"}
 
 
+class _TLS12Adapter(HTTPAdapter):
+    """Avoid TLS 1.3 EOF failures observed between Spaces and Cloudflare edge."""
+
+    def init_poolmanager(self, *args, **kwargs):
+        context = ssl.create_default_context()
+        context.minimum_version = ssl.TLSVersion.TLSv1_2
+        context.maximum_version = ssl.TLSVersion.TLSv1_2
+        kwargs["ssl_context"] = context
+        return super().init_poolmanager(*args, **kwargs)
+
+
 def _post_json_sync(url: str, payload: dict, timeout: float = 30.0) -> dict:
     """POST through requests; its transport is reliable in the Space runtime."""
     with requests.Session() as session:
+        session.mount("https://", _TLS12Adapter())
         response = session.post(url, headers=_headers(), json=payload, timeout=timeout)
         response.raise_for_status()
         return response.json()
