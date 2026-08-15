@@ -1,0 +1,3922 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-08-15T15:40:21.210946+00:00",
+  "read_only_snapshot": true,
+  "application_commit": "7793af0034cd6820e4f52f18301bd6d9f2d3ef78",
+  "deployed_space_revision": "a79d62b10b5dc496e509fe244a88c73d0e8ca8be",
+  "benchmark_run_id": "31889842986",
+  "qdrant_endpoint_host": "a36d962f-aa0e-4edd-8949-8c19de4981a4.europe-west3-0.gcp.cloud.qdrant.io",
+  "source_manifest_revision": "7793af0034cd6820e4f52f18301bd6d9f2d3ef78",
+  "source_manifest_sha256": "5728c60e310f12cf5f100e1139679eab2007142c58b8d0a9676ca0edb4cdaf4d",
+  "manifest_deployment_comparison": {
+    "manifest_source_count": 28,
+    "deployed_kb_source_count": 23,
+    "manifest_sources_absent_from_kb_chunks": [
+      "acs_quit_timeline",
+      "aha_why_quit",
+      "cdc_benefits_timeline",
+      "mayo_quit_smoking",
+      "nhs_quit_benefits"
+    ],
+    "kb_chunk_sources_absent_from_manifest": [],
+    "counts_match": false,
+    "source_sets_match": false
+  },
+  "collections": [
+    {
+      "collection": "kb_chunks",
+      "reported_points_count": 487,
+      "inventoried_points_count": 487,
+      "vector_dimensions": {
+        "384": 487
+      },
+      "payload_schema": {
+        "benefit_id": [
+          "null"
+        ],
+        "chunk_index": [
+          "integer"
+        ],
+        "content": [
+          "string"
+        ],
+        "recency_date": [
+          "string"
+        ],
+        "source_id": [
+          "string"
+        ],
+        "source_type": [
+          "string"
+        ],
+        "topic_tags": [
+          "array"
+        ],
+        "total_chunks": [
+          "integer"
+        ]
+      },
+      "required_payload_fields": [
+        "source_id",
+        "source_type",
+        "chunk_index",
+        "total_chunks",
+        "topic_tags",
+        "recency_date",
+        "text_or_content"
+      ],
+      "payload_completeness": {
+        "source_id": {
+          "present": 487,
+          "missing": 0
+        },
+        "source_type": {
+          "present": 487,
+          "missing": 0
+        },
+        "chunk_index": {
+          "present": 487,
+          "missing": 0
+        },
+        "total_chunks": {
+          "present": 487,
+          "missing": 0
+        },
+        "topic_tags": {
+          "present": 487,
+          "missing": 0
+        },
+        "recency_date": {
+          "present": 487,
+          "missing": 0
+        },
+        "text_or_content": {
+          "present": 487,
+          "missing": 0
+        }
+      },
+      "required_payload_complete": true,
+      "source_counts": {
+        "acs_smoking_cancer_risks": 5,
+        "aha_smoking_cvd": 1,
+        "ala_smoking_lung_health": 18,
+        "cdc_cancer_mortality": 4,
+        "cdc_secondhand_smoke": 17,
+        "cdc_smoking_pregnancy": 11,
+        "cdc_why_smoking_harmful": 11,
+        "mayo_nicotine_dependence": 16,
+        "mayo_nicotine_dependence_treatment": 15,
+        "nhs_10_self_help_tips": 10,
+        "nhs_copd_causes": 6,
+        "nhs_nicotine_withdrawal": 15,
+        "nhs_nrt_guide": 15,
+        "nhs_stop_smoking_treatments": 11,
+        "smokefree_cravings": 12,
+        "smokefree_nrt": 11,
+        "smokefree_quit_guide": 5,
+        "smokefree_slips_relapses": 9,
+        "smokefree_stay_free": 4,
+        "smokefree_triggers": 14,
+        "smokefree_withdrawal": 21,
+        "uspstf_tobacco_2021": 229,
+        "who_tobacco_facts": 27
+      },
+      "source_chunk_identifiers": [
+        {
+          "point_id": "001facba-c9ac-c7cd-95f3-cc6658f98c39",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 142,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "0025cfe8-db97-b0fd-8159-a98d6754b382",
+          "source_id": "ala_smoking_lung_health",
+          "chunk_index": 9,
+          "total_chunks": 18,
+          "benefit_id": null
+        },
+        {
+          "point_id": "009286fe-95fa-6cac-4d91-e598f7d10cb0",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 62,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "00d6761c-8da7-1a45-fb06-66b512d9de02",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 198,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "010cd7f4-dcfd-afbc-bc1a-1cca3d92f17d",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 46,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "017f14de-67b1-373b-5c7a-bd14bfb03464",
+          "source_id": "cdc_secondhand_smoke",
+          "chunk_index": 13,
+          "total_chunks": 17,
+          "benefit_id": null
+        },
+        {
+          "point_id": "01a47715-d75c-a5f9-257a-4e45e6cbfcc9",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 43,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "01ab6ce9-547b-e14b-ab49-75b3ac943289",
+          "source_id": "smokefree_triggers",
+          "chunk_index": 5,
+          "total_chunks": 14,
+          "benefit_id": null
+        },
+        {
+          "point_id": "024e9f83-1db8-4a3e-15c1-10a2fa4cb40b",
+          "source_id": "cdc_smoking_pregnancy",
+          "chunk_index": 7,
+          "total_chunks": 11,
+          "benefit_id": null
+        },
+        {
+          "point_id": "025310b1-9d0c-6ac1-4d79-f96be02ade95",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 126,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "026fd172-4c4b-84ce-1c6b-415077ccf437",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 189,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "0294d006-598c-f91f-34f5-b3ee3e8b099c",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 12,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "02b57cea-7301-2b27-46d2-071af204d759",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 21,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "030356da-fe0a-48ec-5267-79d8b79afbbc",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 186,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "030ed2d8-7d31-5f45-c94c-3cda6fc1901a",
+          "source_id": "acs_smoking_cancer_risks",
+          "chunk_index": 2,
+          "total_chunks": 5,
+          "benefit_id": null
+        },
+        {
+          "point_id": "0346d3bc-ae08-f1ea-836c-cc33cd5affa3",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 217,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "0357300c-237c-2750-f284-4337c517492d",
+          "source_id": "smokefree_stay_free",
+          "chunk_index": 0,
+          "total_chunks": 4,
+          "benefit_id": null
+        },
+        {
+          "point_id": "0396ddc0-68c8-6e95-1c7e-5de4b06f0cde",
+          "source_id": "smokefree_cravings",
+          "chunk_index": 2,
+          "total_chunks": 12,
+          "benefit_id": null
+        },
+        {
+          "point_id": "03d1e99e-545d-77b9-8172-8c75988e4ce9",
+          "source_id": "nhs_nrt_guide",
+          "chunk_index": 5,
+          "total_chunks": 15,
+          "benefit_id": null
+        },
+        {
+          "point_id": "03ef89c4-c490-28b1-929d-d6e7296d5d0f",
+          "source_id": "ala_smoking_lung_health",
+          "chunk_index": 16,
+          "total_chunks": 18,
+          "benefit_id": null
+        },
+        {
+          "point_id": "043b1223-28e8-7c57-8a5f-98d45e6cdae7",
+          "source_id": "mayo_nicotine_dependence",
+          "chunk_index": 9,
+          "total_chunks": 16,
+          "benefit_id": null
+        },
+        {
+          "point_id": "0491b7f5-1af6-c26d-e55f-c42e64a755d2",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 50,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "050405ec-6af7-4aef-e356-08dd57c3a92a",
+          "source_id": "who_tobacco_facts",
+          "chunk_index": 25,
+          "total_chunks": 27,
+          "benefit_id": null
+        },
+        {
+          "point_id": "0562500c-622f-2254-a08e-311b23c3ecd2",
+          "source_id": "smokefree_slips_relapses",
+          "chunk_index": 0,
+          "total_chunks": 9,
+          "benefit_id": null
+        },
+        {
+          "point_id": "063de856-25ed-dd60-d8a4-d4eb61c19078",
+          "source_id": "nhs_nrt_guide",
+          "chunk_index": 13,
+          "total_chunks": 15,
+          "benefit_id": null
+        },
+        {
+          "point_id": "067526bc-a52a-36eb-4f36-b32d19335da9",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 49,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "07272c54-db4c-aa4d-46de-5d07a952030d",
+          "source_id": "nhs_copd_causes",
+          "chunk_index": 3,
+          "total_chunks": 6,
+          "benefit_id": null
+        },
+        {
+          "point_id": "07a72129-d6f5-0ceb-53f9-208dbf68de4f",
+          "source_id": "who_tobacco_facts",
+          "chunk_index": 23,
+          "total_chunks": 27,
+          "benefit_id": null
+        },
+        {
+          "point_id": "08f8a769-13b0-aca9-712a-a873224afd25",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 224,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "09ad406a-918e-e71f-b861-c9b29807cc33",
+          "source_id": "who_tobacco_facts",
+          "chunk_index": 21,
+          "total_chunks": 27,
+          "benefit_id": null
+        },
+        {
+          "point_id": "09d1218f-3d09-28ab-a44f-8558760ff59a",
+          "source_id": "smokefree_withdrawal",
+          "chunk_index": 3,
+          "total_chunks": 21,
+          "benefit_id": null
+        },
+        {
+          "point_id": "0a146f0e-4cfb-3125-143c-a142fdb3a46e",
+          "source_id": "nhs_10_self_help_tips",
+          "chunk_index": 9,
+          "total_chunks": 10,
+          "benefit_id": null
+        },
+        {
+          "point_id": "0aa6b71a-26e2-58dd-815e-f1ee6dc2cd18",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 184,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "0b5d26a5-2b1d-e333-bb04-b4576e888000",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 75,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "0c92bc4e-3e19-8ed6-00e3-8c4d90ee05f1",
+          "source_id": "nhs_nicotine_withdrawal",
+          "chunk_index": 0,
+          "total_chunks": 15,
+          "benefit_id": null
+        },
+        {
+          "point_id": "0ed82683-7ddb-20c5-7828-8616ebd7d088",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 91,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "0f7a47ea-9f60-79bb-aa03-8d56f267d605",
+          "source_id": "smokefree_withdrawal",
+          "chunk_index": 16,
+          "total_chunks": 21,
+          "benefit_id": null
+        },
+        {
+          "point_id": "0fd125a2-5e2e-6aab-01e0-a4be9e9d232f",
+          "source_id": "ala_smoking_lung_health",
+          "chunk_index": 13,
+          "total_chunks": 18,
+          "benefit_id": null
+        },
+        {
+          "point_id": "0ff15b45-c565-c01c-4e97-87c97ae7a7c3",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 4,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "107cf315-00b1-d00c-27c6-f2ae955e6097",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 108,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "1318d5ae-f99c-ca9c-280e-e53be5d1f67a",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 19,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "14f0fbed-32da-a847-7a18-e1fa79ec4f08",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 93,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "14f7d0a1-4068-d3e5-16ac-335ac24e36bc",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 13,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "1581c91d-0115-849d-1b63-a388a3482c5c",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 32,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "159b6ac1-d531-15d5-82f6-186ae6df8bf8",
+          "source_id": "who_tobacco_facts",
+          "chunk_index": 16,
+          "total_chunks": 27,
+          "benefit_id": null
+        },
+        {
+          "point_id": "15cb1e26-2ac5-e487-a545-78aa9f336677",
+          "source_id": "smokefree_cravings",
+          "chunk_index": 7,
+          "total_chunks": 12,
+          "benefit_id": null
+        },
+        {
+          "point_id": "1738c848-fdf6-7aba-5882-719641bdbd93",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 39,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "18cfc45f-53a3-ef02-a135-c4f2eb40b2b6",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 58,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "19bcff89-f5db-bf10-73d0-2213134eaefd",
+          "source_id": "mayo_nicotine_dependence",
+          "chunk_index": 13,
+          "total_chunks": 16,
+          "benefit_id": null
+        },
+        {
+          "point_id": "1acc611c-b73c-a027-64fc-9dff34c4df4a",
+          "source_id": "nhs_stop_smoking_treatments",
+          "chunk_index": 6,
+          "total_chunks": 11,
+          "benefit_id": null
+        },
+        {
+          "point_id": "1bb3a01f-0eae-f9a8-9fc3-9d305f062e82",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 192,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "1be92546-d4a4-e377-a78d-e1c8eec12148",
+          "source_id": "cdc_smoking_pregnancy",
+          "chunk_index": 4,
+          "total_chunks": 11,
+          "benefit_id": null
+        },
+        {
+          "point_id": "1c486440-9589-3cc7-0912-b95ca3d1befe",
+          "source_id": "who_tobacco_facts",
+          "chunk_index": 1,
+          "total_chunks": 27,
+          "benefit_id": null
+        },
+        {
+          "point_id": "1c5f7aa8-5855-691e-75fb-eaa01e0f26aa",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 24,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "1e77c711-3c6b-e9e5-5273-08901ff8c66b",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 95,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "1eb1ff6c-f96e-f844-d07e-f4b06ddf2bc7",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 213,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "1f106d1d-4e31-690d-a142-5cd3a1a4e184",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 196,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "205f856b-9a17-9807-6c6d-de2fa4e335ea",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 124,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "21052cc8-6dea-c45f-4548-3fb32b93859a",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 194,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "21d08c5c-c7d7-0f22-bab0-5d7ace295bb9",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 139,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "221a4684-3d30-91f6-7ad5-8689ec0467c4",
+          "source_id": "smokefree_triggers",
+          "chunk_index": 7,
+          "total_chunks": 14,
+          "benefit_id": null
+        },
+        {
+          "point_id": "22a6671d-42de-51ec-1b70-7fe95083b598",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 25,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "2348fe1b-fbfd-e9a1-8d65-848decbb27d9",
+          "source_id": "smokefree_slips_relapses",
+          "chunk_index": 5,
+          "total_chunks": 9,
+          "benefit_id": null
+        },
+        {
+          "point_id": "25bf743e-4ca8-b684-4b56-9da847b941b4",
+          "source_id": "who_tobacco_facts",
+          "chunk_index": 7,
+          "total_chunks": 27,
+          "benefit_id": null
+        },
+        {
+          "point_id": "26bdc0f7-87e6-99b8-7940-46fa4f4e0c2c",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 133,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "26df4bb6-fcfd-8170-b713-bff6dbbd4d5e",
+          "source_id": "smokefree_slips_relapses",
+          "chunk_index": 7,
+          "total_chunks": 9,
+          "benefit_id": null
+        },
+        {
+          "point_id": "275176ec-d553-7bd1-a9b5-af9e76f4aa48",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 97,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "283240b7-ab11-c8e4-ca7d-cf2f35393992",
+          "source_id": "smokefree_cravings",
+          "chunk_index": 9,
+          "total_chunks": 12,
+          "benefit_id": null
+        },
+        {
+          "point_id": "28918043-898a-233e-ee21-6a8b973c85f7",
+          "source_id": "smokefree_cravings",
+          "chunk_index": 5,
+          "total_chunks": 12,
+          "benefit_id": null
+        },
+        {
+          "point_id": "292003b2-e28b-c852-4ae5-4ed01391f6e5",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 28,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "295bd645-4cdb-9f3a-1457-679cd592d4fa",
+          "source_id": "who_tobacco_facts",
+          "chunk_index": 18,
+          "total_chunks": 27,
+          "benefit_id": null
+        },
+        {
+          "point_id": "29916ae3-48a1-6053-b250-7aaf2d8b55fb",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 113,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "29cba678-5261-ca69-751f-92e644643afc",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 89,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "2a2b3e57-56b4-ed65-a161-d2a96971d2de",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 202,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "2a2d56c7-def2-9d78-0d5b-c7a3e8c6e36a",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 67,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "2a519d47-a69d-57bd-4c39-cdd0c8ed73bb",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 218,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "2b8927c0-fcff-fad6-9ab4-26d288974960",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 159,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "2bb27713-55c8-38be-d54b-7aa9074ef308",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 107,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "2c15b7cb-546e-7e68-285e-1a2b72570221",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 158,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "2c5be144-3bdb-b2e3-193e-2837c77159c2",
+          "source_id": "who_tobacco_facts",
+          "chunk_index": 14,
+          "total_chunks": 27,
+          "benefit_id": null
+        },
+        {
+          "point_id": "302244a8-366c-1463-04c9-8c9541351659",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 34,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "3070d21f-20e1-0fbf-5371-9d462752fd49",
+          "source_id": "smokefree_withdrawal",
+          "chunk_index": 10,
+          "total_chunks": 21,
+          "benefit_id": null
+        },
+        {
+          "point_id": "313238a7-8d09-dd35-e74d-60d4ae63e9b3",
+          "source_id": "smokefree_cravings",
+          "chunk_index": 10,
+          "total_chunks": 12,
+          "benefit_id": null
+        },
+        {
+          "point_id": "315da6d8-9868-949b-8703-5ceda68be938",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 131,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "337f0723-a745-2d3a-ab0c-e8f8a533c114",
+          "source_id": "cdc_why_smoking_harmful",
+          "chunk_index": 9,
+          "total_chunks": 11,
+          "benefit_id": null
+        },
+        {
+          "point_id": "346885bc-49c2-1072-3719-38585577881a",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 130,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "34b24725-d9dd-c81f-1cc3-ca88e28deb75",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 163,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "3518e0d6-4ac6-d991-227f-5c4c4eb060ea",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 114,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "359b0ebe-3d7a-abbf-e468-948067ca9579",
+          "source_id": "nhs_nrt_guide",
+          "chunk_index": 6,
+          "total_chunks": 15,
+          "benefit_id": null
+        },
+        {
+          "point_id": "35af6e5d-ece0-56f9-95ce-8577d7f19c2d",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 149,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "35db24a9-6d02-cf05-5bc7-a4ad42f144e0",
+          "source_id": "smokefree_cravings",
+          "chunk_index": 1,
+          "total_chunks": 12,
+          "benefit_id": null
+        },
+        {
+          "point_id": "35e747f2-8c1a-db9c-9e72-bf881836df6b",
+          "source_id": "cdc_cancer_mortality",
+          "chunk_index": 0,
+          "total_chunks": 4,
+          "benefit_id": null
+        },
+        {
+          "point_id": "361c13b5-06b5-530b-aa56-771d67711a75",
+          "source_id": "nhs_stop_smoking_treatments",
+          "chunk_index": 2,
+          "total_chunks": 11,
+          "benefit_id": null
+        },
+        {
+          "point_id": "379615f1-8a28-9db8-f421-98df834593ef",
+          "source_id": "smokefree_slips_relapses",
+          "chunk_index": 2,
+          "total_chunks": 9,
+          "benefit_id": null
+        },
+        {
+          "point_id": "39025de1-34ea-20c7-24de-80782e9e83c0",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 82,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "390faace-33e2-5c8e-cdc7-2faefd8b7c77",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 129,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "3932f49a-ac2d-c0e5-2a8d-a8493220e60e",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 195,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "393bbade-c8fb-b25e-0591-f39252138cd5",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 59,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "396f6c53-504a-bcbf-d508-ddba764b4ec8",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 209,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "399b4a46-df51-5533-0e3b-61f9471362d5",
+          "source_id": "who_tobacco_facts",
+          "chunk_index": 8,
+          "total_chunks": 27,
+          "benefit_id": null
+        },
+        {
+          "point_id": "39b3f679-d1c6-fb85-2d10-88c8baa21ca9",
+          "source_id": "cdc_smoking_pregnancy",
+          "chunk_index": 10,
+          "total_chunks": 11,
+          "benefit_id": null
+        },
+        {
+          "point_id": "3b80a4f8-2b75-56fc-c3c3-b8fb403cec3d",
+          "source_id": "smokefree_triggers",
+          "chunk_index": 11,
+          "total_chunks": 14,
+          "benefit_id": null
+        },
+        {
+          "point_id": "3bc0a8b8-00f9-5135-5a96-a6506518ba5f",
+          "source_id": "nhs_10_self_help_tips",
+          "chunk_index": 7,
+          "total_chunks": 10,
+          "benefit_id": null
+        },
+        {
+          "point_id": "3bcf4d2f-f0ae-2a0b-f4c5-5dc54196af4c",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 193,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "3c310eaa-6105-31aa-e8b3-027dafc47356",
+          "source_id": "nhs_stop_smoking_treatments",
+          "chunk_index": 3,
+          "total_chunks": 11,
+          "benefit_id": null
+        },
+        {
+          "point_id": "3d4bcd70-2ccc-b9e2-5de7-bd316537b3f7",
+          "source_id": "ala_smoking_lung_health",
+          "chunk_index": 12,
+          "total_chunks": 18,
+          "benefit_id": null
+        },
+        {
+          "point_id": "3d77e703-b8e7-6b8d-b3f8-276cc9bbc3f5",
+          "source_id": "nhs_nrt_guide",
+          "chunk_index": 0,
+          "total_chunks": 15,
+          "benefit_id": null
+        },
+        {
+          "point_id": "3e1979b9-1c50-3fc6-3c90-8d83dab50c3c",
+          "source_id": "cdc_secondhand_smoke",
+          "chunk_index": 8,
+          "total_chunks": 17,
+          "benefit_id": null
+        },
+        {
+          "point_id": "3e3d5b05-2ae3-0534-3423-1e4e289bf96a",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 119,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "3ecb57f6-7d74-06da-c956-6e7bb24392f4",
+          "source_id": "mayo_nicotine_dependence",
+          "chunk_index": 8,
+          "total_chunks": 16,
+          "benefit_id": null
+        },
+        {
+          "point_id": "3f0af844-a4c2-9bc5-27bb-b42af10269fa",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 74,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "40ac9149-1410-ce30-3397-b4e18cd5f745",
+          "source_id": "smokefree_withdrawal",
+          "chunk_index": 2,
+          "total_chunks": 21,
+          "benefit_id": null
+        },
+        {
+          "point_id": "4128afef-8a29-2b67-e0b7-9498d29cc7cc",
+          "source_id": "smokefree_triggers",
+          "chunk_index": 3,
+          "total_chunks": 14,
+          "benefit_id": null
+        },
+        {
+          "point_id": "416713da-c702-07ed-07dd-1516e57d6ac3",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 120,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "419a4d26-8fb8-bdf7-63bf-39ecfcd1a26f",
+          "source_id": "smokefree_nrt",
+          "chunk_index": 0,
+          "total_chunks": 11,
+          "benefit_id": null
+        },
+        {
+          "point_id": "41d06c08-2e38-8215-cd37-4e1a801f813a",
+          "source_id": "nhs_stop_smoking_treatments",
+          "chunk_index": 9,
+          "total_chunks": 11,
+          "benefit_id": null
+        },
+        {
+          "point_id": "4208b0eb-d9b8-63da-0ee5-8d88c5f1fc3e",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 146,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "4244451f-1306-df8e-6a94-9a387f200a50",
+          "source_id": "cdc_secondhand_smoke",
+          "chunk_index": 16,
+          "total_chunks": 17,
+          "benefit_id": null
+        },
+        {
+          "point_id": "424f41d1-b20f-a943-26b0-9c855fdcfe73",
+          "source_id": "smokefree_stay_free",
+          "chunk_index": 1,
+          "total_chunks": 4,
+          "benefit_id": null
+        },
+        {
+          "point_id": "42774cc0-413b-61f9-b7e2-c55863fb0a46",
+          "source_id": "smokefree_nrt",
+          "chunk_index": 5,
+          "total_chunks": 11,
+          "benefit_id": null
+        },
+        {
+          "point_id": "428c698e-26da-41e3-b207-943e99c150aa",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 165,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "43113a80-c42d-e949-c4a6-42c2ac4e0dbe",
+          "source_id": "nhs_10_self_help_tips",
+          "chunk_index": 2,
+          "total_chunks": 10,
+          "benefit_id": null
+        },
+        {
+          "point_id": "4343f30e-5ca4-1cd0-c4e8-5662c79e4fc6",
+          "source_id": "nhs_nicotine_withdrawal",
+          "chunk_index": 4,
+          "total_chunks": 15,
+          "benefit_id": null
+        },
+        {
+          "point_id": "443b12f9-cd24-5d3b-13cc-73f89b4dceca",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 70,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "4456b61a-bd52-7f5f-a76b-9186f46cf824",
+          "source_id": "who_tobacco_facts",
+          "chunk_index": 20,
+          "total_chunks": 27,
+          "benefit_id": null
+        },
+        {
+          "point_id": "446da13d-419c-5a55-615f-a1f4816e9e75",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 215,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "44ef57b0-602b-2025-45f9-33443e10743e",
+          "source_id": "smokefree_withdrawal",
+          "chunk_index": 13,
+          "total_chunks": 21,
+          "benefit_id": null
+        },
+        {
+          "point_id": "44f0b646-5a92-672b-13a3-64b548478ef7",
+          "source_id": "smokefree_withdrawal",
+          "chunk_index": 5,
+          "total_chunks": 21,
+          "benefit_id": null
+        },
+        {
+          "point_id": "45a2b812-952e-883f-c099-daf631fec842",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 125,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "46bdbdb7-0e6a-1887-9bc7-488be75baf05",
+          "source_id": "cdc_smoking_pregnancy",
+          "chunk_index": 2,
+          "total_chunks": 11,
+          "benefit_id": null
+        },
+        {
+          "point_id": "46cc224e-2a29-d348-2fa1-9030c9583383",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 56,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "4752a03b-087a-9a83-3f8e-2f5f82e8bbd4",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 37,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "47ad9814-9cf2-c3a2-ca87-caf955a76a91",
+          "source_id": "mayo_nicotine_dependence_treatment",
+          "chunk_index": 4,
+          "total_chunks": 15,
+          "benefit_id": null
+        },
+        {
+          "point_id": "49650f54-7b34-9243-d4d4-fc3fa5e58a6f",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 36,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "4b6ce582-f67e-2248-e7f5-7657aebada0d",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 117,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "4b9a1ebc-ff05-a506-2f46-8765eed81c16",
+          "source_id": "nhs_nicotine_withdrawal",
+          "chunk_index": 13,
+          "total_chunks": 15,
+          "benefit_id": null
+        },
+        {
+          "point_id": "4c1c786b-9540-9bd4-88ef-8fd977ae04d5",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 151,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "4d4bb86b-c631-262f-1e45-cdac01a8932e",
+          "source_id": "smokefree_withdrawal",
+          "chunk_index": 17,
+          "total_chunks": 21,
+          "benefit_id": null
+        },
+        {
+          "point_id": "4dffbb3b-1b5a-e570-e32b-0885b95c9510",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 157,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "4e2b56f0-e4e0-ac2e-94d3-caad03bac5c1",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 3,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "50f2d335-4da8-7929-82a2-71e5c241fb82",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 10,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "515f617d-398f-652d-9f01-742b2a70c677",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 90,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "5173c608-3533-7ca3-3ae7-cce71db547a3",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 1,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "519ffdb0-3f39-8d5c-04f9-90a63c41634f",
+          "source_id": "cdc_cancer_mortality",
+          "chunk_index": 3,
+          "total_chunks": 4,
+          "benefit_id": null
+        },
+        {
+          "point_id": "51d45c99-ef37-05f5-844a-d0fcd7c83646",
+          "source_id": "mayo_nicotine_dependence_treatment",
+          "chunk_index": 12,
+          "total_chunks": 15,
+          "benefit_id": null
+        },
+        {
+          "point_id": "5328c4f1-b333-9d3f-9d82-6ac43c7ccda6",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 145,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "537564d4-8d6c-447b-0342-edf032dfb2cd",
+          "source_id": "who_tobacco_facts",
+          "chunk_index": 2,
+          "total_chunks": 27,
+          "benefit_id": null
+        },
+        {
+          "point_id": "53b2693f-8e60-c8de-50ae-f5c6c8dee8f1",
+          "source_id": "who_tobacco_facts",
+          "chunk_index": 3,
+          "total_chunks": 27,
+          "benefit_id": null
+        },
+        {
+          "point_id": "54e748ee-589b-1b5e-84e8-49f3f931d059",
+          "source_id": "nhs_nicotine_withdrawal",
+          "chunk_index": 1,
+          "total_chunks": 15,
+          "benefit_id": null
+        },
+        {
+          "point_id": "54ffde80-212c-3694-15ca-37d090b9b75c",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 156,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "551ddc78-83a4-e3a5-325c-4385d22c5a98",
+          "source_id": "nhs_nrt_guide",
+          "chunk_index": 14,
+          "total_chunks": 15,
+          "benefit_id": null
+        },
+        {
+          "point_id": "557c23e0-75f3-ad52-3055-82c6af3c3e3f",
+          "source_id": "cdc_smoking_pregnancy",
+          "chunk_index": 8,
+          "total_chunks": 11,
+          "benefit_id": null
+        },
+        {
+          "point_id": "55a86d82-babc-9bef-c671-838d56e1955a",
+          "source_id": "ala_smoking_lung_health",
+          "chunk_index": 17,
+          "total_chunks": 18,
+          "benefit_id": null
+        },
+        {
+          "point_id": "5658fa2a-7db7-c5c4-fdce-6b669dbed8dd",
+          "source_id": "smokefree_triggers",
+          "chunk_index": 1,
+          "total_chunks": 14,
+          "benefit_id": null
+        },
+        {
+          "point_id": "569c4d1f-24ba-4cfe-7025-f3e98999a9ce",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 225,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "56ff8cef-2e0e-78ae-b94b-6e0320d3435a",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 17,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "5723daee-900d-ebd7-9e32-bff8c022e764",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 80,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "58370507-26e8-0689-3220-7ba645136ab8",
+          "source_id": "nhs_stop_smoking_treatments",
+          "chunk_index": 10,
+          "total_chunks": 11,
+          "benefit_id": null
+        },
+        {
+          "point_id": "5907e7c3-ae2c-8fb7-eb0c-8729a7675885",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 42,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "598307cc-5c0b-3c5a-3016-c74bd9562fe4",
+          "source_id": "nhs_nrt_guide",
+          "chunk_index": 3,
+          "total_chunks": 15,
+          "benefit_id": null
+        },
+        {
+          "point_id": "5a3f7edc-4347-18a9-cce0-740cdc962bf2",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 152,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "5af24b19-78e3-7c8a-8e56-c956eafa6af8",
+          "source_id": "cdc_secondhand_smoke",
+          "chunk_index": 11,
+          "total_chunks": 17,
+          "benefit_id": null
+        },
+        {
+          "point_id": "5c3e38ff-a9c0-de33-bd7e-0df84762fb45",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 216,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "5c5043bb-2aba-9886-cccd-f0390f987c70",
+          "source_id": "nhs_10_self_help_tips",
+          "chunk_index": 8,
+          "total_chunks": 10,
+          "benefit_id": null
+        },
+        {
+          "point_id": "5cf9dd82-1915-6393-9c9d-45e0cd92b833",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 98,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "5d27c040-18f7-b061-3b5a-cd76f633fc89",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 132,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "5d3f65e8-f5c2-bfb1-0dcc-ed7aa97e4015",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 65,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "5ddce5e1-1e2b-fe15-8f02-12e1fb8d9141",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 106,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "5e2ff05e-6e8c-d87f-1f76-bcf6a1792284",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 26,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "5e716982-4daf-b1e3-0b6f-9695d8f530e4",
+          "source_id": "mayo_nicotine_dependence_treatment",
+          "chunk_index": 13,
+          "total_chunks": 15,
+          "benefit_id": null
+        },
+        {
+          "point_id": "5eb660f0-3951-b248-c214-6d07b52d559e",
+          "source_id": "smokefree_nrt",
+          "chunk_index": 6,
+          "total_chunks": 11,
+          "benefit_id": null
+        },
+        {
+          "point_id": "5fde3177-6b5f-9cd4-ab49-551e7d9e9466",
+          "source_id": "cdc_why_smoking_harmful",
+          "chunk_index": 3,
+          "total_chunks": 11,
+          "benefit_id": null
+        },
+        {
+          "point_id": "607d480b-0583-aee2-f712-58c90d01a31c",
+          "source_id": "smokefree_withdrawal",
+          "chunk_index": 8,
+          "total_chunks": 21,
+          "benefit_id": null
+        },
+        {
+          "point_id": "60cc6197-60ca-4a01-8887-7ec455902fe0",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 179,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "611b05bb-e6b7-1eb6-be16-0673aeade001",
+          "source_id": "who_tobacco_facts",
+          "chunk_index": 26,
+          "total_chunks": 27,
+          "benefit_id": null
+        },
+        {
+          "point_id": "611c2492-fb52-f7dc-522e-6e949c69a9fa",
+          "source_id": "nhs_stop_smoking_treatments",
+          "chunk_index": 4,
+          "total_chunks": 11,
+          "benefit_id": null
+        },
+        {
+          "point_id": "61264387-4086-3e62-27a1-0949794d9e04",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 228,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "612cdb19-5a49-2238-aec9-7efdc08ec7bb",
+          "source_id": "nhs_10_self_help_tips",
+          "chunk_index": 1,
+          "total_chunks": 10,
+          "benefit_id": null
+        },
+        {
+          "point_id": "614f61a7-215c-25cf-5389-5c01e4c33fb2",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 86,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "624c1d4b-a96a-98e9-823c-ec6abc129664",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 79,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "633f1995-ad52-57cc-3e76-859c6a734db9",
+          "source_id": "acs_smoking_cancer_risks",
+          "chunk_index": 0,
+          "total_chunks": 5,
+          "benefit_id": null
+        },
+        {
+          "point_id": "63bc6fb4-15c6-c7c5-e0e1-6c3371099acd",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 69,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "64c4af7a-5d85-5cf9-c340-8e76082826d0",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 92,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "654421a7-94e6-3c57-aed6-8f027624e6a2",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 99,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "6544cd64-8427-77c0-656d-12074799b36c",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 81,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "66dbac47-3773-1de7-3081-87224f09092a",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 170,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "67ae29a8-60a8-3bc7-b5b0-938c3da906d7",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 38,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "686aa266-cfac-f612-7595-0b3fdad986a3",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 30,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "6a3e68d0-a0ff-8088-acad-57f20b94a784",
+          "source_id": "nhs_nrt_guide",
+          "chunk_index": 11,
+          "total_chunks": 15,
+          "benefit_id": null
+        },
+        {
+          "point_id": "6a946111-b339-e14f-ab00-acb86c145b26",
+          "source_id": "nhs_nrt_guide",
+          "chunk_index": 2,
+          "total_chunks": 15,
+          "benefit_id": null
+        },
+        {
+          "point_id": "6b02dca3-7725-466b-c37d-a62a8a5b2600",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 76,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "6b06466e-ad29-79cc-eefd-ce8341b5d719",
+          "source_id": "smokefree_withdrawal",
+          "chunk_index": 7,
+          "total_chunks": 21,
+          "benefit_id": null
+        },
+        {
+          "point_id": "6c040180-242e-3af0-133d-a36acd0e36a5",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 22,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "6d98e855-c8ea-56ff-16c1-63237d526155",
+          "source_id": "smokefree_triggers",
+          "chunk_index": 8,
+          "total_chunks": 14,
+          "benefit_id": null
+        },
+        {
+          "point_id": "6e372ef2-c8af-4bcd-9db5-2477b978d196",
+          "source_id": "smokefree_cravings",
+          "chunk_index": 0,
+          "total_chunks": 12,
+          "benefit_id": null
+        },
+        {
+          "point_id": "6e5ce6c3-1132-7f69-221c-a2d8a680350f",
+          "source_id": "nhs_stop_smoking_treatments",
+          "chunk_index": 5,
+          "total_chunks": 11,
+          "benefit_id": null
+        },
+        {
+          "point_id": "6ecdc091-1646-bb26-1940-a68bff3e0611",
+          "source_id": "nhs_nicotine_withdrawal",
+          "chunk_index": 8,
+          "total_chunks": 15,
+          "benefit_id": null
+        },
+        {
+          "point_id": "6eeaa4dd-867a-41eb-857c-fb7eb3b84c49",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 71,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "70991c50-9e1a-0298-5857-51934ebd8021",
+          "source_id": "mayo_nicotine_dependence_treatment",
+          "chunk_index": 9,
+          "total_chunks": 15,
+          "benefit_id": null
+        },
+        {
+          "point_id": "70cebf9d-9da5-3a7b-7721-8a49faa1ea6f",
+          "source_id": "smokefree_cravings",
+          "chunk_index": 11,
+          "total_chunks": 12,
+          "benefit_id": null
+        },
+        {
+          "point_id": "716f5e20-8f47-8ae3-b4da-ccb9848539e4",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 187,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "71971f02-3239-6156-1260-d54422b6e7cc",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 173,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "71ee2d90-404f-8560-9f47-70315f748224",
+          "source_id": "cdc_smoking_pregnancy",
+          "chunk_index": 0,
+          "total_chunks": 11,
+          "benefit_id": null
+        },
+        {
+          "point_id": "728a482c-6d98-d602-245b-fc03c604226f",
+          "source_id": "smokefree_nrt",
+          "chunk_index": 7,
+          "total_chunks": 11,
+          "benefit_id": null
+        },
+        {
+          "point_id": "72b14cec-c924-6966-b57e-8d3b2aae7b0b",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 199,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "7392fd4c-53fa-6ed8-95d0-fe4c7ce80818",
+          "source_id": "nhs_copd_causes",
+          "chunk_index": 2,
+          "total_chunks": 6,
+          "benefit_id": null
+        },
+        {
+          "point_id": "73b09723-2730-a5af-ec48-de4618c0eb32",
+          "source_id": "smokefree_nrt",
+          "chunk_index": 9,
+          "total_chunks": 11,
+          "benefit_id": null
+        },
+        {
+          "point_id": "73c8c363-17da-8745-fb8f-51cece757990",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 153,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "73d76e06-d5fc-e0ff-0a92-87898df5251d",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 14,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "73df7e60-8dea-f0c6-d7ed-8a1a8047e1ef",
+          "source_id": "smokefree_stay_free",
+          "chunk_index": 3,
+          "total_chunks": 4,
+          "benefit_id": null
+        },
+        {
+          "point_id": "74ad7195-e9d8-d887-10c1-7796b94f3bb0",
+          "source_id": "nhs_nicotine_withdrawal",
+          "chunk_index": 6,
+          "total_chunks": 15,
+          "benefit_id": null
+        },
+        {
+          "point_id": "75643259-4dc3-5017-7f4e-6e08d637e578",
+          "source_id": "ala_smoking_lung_health",
+          "chunk_index": 0,
+          "total_chunks": 18,
+          "benefit_id": null
+        },
+        {
+          "point_id": "758a70b7-d842-ef84-5a64-6323456e8e2e",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 47,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "76098b13-2cc2-9524-aa53-6e5c506d09af",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 134,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "76416bc5-4270-9a8c-f989-2a022ccbe2aa",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 88,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "76505062-1280-d7af-0072-db48528341ca",
+          "source_id": "smokefree_triggers",
+          "chunk_index": 4,
+          "total_chunks": 14,
+          "benefit_id": null
+        },
+        {
+          "point_id": "7894a44a-19df-5881-5828-ab1732b1d033",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 200,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "78e4b180-cfca-a08d-da95-ddc1d2828a7f",
+          "source_id": "smokefree_quit_guide",
+          "chunk_index": 4,
+          "total_chunks": 5,
+          "benefit_id": null
+        },
+        {
+          "point_id": "793ef74a-fe12-cda3-4834-e5163478fe04",
+          "source_id": "nhs_copd_causes",
+          "chunk_index": 0,
+          "total_chunks": 6,
+          "benefit_id": null
+        },
+        {
+          "point_id": "79aa5836-7162-5fbb-a016-c2b9d0c55a9c",
+          "source_id": "nhs_10_self_help_tips",
+          "chunk_index": 4,
+          "total_chunks": 10,
+          "benefit_id": null
+        },
+        {
+          "point_id": "79e1cbcb-ec81-f401-feb1-badf53813552",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 33,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "7a75a703-dc42-ea85-0bb7-a3dddb719c57",
+          "source_id": "smokefree_withdrawal",
+          "chunk_index": 6,
+          "total_chunks": 21,
+          "benefit_id": null
+        },
+        {
+          "point_id": "7a7f2b83-6942-e402-802c-1e6e3201fa1f",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 227,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "7b5e8e6d-b416-0746-e817-e22811c2e4c4",
+          "source_id": "cdc_smoking_pregnancy",
+          "chunk_index": 5,
+          "total_chunks": 11,
+          "benefit_id": null
+        },
+        {
+          "point_id": "7bdad3d3-0d7b-1390-b111-40af357831e2",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 112,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "7c464102-d45c-0518-5c33-6cc1bb5f6846",
+          "source_id": "smokefree_triggers",
+          "chunk_index": 2,
+          "total_chunks": 14,
+          "benefit_id": null
+        },
+        {
+          "point_id": "7cf62b25-cc97-e36a-9ee9-7b085c749414",
+          "source_id": "smokefree_withdrawal",
+          "chunk_index": 0,
+          "total_chunks": 21,
+          "benefit_id": null
+        },
+        {
+          "point_id": "7da7bcd4-2e13-cc1d-4467-5a9afdbc6283",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 20,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "7e524f62-a61f-3365-63b5-a54295e8406b",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 9,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "7e973c95-8ce1-f801-46db-8671e96e68c3",
+          "source_id": "nhs_nrt_guide",
+          "chunk_index": 10,
+          "total_chunks": 15,
+          "benefit_id": null
+        },
+        {
+          "point_id": "7ead2f2e-42ae-f11d-a935-180281f65e38",
+          "source_id": "smokefree_cravings",
+          "chunk_index": 6,
+          "total_chunks": 12,
+          "benefit_id": null
+        },
+        {
+          "point_id": "7efeb973-b6c6-b6bf-d91c-16c4822b0dcf",
+          "source_id": "mayo_nicotine_dependence_treatment",
+          "chunk_index": 10,
+          "total_chunks": 15,
+          "benefit_id": null
+        },
+        {
+          "point_id": "7f267e7b-6ae0-00fe-ce59-fc670fae45fb",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 77,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "7f26e5c0-b74e-185f-42a4-f7075c49c53f",
+          "source_id": "smokefree_withdrawal",
+          "chunk_index": 12,
+          "total_chunks": 21,
+          "benefit_id": null
+        },
+        {
+          "point_id": "800d3a09-ad56-8819-3a31-f550871941a3",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 103,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "80685d92-848d-83c4-22f4-f6e5d133f3db",
+          "source_id": "mayo_nicotine_dependence",
+          "chunk_index": 3,
+          "total_chunks": 16,
+          "benefit_id": null
+        },
+        {
+          "point_id": "820cdb0b-cebb-b6fb-c3bc-f4e6d5dbd24d",
+          "source_id": "cdc_secondhand_smoke",
+          "chunk_index": 14,
+          "total_chunks": 17,
+          "benefit_id": null
+        },
+        {
+          "point_id": "8371d23c-edc1-3e76-175d-977a27380578",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 136,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "83ba673e-530c-2338-9e66-57502aa5a215",
+          "source_id": "cdc_why_smoking_harmful",
+          "chunk_index": 4,
+          "total_chunks": 11,
+          "benefit_id": null
+        },
+        {
+          "point_id": "83cf4057-faba-554d-9822-f2576583f34c",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 181,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "84176baf-3871-f929-d9ca-da7c58ab9f4f",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 16,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "845b2d62-ddef-54c7-2a93-3bfd15d839fd",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 135,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "855501a3-a8c0-9a50-d628-05350339abc0",
+          "source_id": "cdc_secondhand_smoke",
+          "chunk_index": 2,
+          "total_chunks": 17,
+          "benefit_id": null
+        },
+        {
+          "point_id": "858534c9-ced5-c2a6-67da-e2a6343c7e8b",
+          "source_id": "nhs_nrt_guide",
+          "chunk_index": 4,
+          "total_chunks": 15,
+          "benefit_id": null
+        },
+        {
+          "point_id": "8616780f-9a9e-25c3-b2da-5c3bb1b05e15",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 201,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "86fdda91-38d4-afb5-d52f-c6bfb5620ea8",
+          "source_id": "smokefree_cravings",
+          "chunk_index": 3,
+          "total_chunks": 12,
+          "benefit_id": null
+        },
+        {
+          "point_id": "883921b0-6ac5-c63f-a41f-dc7bc1c582b2",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 185,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "8a34d5a3-50df-5232-7c96-d8a361646569",
+          "source_id": "mayo_nicotine_dependence_treatment",
+          "chunk_index": 3,
+          "total_chunks": 15,
+          "benefit_id": null
+        },
+        {
+          "point_id": "8a916b75-b46f-0afc-b50e-54f4af1914a4",
+          "source_id": "acs_smoking_cancer_risks",
+          "chunk_index": 1,
+          "total_chunks": 5,
+          "benefit_id": null
+        },
+        {
+          "point_id": "8ae671db-e8a6-59ab-f9e6-26e24e3a0176",
+          "source_id": "cdc_why_smoking_harmful",
+          "chunk_index": 10,
+          "total_chunks": 11,
+          "benefit_id": null
+        },
+        {
+          "point_id": "8be8e6e1-530b-250b-30cb-f77fe7dc7bd3",
+          "source_id": "smokefree_quit_guide",
+          "chunk_index": 2,
+          "total_chunks": 5,
+          "benefit_id": null
+        },
+        {
+          "point_id": "8d286895-43c2-c73c-fdb6-72c2cb09d565",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 197,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "8f528400-3ae1-c852-340a-9772bf5d99f0",
+          "source_id": "who_tobacco_facts",
+          "chunk_index": 22,
+          "total_chunks": 27,
+          "benefit_id": null
+        },
+        {
+          "point_id": "8ff87167-5b23-4571-7451-a6bfe0e517e1",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 40,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "9137b505-752c-b7f7-1c2c-e648ebca948a",
+          "source_id": "smokefree_triggers",
+          "chunk_index": 9,
+          "total_chunks": 14,
+          "benefit_id": null
+        },
+        {
+          "point_id": "91dd9fee-1b29-6007-e472-bb6adbfdeda8",
+          "source_id": "mayo_nicotine_dependence",
+          "chunk_index": 6,
+          "total_chunks": 16,
+          "benefit_id": null
+        },
+        {
+          "point_id": "93076580-682a-b631-274b-fa7876718278",
+          "source_id": "cdc_cancer_mortality",
+          "chunk_index": 2,
+          "total_chunks": 4,
+          "benefit_id": null
+        },
+        {
+          "point_id": "930d5ac3-5779-c544-f27b-1250c8bb6562",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 222,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "93c284a2-70e2-b55a-8a51-9a58056a9a77",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 127,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "943ef03b-4fce-f3be-50b5-9300aeb65723",
+          "source_id": "mayo_nicotine_dependence",
+          "chunk_index": 11,
+          "total_chunks": 16,
+          "benefit_id": null
+        },
+        {
+          "point_id": "952e9b23-16fe-71ef-1167-ffc7f9fbe13f",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 72,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "9552431f-b5eb-6b6f-f78b-de6df1e61bd8",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 122,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "9554d231-aa45-cc7d-1670-7d689f780cf6",
+          "source_id": "smokefree_cravings",
+          "chunk_index": 4,
+          "total_chunks": 12,
+          "benefit_id": null
+        },
+        {
+          "point_id": "9655575e-705e-fbc2-a3bb-a89453213754",
+          "source_id": "who_tobacco_facts",
+          "chunk_index": 13,
+          "total_chunks": 27,
+          "benefit_id": null
+        },
+        {
+          "point_id": "99251c14-61f6-3f91-b8a4-2ae87e69cce7",
+          "source_id": "nhs_copd_causes",
+          "chunk_index": 5,
+          "total_chunks": 6,
+          "benefit_id": null
+        },
+        {
+          "point_id": "99a7a38f-d58c-cec0-9d96-127753a5444c",
+          "source_id": "cdc_secondhand_smoke",
+          "chunk_index": 6,
+          "total_chunks": 17,
+          "benefit_id": null
+        },
+        {
+          "point_id": "9a8b3323-4bd9-d130-518e-dde568a36fce",
+          "source_id": "nhs_nicotine_withdrawal",
+          "chunk_index": 14,
+          "total_chunks": 15,
+          "benefit_id": null
+        },
+        {
+          "point_id": "9b33f144-d716-4494-51bd-8b372c62ac35",
+          "source_id": "cdc_secondhand_smoke",
+          "chunk_index": 12,
+          "total_chunks": 17,
+          "benefit_id": null
+        },
+        {
+          "point_id": "9bf63f37-4765-8e2c-f1e4-a9f3b6153c5d",
+          "source_id": "cdc_why_smoking_harmful",
+          "chunk_index": 7,
+          "total_chunks": 11,
+          "benefit_id": null
+        },
+        {
+          "point_id": "9c2ca42b-1a73-dfe7-3f82-13d6437567c3",
+          "source_id": "who_tobacco_facts",
+          "chunk_index": 6,
+          "total_chunks": 27,
+          "benefit_id": null
+        },
+        {
+          "point_id": "9c3a2316-c9f4-fb38-e4e8-664877cccb3b",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 144,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "9c5787e1-2f38-9382-b14f-9962a07d2fdf",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 171,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "9cb24820-df98-3253-ab30-fe7520b9ab98",
+          "source_id": "cdc_smoking_pregnancy",
+          "chunk_index": 3,
+          "total_chunks": 11,
+          "benefit_id": null
+        },
+        {
+          "point_id": "9cd375a9-52e4-c9ed-cc30-6ad7fd6d8b9d",
+          "source_id": "nhs_nicotine_withdrawal",
+          "chunk_index": 3,
+          "total_chunks": 15,
+          "benefit_id": null
+        },
+        {
+          "point_id": "9ea8670b-65b0-5da6-0afd-2d87296201f4",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 141,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "9eba3dc3-fa7d-fe36-3c8e-52d8ec16611e",
+          "source_id": "cdc_cancer_mortality",
+          "chunk_index": 1,
+          "total_chunks": 4,
+          "benefit_id": null
+        },
+        {
+          "point_id": "a023439e-a795-6836-d42b-4083a20572f0",
+          "source_id": "ala_smoking_lung_health",
+          "chunk_index": 1,
+          "total_chunks": 18,
+          "benefit_id": null
+        },
+        {
+          "point_id": "a044fb0e-e3fc-761d-6e55-8224475fffca",
+          "source_id": "mayo_nicotine_dependence",
+          "chunk_index": 14,
+          "total_chunks": 16,
+          "benefit_id": null
+        },
+        {
+          "point_id": "a0b1de99-b8d5-c495-3501-1a2ea2d67f3e",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 18,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "a0c7bd05-48cf-3753-5c69-124b19c02755",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 5,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "a152ee2c-a10e-034b-d94a-9e76d78e18b7",
+          "source_id": "who_tobacco_facts",
+          "chunk_index": 11,
+          "total_chunks": 27,
+          "benefit_id": null
+        },
+        {
+          "point_id": "a1c2b565-c82a-772b-de7e-9f305696f0ac",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 203,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "a26acb8d-9c80-3787-0a98-be117021fd19",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 205,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "a2f13ba6-e3a2-eb56-d2db-54e35a967fdc",
+          "source_id": "ala_smoking_lung_health",
+          "chunk_index": 11,
+          "total_chunks": 18,
+          "benefit_id": null
+        },
+        {
+          "point_id": "a359854c-e945-fc57-8534-25b5226afc22",
+          "source_id": "who_tobacco_facts",
+          "chunk_index": 5,
+          "total_chunks": 27,
+          "benefit_id": null
+        },
+        {
+          "point_id": "a3f32908-5b8b-41b7-eda3-daa2d5e71ac4",
+          "source_id": "smokefree_withdrawal",
+          "chunk_index": 18,
+          "total_chunks": 21,
+          "benefit_id": null
+        },
+        {
+          "point_id": "a47337bb-8c44-ce87-31b5-196e91799ac6",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 178,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "a4e29030-db36-fdaa-b619-afc7c3cdc0dd",
+          "source_id": "cdc_secondhand_smoke",
+          "chunk_index": 15,
+          "total_chunks": 17,
+          "benefit_id": null
+        },
+        {
+          "point_id": "a5270f89-57b2-999a-a7fe-4a892f65df0a",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 87,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "a5779542-0a8d-c9a4-b000-5888fcb3ca1b",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 166,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "a66053e2-a427-4bea-1b78-9e082a79a21d",
+          "source_id": "nhs_nicotine_withdrawal",
+          "chunk_index": 2,
+          "total_chunks": 15,
+          "benefit_id": null
+        },
+        {
+          "point_id": "a6c40c60-5d82-684a-74ab-8dfc1738b748",
+          "source_id": "mayo_nicotine_dependence_treatment",
+          "chunk_index": 1,
+          "total_chunks": 15,
+          "benefit_id": null
+        },
+        {
+          "point_id": "a7003d65-c2e6-23b4-0292-aee9961c52fc",
+          "source_id": "smokefree_triggers",
+          "chunk_index": 6,
+          "total_chunks": 14,
+          "benefit_id": null
+        },
+        {
+          "point_id": "a7b94eea-3725-949c-ee2f-a1fb15061a17",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 85,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "a83eed0f-9fe7-6ffc-6966-ae89630ca44b",
+          "source_id": "ala_smoking_lung_health",
+          "chunk_index": 3,
+          "total_chunks": 18,
+          "benefit_id": null
+        },
+        {
+          "point_id": "a84247e4-e74f-3b14-a19b-dac1cb6ca34d",
+          "source_id": "smokefree_slips_relapses",
+          "chunk_index": 4,
+          "total_chunks": 9,
+          "benefit_id": null
+        },
+        {
+          "point_id": "a8671b29-fbf9-a1c3-0d11-67d223517af4",
+          "source_id": "nhs_copd_causes",
+          "chunk_index": 1,
+          "total_chunks": 6,
+          "benefit_id": null
+        },
+        {
+          "point_id": "a8b13eef-5b20-8f5b-0141-cce4993de15f",
+          "source_id": "mayo_nicotine_dependence_treatment",
+          "chunk_index": 8,
+          "total_chunks": 15,
+          "benefit_id": null
+        },
+        {
+          "point_id": "a903ce4a-3d34-95cc-ce9f-236532eec485",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 138,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "ab0f0296-b9a5-09f1-ae98-8555460177ab",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 57,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "ab4f644a-e9dd-4b1c-82e0-c5f344152e05",
+          "source_id": "smokefree_withdrawal",
+          "chunk_index": 14,
+          "total_chunks": 21,
+          "benefit_id": null
+        },
+        {
+          "point_id": "ab77b8b6-9de1-37fa-0d9f-1de739a8bc1d",
+          "source_id": "smokefree_nrt",
+          "chunk_index": 2,
+          "total_chunks": 11,
+          "benefit_id": null
+        },
+        {
+          "point_id": "abcd9a72-880a-8115-c247-6b2f1a082750",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 8,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "ac168419-a041-6382-11ea-2519e16698d0",
+          "source_id": "smokefree_quit_guide",
+          "chunk_index": 1,
+          "total_chunks": 5,
+          "benefit_id": null
+        },
+        {
+          "point_id": "ad7e344a-c60b-0359-9e8e-c521630dcf4e",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 174,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "af631672-75a4-151e-64ee-361f135bf429",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 45,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "b00417d0-be14-c68a-698b-37e2ca778ccc",
+          "source_id": "mayo_nicotine_dependence_treatment",
+          "chunk_index": 14,
+          "total_chunks": 15,
+          "benefit_id": null
+        },
+        {
+          "point_id": "b01b2fc5-d956-4e18-ebbc-9f2de569e409",
+          "source_id": "smokefree_nrt",
+          "chunk_index": 1,
+          "total_chunks": 11,
+          "benefit_id": null
+        },
+        {
+          "point_id": "b0cf4bc2-8061-0486-4b30-1e7d85cbbcea",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 101,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "b205f79d-e827-55fe-800b-3e4156a8df9d",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 54,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "b207ccd3-1451-0e99-dd5f-eb52a19a1814",
+          "source_id": "smokefree_triggers",
+          "chunk_index": 10,
+          "total_chunks": 14,
+          "benefit_id": null
+        },
+        {
+          "point_id": "b28ba620-2880-4ed7-32c5-b0a8b88fb207",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 172,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "b338e955-821c-5929-72ef-bab3b33e182a",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 109,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "b377da0b-b3c4-25fd-9fec-522895ce3ee4",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 143,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "b4082877-5f0c-5cc0-d3d5-fe6f7839dff5",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 204,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "b4603512-366b-d584-c3de-c2775376da0a",
+          "source_id": "smokefree_nrt",
+          "chunk_index": 10,
+          "total_chunks": 11,
+          "benefit_id": null
+        },
+        {
+          "point_id": "b47a33ce-b594-81ad-c57a-91e99f63e6eb",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 207,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "b5418922-41b2-aa43-168c-af436a917202",
+          "source_id": "smokefree_withdrawal",
+          "chunk_index": 19,
+          "total_chunks": 21,
+          "benefit_id": null
+        },
+        {
+          "point_id": "b55dafe4-0cad-968a-00e6-51eeaec0ce70",
+          "source_id": "mayo_nicotine_dependence",
+          "chunk_index": 10,
+          "total_chunks": 16,
+          "benefit_id": null
+        },
+        {
+          "point_id": "b7682f47-699e-3f68-9837-431c75749c2e",
+          "source_id": "mayo_nicotine_dependence",
+          "chunk_index": 12,
+          "total_chunks": 16,
+          "benefit_id": null
+        },
+        {
+          "point_id": "b7cf6aae-a507-1368-d486-a1deebec051f",
+          "source_id": "nhs_nrt_guide",
+          "chunk_index": 12,
+          "total_chunks": 15,
+          "benefit_id": null
+        },
+        {
+          "point_id": "b7eb6507-2942-3a69-9474-3c4d4e889dfd",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 78,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "b80f920f-b891-b3ca-a4b7-6a6c7fe2d9b0",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 51,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "b88da34d-8f14-1a1e-a34e-ec1586cdec1d",
+          "source_id": "mayo_nicotine_dependence",
+          "chunk_index": 7,
+          "total_chunks": 16,
+          "benefit_id": null
+        },
+        {
+          "point_id": "b913c5a9-8833-fe10-5b43-457e3614a109",
+          "source_id": "ala_smoking_lung_health",
+          "chunk_index": 8,
+          "total_chunks": 18,
+          "benefit_id": null
+        },
+        {
+          "point_id": "b9d9f46d-961b-983a-d637-c22824d269f8",
+          "source_id": "cdc_smoking_pregnancy",
+          "chunk_index": 9,
+          "total_chunks": 11,
+          "benefit_id": null
+        },
+        {
+          "point_id": "ba1a81ed-b9da-0f17-86ff-5a04cd660a54",
+          "source_id": "smokefree_triggers",
+          "chunk_index": 0,
+          "total_chunks": 14,
+          "benefit_id": null
+        },
+        {
+          "point_id": "baa0f22a-692d-b246-f2fa-065a93c2885c",
+          "source_id": "cdc_why_smoking_harmful",
+          "chunk_index": 5,
+          "total_chunks": 11,
+          "benefit_id": null
+        },
+        {
+          "point_id": "baab20bd-b581-2fe4-9c67-e333b8ccc0a5",
+          "source_id": "mayo_nicotine_dependence",
+          "chunk_index": 0,
+          "total_chunks": 16,
+          "benefit_id": null
+        },
+        {
+          "point_id": "bab333cd-64e4-01fc-84c3-031ecb7b033d",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 41,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "bab5d2ab-baa6-b523-4f07-9250adf168f4",
+          "source_id": "cdc_secondhand_smoke",
+          "chunk_index": 0,
+          "total_chunks": 17,
+          "benefit_id": null
+        },
+        {
+          "point_id": "baf792bf-091f-bfdf-d8eb-ab5956065563",
+          "source_id": "smokefree_cravings",
+          "chunk_index": 8,
+          "total_chunks": 12,
+          "benefit_id": null
+        },
+        {
+          "point_id": "bc0371d7-cac5-b4b4-f2ca-43d41f5fca87",
+          "source_id": "mayo_nicotine_dependence",
+          "chunk_index": 5,
+          "total_chunks": 16,
+          "benefit_id": null
+        },
+        {
+          "point_id": "bc106cac-7662-730e-e444-191fec8f2b18",
+          "source_id": "smokefree_slips_relapses",
+          "chunk_index": 1,
+          "total_chunks": 9,
+          "benefit_id": null
+        },
+        {
+          "point_id": "bc3bba37-7124-6ca1-e334-a0413f324c4b",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 175,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "bccbe2ea-7065-c7c1-3aec-69cf2b575cc7",
+          "source_id": "smokefree_nrt",
+          "chunk_index": 3,
+          "total_chunks": 11,
+          "benefit_id": null
+        },
+        {
+          "point_id": "bcf38dc7-025a-6678-1a87-75b05b3757cb",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 160,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "bcf953b1-7b4d-7b8c-afc6-a60e97eb0821",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 164,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "bd25776d-5db3-65b5-4652-dba31b4c2181",
+          "source_id": "aha_smoking_cvd",
+          "chunk_index": 0,
+          "total_chunks": 1,
+          "benefit_id": null
+        },
+        {
+          "point_id": "bd39b7ea-ed2f-d1e9-38f6-bed3286341ca",
+          "source_id": "nhs_nrt_guide",
+          "chunk_index": 8,
+          "total_chunks": 15,
+          "benefit_id": null
+        },
+        {
+          "point_id": "bde7c1cc-181f-9158-1233-05d084af17a3",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 121,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "be22ae0c-a777-ca6a-bf1d-a9bfd6334ae3",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 191,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "be545521-83ca-a255-d3ef-348056721f54",
+          "source_id": "mayo_nicotine_dependence",
+          "chunk_index": 2,
+          "total_chunks": 16,
+          "benefit_id": null
+        },
+        {
+          "point_id": "bf298eb4-591e-14c9-54b2-97a4073d5989",
+          "source_id": "nhs_nicotine_withdrawal",
+          "chunk_index": 12,
+          "total_chunks": 15,
+          "benefit_id": null
+        },
+        {
+          "point_id": "bf2fc70f-8462-182c-1f4b-9642a25edffe",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 105,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "bf3bcbcd-2aee-0fe5-5bf5-164d5008e17b",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 2,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "c02b2bc6-87d7-22b3-a0d0-54c46c2783dd",
+          "source_id": "cdc_secondhand_smoke",
+          "chunk_index": 9,
+          "total_chunks": 17,
+          "benefit_id": null
+        },
+        {
+          "point_id": "c03f082d-85bf-8072-7bc6-4097b4d629d4",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 104,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "c04787c3-fb70-e1cd-f6b6-60f2c144dc7f",
+          "source_id": "ala_smoking_lung_health",
+          "chunk_index": 10,
+          "total_chunks": 18,
+          "benefit_id": null
+        },
+        {
+          "point_id": "c20a5107-71a0-7385-3226-37c60ab09d13",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 60,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "c2609843-70e1-72e3-ef16-016ec8b7a999",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 123,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "c3006f9f-cc91-d783-61a1-51c8163b2c73",
+          "source_id": "nhs_nicotine_withdrawal",
+          "chunk_index": 5,
+          "total_chunks": 15,
+          "benefit_id": null
+        },
+        {
+          "point_id": "c318c36b-35f0-c7c6-4273-8a0d077c2066",
+          "source_id": "mayo_nicotine_dependence_treatment",
+          "chunk_index": 11,
+          "total_chunks": 15,
+          "benefit_id": null
+        },
+        {
+          "point_id": "c3bc8bf8-3b6c-0653-1022-b7c0b6f159d1",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 212,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "c4cae319-a614-c9af-b256-0b9ea04905de",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 115,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "c6e7b906-41fa-d3bd-0c88-2b4c18803874",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 161,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "c6f9149a-0715-e3dd-abde-691b0186a113",
+          "source_id": "ala_smoking_lung_health",
+          "chunk_index": 14,
+          "total_chunks": 18,
+          "benefit_id": null
+        },
+        {
+          "point_id": "c7035c51-b775-18f9-64cc-522e9fa4bd7e",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 11,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "c792a1c6-7224-b809-321b-c4e12c62f86a",
+          "source_id": "nhs_nicotine_withdrawal",
+          "chunk_index": 9,
+          "total_chunks": 15,
+          "benefit_id": null
+        },
+        {
+          "point_id": "c79de36f-0135-82fc-6e72-bd6066f5241b",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 137,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "c7a123a2-9b84-8c26-e6d6-11c4a23048c2",
+          "source_id": "smokefree_slips_relapses",
+          "chunk_index": 6,
+          "total_chunks": 9,
+          "benefit_id": null
+        },
+        {
+          "point_id": "c80bb6f8-0949-de6e-0b75-fd3804060f0d",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 15,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "c83a86f5-e660-d9a3-9dc1-0a16ca90e1e0",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 7,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "c86b5fde-967d-067b-16d5-31a7c7fe065b",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 154,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "c893befc-a385-18f3-2102-a60038008cbe",
+          "source_id": "who_tobacco_facts",
+          "chunk_index": 19,
+          "total_chunks": 27,
+          "benefit_id": null
+        },
+        {
+          "point_id": "c8dbbb00-1704-e81c-e691-0cde86517492",
+          "source_id": "who_tobacco_facts",
+          "chunk_index": 9,
+          "total_chunks": 27,
+          "benefit_id": null
+        },
+        {
+          "point_id": "c8e740e2-3768-19f5-169f-40c2dc910ca4",
+          "source_id": "who_tobacco_facts",
+          "chunk_index": 0,
+          "total_chunks": 27,
+          "benefit_id": null
+        },
+        {
+          "point_id": "c9e9cefa-a8a5-7f25-d47c-0f2b117b58af",
+          "source_id": "nhs_10_self_help_tips",
+          "chunk_index": 5,
+          "total_chunks": 10,
+          "benefit_id": null
+        },
+        {
+          "point_id": "ca6878c2-ea20-3d84-6858-6b137cfbabfc",
+          "source_id": "acs_smoking_cancer_risks",
+          "chunk_index": 4,
+          "total_chunks": 5,
+          "benefit_id": null
+        },
+        {
+          "point_id": "cabcb3b9-29aa-40b4-7750-2d1c52850597",
+          "source_id": "nhs_stop_smoking_treatments",
+          "chunk_index": 8,
+          "total_chunks": 11,
+          "benefit_id": null
+        },
+        {
+          "point_id": "cb031ea0-c3ec-08ad-4b79-e0b4159e7680",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 68,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "cb57d8b3-b57a-b208-7696-ec738f19a374",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 167,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "cc4b4f7f-5c9b-7ad7-9d0a-8361a75d8f95",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 150,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "ccc50e9f-4e28-ae1a-8e8a-c27be2bff668",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 61,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "cd57dd13-2728-0755-c817-c159525c23da",
+          "source_id": "who_tobacco_facts",
+          "chunk_index": 4,
+          "total_chunks": 27,
+          "benefit_id": null
+        },
+        {
+          "point_id": "cdb82b9c-9489-c885-c0a5-f4a27a7e2768",
+          "source_id": "cdc_smoking_pregnancy",
+          "chunk_index": 1,
+          "total_chunks": 11,
+          "benefit_id": null
+        },
+        {
+          "point_id": "ce86a1a2-6093-40ed-2f00-112b827e55f0",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 148,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "ceb38249-7488-768d-6fdb-736636d8bc38",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 214,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "cf51a75e-7cf0-be64-4799-295cb672338c",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 176,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "d00bcfa8-2971-ff71-5289-cf60671b0dae",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 6,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "d019c92a-6979-6f4d-b4ac-02f9dd98b1a1",
+          "source_id": "who_tobacco_facts",
+          "chunk_index": 12,
+          "total_chunks": 27,
+          "benefit_id": null
+        },
+        {
+          "point_id": "d07bbaa9-9fd1-c33c-a8a1-015802ce4183",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 73,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "d0aa7a89-b185-9938-1bd4-c2ccfbbda1ed",
+          "source_id": "smokefree_quit_guide",
+          "chunk_index": 3,
+          "total_chunks": 5,
+          "benefit_id": null
+        },
+        {
+          "point_id": "d1a60a11-6779-97f5-97fd-8b1915d865c7",
+          "source_id": "smokefree_nrt",
+          "chunk_index": 8,
+          "total_chunks": 11,
+          "benefit_id": null
+        },
+        {
+          "point_id": "d2d8c763-250b-739c-b12a-6ccb8c9c0d70",
+          "source_id": "nhs_10_self_help_tips",
+          "chunk_index": 3,
+          "total_chunks": 10,
+          "benefit_id": null
+        },
+        {
+          "point_id": "d2ec420c-ff22-86d7-9150-4c16198ace7e",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 169,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "d3424584-6afa-c2f2-1900-b8214f64aa00",
+          "source_id": "nhs_nrt_guide",
+          "chunk_index": 1,
+          "total_chunks": 15,
+          "benefit_id": null
+        },
+        {
+          "point_id": "d3ad8096-d6b3-651a-d904-a4928710e3e6",
+          "source_id": "nhs_nrt_guide",
+          "chunk_index": 7,
+          "total_chunks": 15,
+          "benefit_id": null
+        },
+        {
+          "point_id": "d3ce766e-b1fd-1705-7f0e-34b525e95349",
+          "source_id": "who_tobacco_facts",
+          "chunk_index": 17,
+          "total_chunks": 27,
+          "benefit_id": null
+        },
+        {
+          "point_id": "d40ebebc-809f-ee22-faef-f1710ded53e1",
+          "source_id": "ala_smoking_lung_health",
+          "chunk_index": 4,
+          "total_chunks": 18,
+          "benefit_id": null
+        },
+        {
+          "point_id": "d4803f37-9a4a-607f-5ebe-03312ce52254",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 111,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "d4c5e70f-59cd-c375-5886-64161f05f016",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 168,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "d514c393-0960-0638-c9e6-3c9b553ea349",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 206,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "d53ed9a5-1d58-0875-12ab-bfbf33cd837f",
+          "source_id": "smokefree_withdrawal",
+          "chunk_index": 9,
+          "total_chunks": 21,
+          "benefit_id": null
+        },
+        {
+          "point_id": "d5869888-e260-9418-573c-15860b8654b8",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 211,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "d5bd0a7e-c35c-d4b7-2edf-a77f81bf257c",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 84,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "d5dc6474-26cb-02f5-9123-6604fd623405",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 110,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "d5fa99ad-f56b-c568-ddf8-c6c2425d8e7e",
+          "source_id": "nhs_copd_causes",
+          "chunk_index": 4,
+          "total_chunks": 6,
+          "benefit_id": null
+        },
+        {
+          "point_id": "d799e97c-1fa7-bf95-7c7c-6e7b65095c96",
+          "source_id": "acs_smoking_cancer_risks",
+          "chunk_index": 3,
+          "total_chunks": 5,
+          "benefit_id": null
+        },
+        {
+          "point_id": "d7be3586-413e-0dc7-ec2d-0be61f53153b",
+          "source_id": "who_tobacco_facts",
+          "chunk_index": 24,
+          "total_chunks": 27,
+          "benefit_id": null
+        },
+        {
+          "point_id": "d8ad3fbd-226d-8b8b-c1b0-fe4591465242",
+          "source_id": "mayo_nicotine_dependence_treatment",
+          "chunk_index": 0,
+          "total_chunks": 15,
+          "benefit_id": null
+        },
+        {
+          "point_id": "d9283a0a-0c25-358b-ee3a-8eb0c11aea36",
+          "source_id": "mayo_nicotine_dependence",
+          "chunk_index": 15,
+          "total_chunks": 16,
+          "benefit_id": null
+        },
+        {
+          "point_id": "d9840d1f-8c69-04af-39ca-2051dd5138dc",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 116,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "d9bb662d-8416-cbe4-6ef0-d268f1fc6098",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 177,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "daaf81c2-4a82-fb36-149d-2b10a17893b5",
+          "source_id": "mayo_nicotine_dependence",
+          "chunk_index": 4,
+          "total_chunks": 16,
+          "benefit_id": null
+        },
+        {
+          "point_id": "db62b894-c53b-ebf6-ba2b-ec585754ef5e",
+          "source_id": "cdc_secondhand_smoke",
+          "chunk_index": 3,
+          "total_chunks": 17,
+          "benefit_id": null
+        },
+        {
+          "point_id": "db7ef2fd-5c28-8785-ac38-819974fe4bcf",
+          "source_id": "smokefree_nrt",
+          "chunk_index": 4,
+          "total_chunks": 11,
+          "benefit_id": null
+        },
+        {
+          "point_id": "dbc43e5b-f5c8-f676-c43a-e17953d1b8cd",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 140,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "dc0bb97d-d873-1213-ccb2-6d89bc22d782",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 29,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "dc883db1-5a63-8979-8ff4-b84d5edb9389",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 31,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "ddcd1142-6f9b-fd36-4e89-1b179272f775",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 35,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "de081210-f45e-6171-8a1c-42b237240acb",
+          "source_id": "cdc_why_smoking_harmful",
+          "chunk_index": 8,
+          "total_chunks": 11,
+          "benefit_id": null
+        },
+        {
+          "point_id": "de19050e-a7a9-ac31-cbc4-f103c8f7cd6e",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 226,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "deeae953-5a5d-899d-0534-b33e2749b592",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 221,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "df24c40d-7827-4f2c-5f5c-8a2272be1250",
+          "source_id": "nhs_nicotine_withdrawal",
+          "chunk_index": 7,
+          "total_chunks": 15,
+          "benefit_id": null
+        },
+        {
+          "point_id": "df6e9624-958a-fba5-e0c1-a283fc560b0e",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 190,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "dfcbeea1-c3ca-84d8-7538-1f313a2550a3",
+          "source_id": "nhs_stop_smoking_treatments",
+          "chunk_index": 7,
+          "total_chunks": 11,
+          "benefit_id": null
+        },
+        {
+          "point_id": "e0dfb1f5-3428-5ca1-739a-d2e70b6c0fab",
+          "source_id": "who_tobacco_facts",
+          "chunk_index": 10,
+          "total_chunks": 27,
+          "benefit_id": null
+        },
+        {
+          "point_id": "e0f076f8-c663-e5bc-e31a-b86275ba532a",
+          "source_id": "ala_smoking_lung_health",
+          "chunk_index": 15,
+          "total_chunks": 18,
+          "benefit_id": null
+        },
+        {
+          "point_id": "e15b364b-0fc3-8132-b2c2-92e49141f5d2",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 147,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "e1a8a83d-a1e4-d681-d3fb-e8e99ca4a1d1",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 219,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "e25c4d38-fd70-3105-f9f1-0cf1122f47f7",
+          "source_id": "mayo_nicotine_dependence_treatment",
+          "chunk_index": 6,
+          "total_chunks": 15,
+          "benefit_id": null
+        },
+        {
+          "point_id": "e26343e7-614d-f3a4-af9f-14db2f8c4aaf",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 44,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "e28e1ea6-cdc4-4901-a478-07092902a818",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 23,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "e332dac4-fbd6-9fd0-add0-bee9f2ebec24",
+          "source_id": "cdc_secondhand_smoke",
+          "chunk_index": 10,
+          "total_chunks": 17,
+          "benefit_id": null
+        },
+        {
+          "point_id": "e3d6578e-df90-a4e2-d6e3-2bcca378c40f",
+          "source_id": "cdc_why_smoking_harmful",
+          "chunk_index": 2,
+          "total_chunks": 11,
+          "benefit_id": null
+        },
+        {
+          "point_id": "e4e08fe3-53e6-42d6-ea1e-16f1ac5b3554",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 100,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "e4f241c3-96c9-e253-1f01-df47ad999638",
+          "source_id": "smokefree_triggers",
+          "chunk_index": 12,
+          "total_chunks": 14,
+          "benefit_id": null
+        },
+        {
+          "point_id": "e53ac53d-469a-9c07-4d01-e37f51ac29fd",
+          "source_id": "nhs_10_self_help_tips",
+          "chunk_index": 0,
+          "total_chunks": 10,
+          "benefit_id": null
+        },
+        {
+          "point_id": "e5b81da0-12b9-1087-6397-223b14200643",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 53,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "e680b4c7-0d8a-fe81-fbab-9d07862bf356",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 155,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "e70f0e93-36ec-91c5-bc4e-c09157c8c2c1",
+          "source_id": "ala_smoking_lung_health",
+          "chunk_index": 6,
+          "total_chunks": 18,
+          "benefit_id": null
+        },
+        {
+          "point_id": "e78d7a6e-a983-9c95-bfab-6b1f2a21a6e7",
+          "source_id": "mayo_nicotine_dependence",
+          "chunk_index": 1,
+          "total_chunks": 16,
+          "benefit_id": null
+        },
+        {
+          "point_id": "e818f4dd-1ffc-9d1c-5f0f-f9f37cf5f0f8",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 182,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "e87b9c1a-1ce9-cc95-3088-9a2e2b2cfb20",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 63,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "e8c96aa2-3299-983c-a39f-fa994de9d984",
+          "source_id": "nhs_10_self_help_tips",
+          "chunk_index": 6,
+          "total_chunks": 10,
+          "benefit_id": null
+        },
+        {
+          "point_id": "e8ff93da-c01a-1fe8-8f2b-7fa896a1e8f0",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 118,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "e911f986-cdb2-80b7-bfe4-4f614f525d79",
+          "source_id": "ala_smoking_lung_health",
+          "chunk_index": 2,
+          "total_chunks": 18,
+          "benefit_id": null
+        },
+        {
+          "point_id": "e92fcc2d-73b2-750d-001e-a3388ab4f082",
+          "source_id": "smokefree_withdrawal",
+          "chunk_index": 4,
+          "total_chunks": 21,
+          "benefit_id": null
+        },
+        {
+          "point_id": "ea5d8c9d-daf7-69e4-50b4-3f582ad5f1a9",
+          "source_id": "cdc_why_smoking_harmful",
+          "chunk_index": 0,
+          "total_chunks": 11,
+          "benefit_id": null
+        },
+        {
+          "point_id": "ea8ca6cb-48c1-9a4c-5298-ef6a4d958c01",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 83,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "eb135135-b8e3-08c0-2acf-d9c2e763a4bf",
+          "source_id": "smokefree_withdrawal",
+          "chunk_index": 20,
+          "total_chunks": 21,
+          "benefit_id": null
+        },
+        {
+          "point_id": "eb948671-1617-11d4-366f-ecba69a228bf",
+          "source_id": "who_tobacco_facts",
+          "chunk_index": 15,
+          "total_chunks": 27,
+          "benefit_id": null
+        },
+        {
+          "point_id": "ec24185b-3a29-c907-4c9b-593af357f785",
+          "source_id": "cdc_why_smoking_harmful",
+          "chunk_index": 1,
+          "total_chunks": 11,
+          "benefit_id": null
+        },
+        {
+          "point_id": "ec8a6ec2-3ab8-46cf-123b-f0521ab176c7",
+          "source_id": "cdc_secondhand_smoke",
+          "chunk_index": 1,
+          "total_chunks": 17,
+          "benefit_id": null
+        },
+        {
+          "point_id": "ecddbfef-92e5-c4d6-dc49-354b6985f796",
+          "source_id": "smokefree_withdrawal",
+          "chunk_index": 11,
+          "total_chunks": 21,
+          "benefit_id": null
+        },
+        {
+          "point_id": "eceb110a-5ea1-5938-c8da-65d53e578701",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 162,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "eda2cdce-7609-718b-4bc1-1fa50803796e",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 208,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "ef669614-86ed-023d-7f20-ececbc42740d",
+          "source_id": "smokefree_triggers",
+          "chunk_index": 13,
+          "total_chunks": 14,
+          "benefit_id": null
+        },
+        {
+          "point_id": "ef6e4445-6e33-b35c-29c7-89d91c153fe5",
+          "source_id": "smokefree_withdrawal",
+          "chunk_index": 1,
+          "total_chunks": 21,
+          "benefit_id": null
+        },
+        {
+          "point_id": "efb64817-71c9-bab3-1439-f75a07ed8be0",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 128,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "efba7c2f-e7a7-edb8-60ce-b4e3df6c0fda",
+          "source_id": "cdc_why_smoking_harmful",
+          "chunk_index": 6,
+          "total_chunks": 11,
+          "benefit_id": null
+        },
+        {
+          "point_id": "efbf6b17-157a-fef3-60f6-9db95373096a",
+          "source_id": "nhs_nicotine_withdrawal",
+          "chunk_index": 11,
+          "total_chunks": 15,
+          "benefit_id": null
+        },
+        {
+          "point_id": "efced60d-3032-476b-908b-0e5aaf7fbb80",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 183,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "efe3881b-7ac9-7040-83c4-7ae63f9ffe8f",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 27,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "f0b33587-c02b-5a82-3e50-07d1d9ee472a",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 0,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "f1038e28-4621-f631-a614-815f56c547cf",
+          "source_id": "cdc_secondhand_smoke",
+          "chunk_index": 5,
+          "total_chunks": 17,
+          "benefit_id": null
+        },
+        {
+          "point_id": "f211869c-d3c3-b350-8c58-34a53952b5d9",
+          "source_id": "mayo_nicotine_dependence_treatment",
+          "chunk_index": 7,
+          "total_chunks": 15,
+          "benefit_id": null
+        },
+        {
+          "point_id": "f295891f-f4eb-8c66-0d98-4a54ba36cf16",
+          "source_id": "nhs_stop_smoking_treatments",
+          "chunk_index": 0,
+          "total_chunks": 11,
+          "benefit_id": null
+        },
+        {
+          "point_id": "f2f5522d-ed1f-86b5-7cb1-fa99d3e93e44",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 55,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "f4d57c4e-4b9e-bd71-4a5b-c9c34dda34e8",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 94,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "f4d9daaa-5d70-0ce2-c96d-ea8fa993ce9e",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 48,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "f6b71775-f322-23b3-1e89-e1d40491f0d6",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 210,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "f7cc4c5e-779a-78c1-99dd-051412de27af",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 220,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "f81ce454-054f-ac16-417d-22e54b3e6569",
+          "source_id": "smokefree_slips_relapses",
+          "chunk_index": 8,
+          "total_chunks": 9,
+          "benefit_id": null
+        },
+        {
+          "point_id": "f8547c18-8bf0-1ba6-1d94-7c97c2388376",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 102,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "f8a3f2d9-057c-1a92-27f1-5471a141641e",
+          "source_id": "nhs_nrt_guide",
+          "chunk_index": 9,
+          "total_chunks": 15,
+          "benefit_id": null
+        },
+        {
+          "point_id": "f8b8fe1e-1c40-fd78-3bba-85f01d3915c8",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 180,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "f8fa7839-1e5f-89fa-cd22-ce8f0b341e85",
+          "source_id": "nhs_stop_smoking_treatments",
+          "chunk_index": 1,
+          "total_chunks": 11,
+          "benefit_id": null
+        },
+        {
+          "point_id": "f907540a-fae6-b9ca-5b07-a3d05374168f",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 96,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "f9432559-5baa-3083-2ab0-11ec23fe4220",
+          "source_id": "ala_smoking_lung_health",
+          "chunk_index": 5,
+          "total_chunks": 18,
+          "benefit_id": null
+        },
+        {
+          "point_id": "fa3eb19e-9ccd-aefc-6bc9-11efe0579193",
+          "source_id": "smokefree_quit_guide",
+          "chunk_index": 0,
+          "total_chunks": 5,
+          "benefit_id": null
+        },
+        {
+          "point_id": "fa5371ed-0dad-6fe8-b70f-3143fb38a962",
+          "source_id": "cdc_smoking_pregnancy",
+          "chunk_index": 6,
+          "total_chunks": 11,
+          "benefit_id": null
+        },
+        {
+          "point_id": "fae85849-d493-4eb6-1d42-ab08e1b610a2",
+          "source_id": "smokefree_slips_relapses",
+          "chunk_index": 3,
+          "total_chunks": 9,
+          "benefit_id": null
+        },
+        {
+          "point_id": "fb1fb5ed-7c2f-81a3-9557-d1f359348efd",
+          "source_id": "cdc_secondhand_smoke",
+          "chunk_index": 4,
+          "total_chunks": 17,
+          "benefit_id": null
+        },
+        {
+          "point_id": "fb9e0b6b-5ce0-a5b7-a7cf-0b6b563a33cf",
+          "source_id": "ala_smoking_lung_health",
+          "chunk_index": 7,
+          "total_chunks": 18,
+          "benefit_id": null
+        },
+        {
+          "point_id": "fbec6310-e6ae-3f22-c4b8-7fc421748607",
+          "source_id": "nhs_nicotine_withdrawal",
+          "chunk_index": 10,
+          "total_chunks": 15,
+          "benefit_id": null
+        },
+        {
+          "point_id": "fbfaba91-a44e-5803-f02e-7c5311b3be70",
+          "source_id": "cdc_secondhand_smoke",
+          "chunk_index": 7,
+          "total_chunks": 17,
+          "benefit_id": null
+        },
+        {
+          "point_id": "fc2a61ed-2df0-3cfa-c49d-b970b4cbbbb0",
+          "source_id": "smokefree_withdrawal",
+          "chunk_index": 15,
+          "total_chunks": 21,
+          "benefit_id": null
+        },
+        {
+          "point_id": "fcc948cd-5823-dab8-62e7-f2f453df91b6",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 188,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "fd1ae179-d759-e6c8-665c-da62c7679d78",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 66,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "fd52236c-026d-5dda-d96f-6172c87dcac6",
+          "source_id": "smokefree_stay_free",
+          "chunk_index": 2,
+          "total_chunks": 4,
+          "benefit_id": null
+        },
+        {
+          "point_id": "fe0a12d1-de57-212e-b297-fafc39c2cc75",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 52,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "fe4f1ed1-21ea-81a2-e14b-541f11098eaa",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 64,
+          "total_chunks": 229,
+          "benefit_id": null
+        },
+        {
+          "point_id": "fe5b80b4-cf6e-0ffc-eeb8-5cec915d34aa",
+          "source_id": "mayo_nicotine_dependence_treatment",
+          "chunk_index": 5,
+          "total_chunks": 15,
+          "benefit_id": null
+        },
+        {
+          "point_id": "ffcb4aeb-0f6d-3d73-2073-6b9338dec579",
+          "source_id": "mayo_nicotine_dependence_treatment",
+          "chunk_index": 2,
+          "total_chunks": 15,
+          "benefit_id": null
+        },
+        {
+          "point_id": "fffb02b8-6517-2ded-922b-507eff4e869a",
+          "source_id": "uspstf_tobacco_2021",
+          "chunk_index": 223,
+          "total_chunks": 229,
+          "benefit_id": null
+        }
+      ],
+      "collection_configuration": {
+        "params": {
+          "vectors": {
+            "size": 384,
+            "distance": "Cosine",
+            "hnsw_config": null,
+            "quantization_config": null,
+            "on_disk": null,
+            "datatype": null,
+            "multivector_config": null
+          },
+          "shard_number": 1,
+          "sharding_method": null,
+          "replication_factor": 1,
+          "write_consistency_factor": 1,
+          "read_fan_out_factor": null,
+          "on_disk_payload": true,
+          "sparse_vectors": null
+        },
+        "hnsw_config": {
+          "m": 16,
+          "ef_construct": 100,
+          "full_scan_threshold": 10000,
+          "max_indexing_threads": 0,
+          "on_disk": false,
+          "payload_m": null
+        },
+        "optimizer_config": {
+          "deleted_threshold": 0.2,
+          "vacuum_min_vector_number": 1000,
+          "default_segment_number": 0,
+          "max_segment_size": null,
+          "memmap_threshold": null,
+          "indexing_threshold": 10000,
+          "flush_interval_sec": 5,
+          "max_optimization_threads": null
+        },
+        "wal_config": {
+          "wal_capacity_mb": 32,
+          "wal_segments_ahead": 0
+        },
+        "quantization_config": null,
+        "strict_mode_config": {
+          "enabled": true,
+          "max_query_limit": null,
+          "max_timeout": null,
+          "unindexed_filtering_retrieve": false,
+          "unindexed_filtering_update": false,
+          "search_max_hnsw_ef": null,
+          "search_allow_exact": null,
+          "search_max_oversampling": null,
+          "upsert_max_batchsize": null,
+          "max_collection_vector_size_bytes": null,
+          "read_rate_limit": null,
+          "write_rate_limit": null,
+          "max_collection_payload_size_bytes": null,
+          "max_points_count": null,
+          "filter_max_conditions": null,
+          "condition_max_size": null,
+          "multivector_config": null,
+          "sparse_config": null
+        }
+      },
+      "collection_configuration_sha256": "2b23ba22b7855786e5b8036aebef3b6b3ee455bfd6391e71e58b39f570b4f050",
+      "corpus_sha256_including_payload_and_vectors": "b0442f1732637240d53dac624815dc1b3633219571263abfff36cae009e6c71b"
+    },
+    {
+      "collection": "health_benefit_chunks",
+      "reported_points_count": 25,
+      "inventoried_points_count": 25,
+      "vector_dimensions": {
+        "384": 25
+      },
+      "payload_schema": {
+        "benefit_id": [
+          "string"
+        ],
+        "chunk_index": [
+          "integer"
+        ],
+        "source_id": [
+          "string"
+        ],
+        "source_type": [
+          "string"
+        ],
+        "text": [
+          "string"
+        ],
+        "title": [
+          "string"
+        ],
+        "topic_tags": [
+          "array"
+        ]
+      },
+      "required_payload_fields": [
+        "source_id",
+        "source_type",
+        "chunk_index",
+        "benefit_id",
+        "text_or_content"
+      ],
+      "payload_completeness": {
+        "source_id": {
+          "present": 25,
+          "missing": 0
+        },
+        "source_type": {
+          "present": 25,
+          "missing": 0
+        },
+        "chunk_index": {
+          "present": 25,
+          "missing": 0
+        },
+        "benefit_id": {
+          "present": 25,
+          "missing": 0
+        },
+        "text_or_content": {
+          "present": 25,
+          "missing": 0
+        }
+      },
+      "required_payload_complete": true,
+      "source_counts": {
+        "health_benefit_10yr": 1,
+        "health_benefit_15yr": 1,
+        "health_benefit_1mo": 2,
+        "health_benefit_1yr": 2,
+        "health_benefit_20min": 1,
+        "health_benefit_20yr": 2,
+        "health_benefit_24hr": 2,
+        "health_benefit_2wk": 2,
+        "health_benefit_3mo": 2,
+        "health_benefit_48hr": 2,
+        "health_benefit_5yr": 2,
+        "health_benefit_6mo": 2,
+        "health_benefit_72hr": 2,
+        "health_benefit_8hr": 2
+      },
+      "source_chunk_identifiers": [
+        {
+          "point_id": "06d0b6d9-6bfc-1e5e-4dcd-c6c8c7b0af11",
+          "source_id": "health_benefit_24hr",
+          "chunk_index": 1,
+          "total_chunks": null,
+          "benefit_id": "24hr"
+        },
+        {
+          "point_id": "0c1daadd-4456-1041-89be-d9547e1c2382",
+          "source_id": "health_benefit_2wk",
+          "chunk_index": 0,
+          "total_chunks": null,
+          "benefit_id": "2wk"
+        },
+        {
+          "point_id": "1e378307-1456-219e-a6f1-c8a55af311fb",
+          "source_id": "health_benefit_6mo",
+          "chunk_index": 1,
+          "total_chunks": null,
+          "benefit_id": "6mo"
+        },
+        {
+          "point_id": "1ffcdb49-e8b4-9571-a38f-5cef37779f60",
+          "source_id": "health_benefit_1mo",
+          "chunk_index": 1,
+          "total_chunks": null,
+          "benefit_id": "1mo"
+        },
+        {
+          "point_id": "23806256-b6e1-19e8-ec53-eeca075d0b4d",
+          "source_id": "health_benefit_3mo",
+          "chunk_index": 1,
+          "total_chunks": null,
+          "benefit_id": "3mo"
+        },
+        {
+          "point_id": "25784328-56b0-9378-b6b4-fdac4ec86f72",
+          "source_id": "health_benefit_20yr",
+          "chunk_index": 0,
+          "total_chunks": null,
+          "benefit_id": "20yr"
+        },
+        {
+          "point_id": "2f273599-24de-5aef-0f7e-f11953df50f2",
+          "source_id": "health_benefit_1yr",
+          "chunk_index": 1,
+          "total_chunks": null,
+          "benefit_id": "1yr"
+        },
+        {
+          "point_id": "2fd8f1e8-1216-c876-4907-c43febe438db",
+          "source_id": "health_benefit_6mo",
+          "chunk_index": 0,
+          "total_chunks": null,
+          "benefit_id": "6mo"
+        },
+        {
+          "point_id": "3ca26c3a-9510-b280-a033-5906002470ef",
+          "source_id": "health_benefit_20min",
+          "chunk_index": 0,
+          "total_chunks": null,
+          "benefit_id": "20min"
+        },
+        {
+          "point_id": "4f9de386-9d94-ddad-de63-403b9d6134c2",
+          "source_id": "health_benefit_3mo",
+          "chunk_index": 0,
+          "total_chunks": null,
+          "benefit_id": "3mo"
+        },
+        {
+          "point_id": "5f3e0071-dbd7-1051-f79f-d334922ddf00",
+          "source_id": "health_benefit_48hr",
+          "chunk_index": 0,
+          "total_chunks": null,
+          "benefit_id": "48hr"
+        },
+        {
+          "point_id": "7100439d-62c6-21b6-cc95-ae75ee5930d4",
+          "source_id": "health_benefit_1yr",
+          "chunk_index": 0,
+          "total_chunks": null,
+          "benefit_id": "1yr"
+        },
+        {
+          "point_id": "8c8da176-6bf5-0347-3bb2-96a77cd13a4d",
+          "source_id": "health_benefit_20yr",
+          "chunk_index": 1,
+          "total_chunks": null,
+          "benefit_id": "20yr"
+        },
+        {
+          "point_id": "a23200f6-b80a-47ea-9c3f-0b7269c953b3",
+          "source_id": "health_benefit_2wk",
+          "chunk_index": 1,
+          "total_chunks": null,
+          "benefit_id": "2wk"
+        },
+        {
+          "point_id": "c1aeee10-c1c6-95ab-3951-b65a206aac41",
+          "source_id": "health_benefit_5yr",
+          "chunk_index": 0,
+          "total_chunks": null,
+          "benefit_id": "5yr"
+        },
+        {
+          "point_id": "c62ea17b-bf18-8e25-4627-6b40af4973cc",
+          "source_id": "health_benefit_15yr",
+          "chunk_index": 0,
+          "total_chunks": null,
+          "benefit_id": "15yr"
+        },
+        {
+          "point_id": "cbbf48ae-2024-171e-182e-e78514a81fcc",
+          "source_id": "health_benefit_48hr",
+          "chunk_index": 1,
+          "total_chunks": null,
+          "benefit_id": "48hr"
+        },
+        {
+          "point_id": "d354b1ee-1a20-14a0-34ea-82085c548ead",
+          "source_id": "health_benefit_8hr",
+          "chunk_index": 1,
+          "total_chunks": null,
+          "benefit_id": "8hr"
+        },
+        {
+          "point_id": "e3c28ea1-62a2-6665-b639-8ce8543b294b",
+          "source_id": "health_benefit_10yr",
+          "chunk_index": 0,
+          "total_chunks": null,
+          "benefit_id": "10yr"
+        },
+        {
+          "point_id": "e56f6d33-42b4-3017-877d-9f47380045f8",
+          "source_id": "health_benefit_5yr",
+          "chunk_index": 1,
+          "total_chunks": null,
+          "benefit_id": "5yr"
+        },
+        {
+          "point_id": "e9a1de25-3a8a-2147-2bad-d19265171fa4",
+          "source_id": "health_benefit_72hr",
+          "chunk_index": 0,
+          "total_chunks": null,
+          "benefit_id": "72hr"
+        },
+        {
+          "point_id": "ec2744f9-1aca-f759-caab-ac35916ff860",
+          "source_id": "health_benefit_24hr",
+          "chunk_index": 0,
+          "total_chunks": null,
+          "benefit_id": "24hr"
+        },
+        {
+          "point_id": "ef8bb87b-1a8e-a3cb-669a-ca229dec4dbf",
+          "source_id": "health_benefit_72hr",
+          "chunk_index": 1,
+          "total_chunks": null,
+          "benefit_id": "72hr"
+        },
+        {
+          "point_id": "f2bacfc9-956d-a8c8-3b06-09da42aacc14",
+          "source_id": "health_benefit_1mo",
+          "chunk_index": 0,
+          "total_chunks": null,
+          "benefit_id": "1mo"
+        },
+        {
+          "point_id": "fc254351-3e1b-e2bb-18b5-248b5305b0d5",
+          "source_id": "health_benefit_8hr",
+          "chunk_index": 0,
+          "total_chunks": null,
+          "benefit_id": "8hr"
+        }
+      ],
+      "collection_configuration": {
+        "params": {
+          "vectors": {
+            "size": 384,
+            "distance": "Cosine",
+            "hnsw_config": null,
+            "quantization_config": null,
+            "on_disk": null,
+            "datatype": null,
+            "multivector_config": null
+          },
+          "shard_number": 1,
+          "sharding_method": null,
+          "replication_factor": 1,
+          "write_consistency_factor": 1,
+          "read_fan_out_factor": null,
+          "on_disk_payload": true,
+          "sparse_vectors": null
+        },
+        "hnsw_config": {
+          "m": 16,
+          "ef_construct": 100,
+          "full_scan_threshold": 10000,
+          "max_indexing_threads": 0,
+          "on_disk": false,
+          "payload_m": null
+        },
+        "optimizer_config": {
+          "deleted_threshold": 0.2,
+          "vacuum_min_vector_number": 1000,
+          "default_segment_number": 0,
+          "max_segment_size": null,
+          "memmap_threshold": null,
+          "indexing_threshold": 10000,
+          "flush_interval_sec": 5,
+          "max_optimization_threads": null
+        },
+        "wal_config": {
+          "wal_capacity_mb": 32,
+          "wal_segments_ahead": 0
+        },
+        "quantization_config": null,
+        "strict_mode_config": {
+          "enabled": true,
+          "max_query_limit": null,
+          "max_timeout": null,
+          "unindexed_filtering_retrieve": false,
+          "unindexed_filtering_update": false,
+          "search_max_hnsw_ef": null,
+          "search_allow_exact": null,
+          "search_max_oversampling": null,
+          "upsert_max_batchsize": null,
+          "max_collection_vector_size_bytes": null,
+          "read_rate_limit": null,
+          "write_rate_limit": null,
+          "max_collection_payload_size_bytes": null,
+          "max_points_count": null,
+          "filter_max_conditions": null,
+          "condition_max_size": null,
+          "multivector_config": null,
+          "sparse_config": null
+        }
+      },
+      "collection_configuration_sha256": "2b23ba22b7855786e5b8036aebef3b6b3ee455bfd6391e71e58b39f570b4f050",
+      "corpus_sha256_including_payload_and_vectors": "6420e4c9f7c8ed161286be1dd4846f012341779dd933ca4944846ae5f175639f"
+    }
+  ],
+  "snapshot_sha256": "2be582347953f509f0549c25f9344a5864c5ef2459a364852d942864c0280383"
+}

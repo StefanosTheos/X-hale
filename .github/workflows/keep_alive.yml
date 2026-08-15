@@ -1,24 +1,40 @@
-name: Keep services alive
+name: Hailey readiness monitor
 
 on:
   schedule:
-    - cron: '*/5 * * * *'   # every 5 minutes
-  workflow_dispatch:         # allow manual trigger
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: hailey-readiness-monitor
+  cancel-in-progress: true
 
 jobs:
-  ping:
+  readiness:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
-      - name: Ping Hailey backend
-        run: |
-          curl -sf https://stefanostheos-hailey-backend.hf.space/health \
-            || echo "Health check returned non-2xx — Space may be cold-starting"
-
-      - name: Ping Qdrant cluster
+      - name: Verify Hailey dependencies
         env:
-          QDRANT_API_KEY: ${{ secrets.QDRANT_API_KEY }}
+          HAILEY_API_URL: ${{ secrets.HAILEY_API_URL }}
         run: |
-          curl -sf \
-            -H "api-key: $QDRANT_API_KEY" \
-            https://a36d962f-aa0e-4edd-8949-8c19de4981a4.europe-west3-0.gcp.cloud.qdrant.io/collections \
-            || echo "Qdrant ping returned non-2xx — cluster may be suspended"
+          set -euo pipefail
+          test -n "$HAILEY_API_URL"
+
+          response=$(curl \
+            --fail-with-body \
+            --silent \
+            --show-error \
+            --location \
+            --connect-timeout 20 \
+            --max-time 120 \
+            --retry 2 \
+            --retry-delay 15 \
+            --retry-all-errors \
+            "${HAILEY_API_URL%/}/ready")
+
+          echo "$response" | jq .
+          echo "$response" | jq -e '.status == "ready"' >/dev/null

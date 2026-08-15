@@ -26,6 +26,7 @@ from appwrite.query import Query
 from appwrite.services.tables_db import TablesDB
 
 from app.config import settings
+from app.memory.fact_freshness import is_fact_stale
 from app.models.user_facts import UserFact
 from app.observability.logging import get_logger
 
@@ -65,8 +66,13 @@ def _fact_from_row(row: object, user_id: str) -> UserFact:
     )
 
 
-async def get_facts(user_id: str, fact_type: str | None = None) -> list[UserFact]:
-    """Return active facts for a user, optionally filtered by fact_type."""
+async def get_facts(
+    user_id: str,
+    fact_type: str | None = None,
+    *,
+    include_stale: bool = False,
+) -> list[UserFact]:
+    """Return non-superseded facts, excluding stale facts unless requested."""
     import asyncio
     db, db_id = _build_client()
     queries = [
@@ -82,7 +88,10 @@ async def get_facts(user_id: str, fact_type: str | None = None) -> list[UserFact
         settings.appwrite_user_facts_collection_id,
         queries=queries,
     )
-    return [_fact_from_row(doc, user_id) for doc in result.rows]
+    facts = [_fact_from_row(doc, user_id) for doc in result.rows]
+    if include_stale:
+        return facts
+    return [fact for fact in facts if not is_fact_stale(fact)]
 
 
 async def get_all_facts(user_id: str, page_size: int = 100) -> list[UserFact]:
@@ -221,6 +230,27 @@ async def delete_fact(fact_id: str, user_id: str | None = None) -> None:
         fact_id,
     )
     logger.info("user_fact_deleted", fact_id=fact_id)
+
+
+async def confirm_fact(fact_id: str, user_id: str) -> UserFact:
+    """Reconfirm an existing active fact after enforcing user ownership."""
+    import asyncio
+    db, db_id = _build_client()
+    row = await asyncio.to_thread(
+        db.get_row, db_id, settings.appwrite_user_facts_collection_id, fact_id,
+    )
+    data = row.data if isinstance(row.data, dict) else {}
+    if data.get("userId") != user_id or data.get("superseded_by"):
+        raise PermissionError("fact is unavailable or does not belong to authenticated user")
+    updated = await asyncio.to_thread(
+        db.update_row,
+        db_id,
+        settings.appwrite_user_facts_collection_id,
+        fact_id,
+        {"last_confirmed": datetime.now(timezone.utc).isoformat()},
+    )
+    logger.info("user_fact_reconfirmed", user_id=user_id, fact_id=fact_id)
+    return _fact_from_row(updated, user_id)
 
 
 async def delete_all_facts(user_id: str) -> int:

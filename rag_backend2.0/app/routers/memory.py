@@ -1,14 +1,16 @@
 """
-GET  /memory/            — returns the user's structured facts ("What does Hailey know about me?")
-DELETE /memory/          — clears all facts for the authenticated user (GDPR erasure)
-DELETE /memory/{fact_id} — lets the user delete a specific fact (GDPR / trust)
+GET    /memory/                   — returns the user's structured facts
+POST   /memory/{fact_id}/confirm — explicitly reconfirms an active fact
+DELETE /memory/                   — clears all facts for the authenticated user
+DELETE /memory/{fact_id}          — lets the user delete a specific fact
 """
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.auth.dependencies import get_current_user
-from app.memory.user_facts_store import delete_all_facts, delete_fact, get_facts
+from app.memory.fact_freshness import fact_expires_at, is_fact_stale
+from app.memory.user_facts_store import confirm_fact, delete_all_facts, delete_fact, get_facts
 from app.models.chat import MemoryFactResponse, MemoryResponse
 from app.observability.logging import get_logger
 
@@ -25,7 +27,9 @@ async def get_memory(
     Return all structured facts Hailey has recorded about the user.
     Optionally filter by fact_type (e.g. "trigger", "coping_strategy_validated").
     """
-    facts = await get_facts(user_id, fact_type=fact_type)
+    # Stale facts remain visible for review/deletion, but get_facts' default
+    # excludes them from snapshots and other personalization consumers.
+    facts = await get_facts(user_id, fact_type=fact_type, include_stale=True)
     return MemoryResponse(
         user_id=user_id,
         facts=[
@@ -37,10 +41,41 @@ async def get_memory(
                 confidence=f.confidence,
                 first_observed=f.first_observed,
                 last_confirmed=f.last_confirmed,
+                expires_at=fact_expires_at(f),
+                is_stale=is_fact_stale(f),
+                requires_reconfirmation=is_fact_stale(f),
             )
             for f in facts
         ],
         total=len(facts),
+    )
+
+
+@router.post("/{fact_id}/confirm", response_model=MemoryFactResponse)
+async def reconfirm_fact(
+    fact_id: str,
+    user_id: str = Depends(get_current_user),
+):
+    """Confirm that a stored fact is still accurate and renew its use period."""
+    try:
+        fact = await confirm_fact(fact_id, user_id)
+    except Exception as exc:
+        logger.warning("user_fact_reconfirmation_failed", fact_id=fact_id, error=str(exc))
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Fact {fact_id!r} not found or unavailable.",
+        )
+    return MemoryFactResponse(
+        fact_id=fact.fact_id or "",
+        fact_type=fact.fact_type,
+        fact_key=fact.fact_key,
+        fact_value=fact.fact_value,
+        confidence=fact.confidence,
+        first_observed=fact.first_observed,
+        last_confirmed=fact.last_confirmed,
+        expires_at=fact_expires_at(fact),
+        is_stale=False,
+        requires_reconfirmation=False,
     )
 
 

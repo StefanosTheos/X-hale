@@ -69,6 +69,9 @@ class MemoryFactResponse(BaseModel):
     confidence: float
     first_observed: Optional[datetime] = None
     last_confirmed: Optional[datetime] = None
+    expires_at: Optional[datetime] = None
+    is_stale: bool = False
+    requires_reconfirmation: bool = False
 
 
 class MemoryResponse(BaseModel):

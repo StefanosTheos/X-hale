@@ -11,7 +11,6 @@ from appwrite.services.storage import Storage
 from appwrite.services.tables_db import TablesDB
 from appwrite.services.users import Users
 
-from app.auth.appwrite_jwt import invalidate_user_tokens
 from app.config import settings
 from app.observability.logging import get_logger
 
@@ -176,7 +175,6 @@ async def delete_account_data(user_id: str) -> DeletionReport:
     try:
         await asyncio.to_thread(users.delete, user_id)
         report.identity_deleted = True
-        await invalidate_user_tokens(user_id)
     except Exception as exc:
         report.errors.append(f"identity: {exc}")
 

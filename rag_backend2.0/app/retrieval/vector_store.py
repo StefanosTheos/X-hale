@@ -56,6 +56,7 @@ async def search(
     k: int = 5,
     filters: Optional[dict] = None,
     topic_tags_should: Optional[list[str]] = None,
+    score_threshold: Optional[float] = None,
 ) -> list[RetrievedChunk]:
     """
     Perform a vector similarity search in the given Qdrant collection.
@@ -102,6 +103,7 @@ async def search(
             query_vector=query_vector,
             query_filter=qdrant_filter,
             limit=k,
+            score_threshold=score_threshold,
             with_payload=True,
         )
     except Exception as exc:

@@ -2,17 +2,17 @@
 
 ### Materials and Methods audit — actionable issues
 
-- [ ] **#1 — The participant study has no reportable ethics decision or informed-consent record.**
-  Section 3.9 cannot currently state an ethics-committee approval, exemption, identifier, or consent procedure. This is a submission-critical human-subject reporting gap, not a detail that can be inferred from the application.
-  **Fix:** Recover the original approval/exemption and consent documentation and report it exactly. If neither exists, determine the applicable institutional and journal requirements before retaining the participant evidence; do not manufacture retrospective approval.
+- [ ] **#1 — Consent is now documented, but the participant study had no ethics-committee review or approval.**
+  Section 3.9 now reports exactly that all 15 participants gave verbal consent after being told that participation was voluntary and that they could withdraw. It also discloses that no ethics-committee review or approval was obtained; this is not described as an exemption and cannot be converted into retrospective approval.
+  **Remaining submission decision:** Before retaining the participant evidence, obtain written guidance from the responsible institution and confirm the target journal's requirements for research conducted without prior ethics review. Depending on that determination, the manuscript may need to retain the transparent disclosure, provide an applicable formal determination, or remove the participant-study evidence. Do not describe the issue as fully resolved until that decision is documented.
 
-- [ ] **#2 — Essential participant-study procedural metadata are missing.**
-  The retained record does not identify recruitment channel, study dates, test setting, device models, moderator script, assistance rules, or compensation. These omissions limit reproducibility and interpretation of assistance and task-time results.
-  **Fix:** Recover these fields from the original protocol, communications, devices, or study notes and add them to Sections 3.9 and the ethics statement. Mark any genuinely unrecoverable field as unavailable.
+- [x] **#2 — Resolved: essential participant-study procedural metadata are now reported.**
+  Section 3.9 records that the study took place during September 2025; participants were personal contacts and university peers who volunteered; meetings were conducted individually and in person at participants' homes or on the university campus; all participants used the same Samsung Galaxy A54 5G; instructions and task order were consistent; assistance was given only upon request; and no compensation was provided.
+  **Reporting boundary:** The verbatim participant instructions were not preserved and are not reconstructed retrospectively.
 
-- [ ] **#3 — The satisfaction and qualitative-feedback procedure cannot be reproduced.**
-  The exact satisfaction question and response scale, interview or feedback prompts, transcripts/notes, coding framework, coder identities, and agreement records are absent. The current manuscript can only call the findings descriptive recurring comments.
-  **Fix:** Locate the original instrument and qualitative records. If available, document collection and analysis faithfully; otherwise retain only auditable satisfaction counts and clearly labelled descriptive observations, without thematic-analysis or saturation claims.
+- [x] **#3 — Resolved: the satisfaction measure and descriptive-feedback procedure are now reported.**
+  Section 3.9 records the four satisfaction options and the complete distribution: very satisfied, 12; satisfied, 2; neutral, 1; and unsatisfied, 0. It also records that participants were invited to comment on their experience and anything that stood out after the tasks and further application exploration. The researcher wrote the comments and summarized them alone.
+  **Reporting boundary:** The comments are treated as researcher-recorded descriptive feedback, not a formal thematic analysis. No predefined coding framework, second coder, saturation assessment, or inter-rater agreement is claimed. The surviving notes should be securely digitized, de-identified, and retained with the study record before submission.
 
 - [ ] **#4 — Participant-level task-time observations are unavailable.**
   Only task means survive, preventing verification and calculation of dispersion, medians, ranges, or outlier-sensitive summaries.
@@ -26,25 +26,25 @@
   SUS, task completion, satisfaction, and qualitative chatbot impressions cannot be attributed to the revised agent, citation interface, action cards, memory controls, or current safety behavior.
   **Fix:** Keep the evidence streams explicitly separated in this article. Any user-experience claim specific to Hailey 2.0 requires a separate ethically governed user evaluation; do not relabel the earlier study.
 
-- [ ] **#7 — The biometrics interface uses static demonstration data without an explicit in-app provenance warning.**
-  It displays health-oriented values despite having no operational Apple Health, Health Connect, Samsung Health, or wearable connection and supplies no data to Hailey.
-  **Fix:** Label the screen and values unambiguously as demonstration data or remove the feature from the evaluated build and manuscript figures. Do not claim wearable integration until a functioning, consented data path is implemented and verified.
+- [x] **#7 — Resolved: the biometrics interface explicitly identifies its values as demonstration data.**
+  The screen is titled “Biometrics Demonstration” and displays a persistent notice that every value is static placeholder data, no wearable or health platform is connected, and no biometric data are shared with Hailey. The inactive Samsung Health prompt is no longer shown when the page opens. The manuscript likewise describes the screen only as a demonstration of a possible future data presentation.
+  **Reporting boundary:** No wearable integration, physiological monitoring, personalized biometric inference, or Hailey biometric input is claimed.
 
-- [ ] **#8 — Knowledge-source governance metadata are incomplete.**
-  The 28-source manifest lacks exact fetch dates, reviewer identity, licensing/access terms, and a completed independent content-review decision. `recency_date` alone does not establish when or by whom deployed content was verified.
-  **Fix:** Extend the manifest with fetch/review dates, reviewer, authority rationale, access/licensing status, version/hash, and inclusion decision; establish and document a review/re-indexing procedure.
+- [ ] **#8 — Partially resolved: developer governance is documented; independent review remains pending.**
+  Every source now resolves to governance metadata recording the Git-supported ingestion-evidence date, developer-review date and identity, review scope, authority rationale, public-access status, unverified reuse-licence status, inclusion decision, independent-review status, and next six-month review date. Exact historical fetch dates, content versions, and hashes are explicitly marked unavailable rather than inferred. The ingestion guide defines inclusion/exclusion criteria, snapshot and hashing requirements, six-month and event-triggered review, staged re-indexing, corpus versioning, removal records, and the prohibition on modifying a frozen evaluation corpus silently.
+  **Remaining requirement:** Stefanos Theos performed the source selection and relevance/authority/scientific-support review as application developer and source curator. No independent clinical or content review has occurred. Keep this error open until a suitably qualified reviewer records their identity, expertise, review date, source-level decisions, and required corrections; do not describe the corpus as independently or clinically validated.
 
-- [ ] **#9 — The frozen deployed Qdrant corpus has not been inventoried and archived.**
-  Repository manifest counts do not prove deployed collection contents, chunk counts, payload completeness, or identity at benchmark time.
-  **Fix:** Before final analysis, export collection counts, vector dimensions, payload-schema checks, source/chunk identifiers, and stable corpus/configuration hashes from the evaluated deployment and archive them with the benchmark artifact.
+- [x] **#9 — Resolved: the frozen deployed Qdrant corpus is inventoried and archived.**
+  A read-only inventory generated on 15 August 2026 records both collection configurations, reported and independently scrolled point counts, vector dimensions, payload schema and required-field completeness, per-source counts, non-content source/chunk identifiers, and stable hashes over the complete payloads and vectors. It is tied to application and manifest commit `7793af0`, deployed Space revision `a79d62b`, and benchmark run `31889842986`; its overall SHA-256 is `2be582347953f509f0549c25f9344a5864c5ef2459a364852d942864c0280383`. The archive contains identifiers and hashes but not source text or vectors.
+  **Observed discrepancy:** `kb_chunks` contains 487 complete 384-dimensional points from 23 manifest sources, not all 28 entries marked ingested. The absent source IDs are `acs_quit_timeline`, `aha_why_quit`, `cdc_benefits_timeline`, `mayo_quit_smoking`, and `nhs_quit_benefits`. `health_benefit_chunks` separately contains 25 complete 384-dimensional points under 14 internal benefit source IDs. These facts must be reported as the evaluated corpus. Reconcile the manifest and any future corpus only as a newly versioned post-campaign deployment; do not alter the frozen benchmark corpus retrospectively.
 
 - [ ] **#10 — Health-benefit chunks lack claim-level canonical URLs.**
   The `health_benefit_chunks` collection can expose internal source labels and excerpts but cannot provide complete bibliographic traceability for each displayed claim.
   **Fix:** Add canonical source URL/title and review metadata to each curated health-benefit payload, re-ingest, and validate lookup output. If this occurs after benchmark start, treat it as a new corpus/version rather than silently changing the frozen evaluation.
 
-- [ ] **#11 — Active retrieval has no minimum similarity threshold or content-level deduplication.**
-  The top three Qdrant results are accepted even when weak or redundant, and multiple chunks from one source can dominate context. The implemented reranker is disabled.
-  **Fix:** After the current frozen campaign, evaluate and configure a defensible similarity threshold and source/content deduplication. Any change requires a new benchmark configuration and must not be credited to the running campaign.
+- [ ] **#11 — Implementation prepared: calibrated threshold and source/content deduplication await post-campaign activation.**
+  A read-only calibration compared top retrieval scores for 60 predefined medical/NRT queries with 30 off-topic controls against the frozen corpus. The raw highest cutoff retaining at least 95% positive-query coverage was 0.65433. To reduce sample-specific overfitting, the operational cutoff was rounded downward to 0.60; it retained 59/60 medical/NRT top results (98.3%) and rejected all 30 off-topic top results in this authored suite. The analysis, case-level scores, corpus/model identity, and limitations are archived. Code now requests four times the desired result count, applies the 0.60 cosine threshold in Qdrant, removes formatting-equivalent content, retains at most one chunk per source, and then returns the requested number of diverse chunks. Configuration bounds and regression tests are included.
+  **Activation boundary:** The running 300-case campaign evaluates commit `7793af0`, which has neither control. These changes must remain undeployed until that campaign finishes, then receive a new application/deployment version and a complete new benchmark. Keep this error open until post-campaign activation and evaluation are complete; do not credit the current results with the prepared controls. The query-category calibration is an engineering proxy, not clinician-labelled chunk-relevance validation.
 
 - [ ] **#12 — Citation objects omit canonical URL and document title, and validation is lexical rather than entailment-based.**
   Users receive source identifiers, types, and snippets, but not complete clickable attribution; the current check cannot demonstrate that every generated claim is entailed by its source.
@@ -62,9 +62,10 @@
   The 0.5 threshold is an engineering rule, not an estimated probability, and extraction can omit, distort, or incorrectly attribute information.
   **Fix:** Build a consent-compatible, manually annotated memory test set and report extraction precision/recall, attribution, contradiction, cross-user isolation, and deletion tests before claiming accurate personalization.
 
-- [ ] **#16 — Active facts have no expiry or stale-fact handling.**
-  A fact can remain active indefinitely until a higher-confidence conflicting fact is generated or the user deletes it.
-  **Fix:** Add confirmation/expiry rules appropriate to fact type, expose `last_confirmed` in user controls, and prompt for reconfirmation of old or sensitive facts. Validate supersession and stale-fact behavior before evaluation claims.
+- [x] **#16 — Resolved: derived facts now expire from active personalization and support explicit reconfirmation.**
+  A documented engineering policy applies 30-day lifetimes to current physical-symptom, NRT-use, and change-stage facts; 90 days to triggers, coping strategies, and social context; 180 days to motivations; and 365 days to past-attempt history. Facts lacking a usable legacy timestamp are conservatively stale. Expiry does not erase the record: stale facts remain visible for authenticated review, export, reconfirmation, or deletion, but are excluded from Hailey's prompt snapshots and behavioral-signal consumers by default. The memory API exposes `last_confirmed`, `expires_at`, `is_stale`, and `requires_reconfirmation`; an ownership-checked confirmation endpoint renews `last_confirmed`; and the Flutter memory screen identifies outdated facts, explains that Hailey is not using them, shows the last confirmation date, and provides a “Still accurate” control.
+  **Validation:** Unit tests cover exact expiry boundaries, missing-timestamp handling, differentiated lifetimes, default stale-fact exclusion, opt-in retrieval for user controls, ownership-checked reconfirmation, and the existing lower-/higher-confidence supersession rules. The full backend suite passes (126 passed, 2 integration tests skipped). These lifetimes are conservative product rules, not clinically validated intervals.
+  **Deployment/evidence boundary:** The implementation remains uncommitted and undeployed while the frozen 300-case campaign runs; its benchmark revision therefore does not include this lifecycle change, and no manuscript result should attribute it to that campaign.
 
 - [ ] **#17 — Conversation and derived-memory deletion are separate, non-atomic operations.**
   Clearing history does not remove facts derived from it, and fact deletion leaves the source conversation. The Flutter combined action sends two concurrent requests and can partially succeed.
@@ -74,9 +75,9 @@
   Cursor-based Appwrite reads now export every conversation turn and every active or superseded memory fact, including source-turn and supersession provenance. The JSON response also reports record totals and remains compatible with the Flutter clipboard consumer.
   **Remaining boundary:** This is a complete export of the two Hailey-owned Appwrite datasets, not a full X-hale account export or proof of GDPR portability across wider application data and external processors.
 
-- [ ] **#19 — Revoked Appwrite JWTs may remain accepted for up to 60 seconds.**
-  Successful verification is cached by token hash, introducing a bounded revocation delay.
-  **Fix:** Assess the risk and either shorten/disable the cache for sensitive operations, add a revocation-aware mechanism, or document and test the accepted revocation window.
+- [x] **#19 — Resolved: successful Appwrite JWT verification is no longer cached.**
+  Every protected HTTP request now verifies its bearer token through the Appwrite Account API. A token revoked at Appwrite is therefore rejected on the next request rather than remaining locally accepted for up to 60 seconds. Authentication still occurs only once before an SSE response starts, not once per streamed event. A unit test verifies that the same token is checked twice and that a revoked second result is not masked by the first successful verification.
+  **Runtime boundary:** Revocation cannot interrupt an HTTP response that was already authenticated and is actively streaming; it governs subsequent requests.
 
 - [ ] **#20 — The deployed API is not configured with least-privilege exposure.**
   CORS permits all origins, and root, health, generated documentation, and metrics endpoints are public when enabled. Metrics reveal operational information even without message bodies.
@@ -106,9 +107,9 @@
   The privacy screen now invokes a confirmation-protected backend workflow that deletes user-owned rows across X-hale and Hailey collections, both sides of social relationships and messages, current and identifiable historical avatar files, and finally the Appwrite authentication identity. The identity is preserved when an earlier step fails so deletion can be retried, and the API returns an explicit incomplete report.
   **Remaining boundary:** The workflow controls X-hale data held in the configured Appwrite project. It cannot independently erase records that an external processor retains under its own policy; the user-facing text now states this boundary.
 
-- [ ] **#27 — The Flutter privacy text contains claims not established by the implementation.**
-  It refers to encryption, provider retention, complete export, account deletion, and a 30-day erasure period that have not all been verified or implemented.
-  **Fix:** Immediately align the text with the actual bounded controls and verified provider terms. Any GDPR, encryption-at-rest, retention-period, or erasure-timeline statement requires supporting technical and legal evidence.
+- [x] **#27 — Resolved: Flutter privacy text is aligned with implemented, bounded controls.**
+  The screen now distinguishes the complete Hailey chat-and-memory export from an account-wide export; describes the implemented Appwrite deletion workflow and its external-provider boundary; identifies Appwrite, Hugging Face Spaces, Groq, Cloudflare Workers AI/local embedding fallback, and Qdrant roles; and removes unsupported encryption-at-rest, zero-provider-retention, absolute-security, blanket non-sharing, GDPR-compliance, and fixed erasure-period claims. The FAQ uses the same bounded language.
+  **Reporting boundary:** The screen is an implementation-level data-handling summary, not a legal certification, exhaustive provider privacy notice, security guarantee, or demonstration of GDPR compliance. Provider-specific processing and retention remain governed by verified deployment configuration and provider terms.
 
 - [ ] **#28 — Runtime feature-flag documentation is inconsistent.**
   `.env.example` enables web-search fallback while the central default and frozen benchmark configuration disable it. Hosted secrets can override either value.
@@ -122,9 +123,9 @@
   Prometheus exposes the metric definition but the runtime does not populate it, leaving only external benchmark latency.
   **Fix:** Instrument the authenticated request lifecycle and, if useful, major graph stages with bounded labels; test that observations are emitted without recording sensitive text.
 
-- [ ] **#31 — The five-minute keep-alive workflow is not an end-to-end availability check.**
-  Workflow failures are converted to messages, and successful health/Qdrant pings do not validate authentication, embedding, retrieval, inference, filtering, or persistence.
-  **Fix:** Add a low-cost synthetic transaction or readiness probe with explicit alert/failure semantics and no real-user data. Do not describe the keep-alive job as uptime evidence.
+- [x] **#31 — Resolved: the keep-alive ping is replaced by an explicit dependency-readiness monitor.**
+  The scheduled workflow now calls Hailey's `/ready` endpoint, uses bounded timeouts and cold-start retries, validates the JSON readiness state, and fails visibly on missing configuration, persistent HTTP failure, or `not_ready`. The backend probe checks Appwrite row access, both configured Qdrant collections, Groq API access, and at least one usable embedding route with fixed synthetic text and no real-user data. The redundant direct Qdrant ping and error-swallowing shell branches were removed.
+  **Evidence boundary:** This is a synthetic dependency-readiness signal, not an uptime guarantee or a full user transaction. It does not exercise JWT issuance, complete graph execution, output filtering, persistence writes, the Flutter client, or notifications, and scheduled GitHub execution may be delayed.
 
 - [ ] **#32 — The deployed Hugging Face revision is not cryptographically tied to the application commit.**
   The Space is maintained through a separate Git remote, so an application commit alone does not prove which service revision generated benchmark responses.

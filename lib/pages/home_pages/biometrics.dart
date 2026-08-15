@@ -24,26 +24,7 @@ class _BiometricsPageState extends ConsumerState<BiometricsPage> {
 
   @override
   void initState() {
-    _checkSamsungHealthStatus();
     super.initState();
-  }
-
-  void _checkSamsungHealthStatus() async {
-    final user = ref.read(userProvider);
-    if (!user.hasSamsungHealth) {
-      setState(() => _isShowingDialog = true);
-      await Future.delayed(const Duration(milliseconds: 500));
-
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _showSamsungHealthDialog(
-          ref.isDark,
-        ).then((_) {
-          if (mounted) {
-            setState(() => _isShowingDialog = false);
-          }
-        });
-      });
-    }
   }
 
   @override
@@ -156,7 +137,7 @@ class _BiometricsPageState extends ConsumerState<BiometricsPage> {
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          'Vitals & Activity',
+          'Biometrics Demonstration',
           style: TextStyle(
             color: isDark ? Colors.white : AppThemes.lightTextColor,
             fontWeight: FontWeight.bold,
@@ -191,6 +172,33 @@ class _BiometricsPageState extends ConsumerState<BiometricsPage> {
                     },
           ),
         ],
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(76),
+          child: Semantics(
+            label: 'Demonstration data notice',
+            child: Container(
+              width: double.infinity,
+              margin: const EdgeInsets.fromLTRB(12, 0, 12, 10),
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: isDark ? Colors.amber.shade900 : Colors.amber.shade100,
+                border: Border.all(color: Colors.amber.shade700),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                'Demonstration only — all values are static placeholder data. '
+                'No wearable or health platform is connected, and no biometric '
+                'data is shared with Hailey.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: isDark ? Colors.white : Colors.brown.shade900,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ),
+        ),
       ),
       body:
           _isLoading
@@ -241,7 +249,7 @@ class _BiometricsPageState extends ConsumerState<BiometricsPage> {
                         opacity: _isLoading ? 1.0 : 0.0,
                         duration: Duration(milliseconds: 500),
                         child: Text(
-                          "Fetching latest Samsung Health data..",
+                          "Reloading demonstration data...",
                           style: TextStyle(
                             color: isDark ? AppThemes.darkTextColor : AppThemes.lightSubtitleColor,
                             fontSize: 16,
@@ -585,6 +593,8 @@ class _BiometricsPageState extends ConsumerState<BiometricsPage> {
     );
   }
 
+  // Retained as inactive prototype UI; the demonstration screen never invokes it.
+  // ignore: unused_element
   Future<void> _showSamsungHealthDialog(bool isDark) async {
     final formKey = GlobalKey<FormState>();
     String? emailError;

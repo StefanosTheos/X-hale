@@ -16,6 +16,7 @@ web fallback are implemented and controlled through feature flags.
 """
 from __future__ import annotations
 
+import re
 from typing import Literal, Optional
 
 from app.config import settings
@@ -112,12 +113,14 @@ async def _vector_retrieval(
         return []
 
     effective_k = k if strategy != "exploratory" else k * 2
-    return await search(
+    candidates = await search(
         query_vector=query_vector,
         collection=settings.qdrant_kb_collection,
-        k=effective_k,
+        k=effective_k * settings.retrieval_candidate_multiplier,
         filters=filters,
+        score_threshold=settings.retrieval_min_score,
     )
+    return _select_diverse_chunks(candidates, limit=effective_k)
 
 
 async def _benefit_retrieval(query: str, benefit_id: str) -> RetrievalResult:
@@ -173,12 +176,42 @@ async def _kg_retrieval(
         logger.warning("kg_retrieval_embed_failed", error=str(exc))
         return []
 
-    return await search(
+    candidates = await search(
         query_vector=query_vector,
         collection=settings.qdrant_kb_collection,
-        k=k,
+        k=k * settings.retrieval_candidate_multiplier,
         topic_tags_should=topic_tags,
+        score_threshold=settings.retrieval_min_score,
     )
+    return _select_diverse_chunks(candidates, limit=k)
+
+
+def _content_key(content: str) -> str:
+    """Normalize chunk text for formatting-insensitive exact deduplication."""
+    return re.sub(r"\s+", " ", content).strip().casefold()
+
+
+def _select_diverse_chunks(
+    chunks: list[RetrievedChunk],
+    *,
+    limit: int,
+) -> list[RetrievedChunk]:
+    """Keep strong, distinct content from no more than one chunk per source."""
+    seen_sources: set[str] = set()
+    seen_content: set[str] = set()
+    selected: list[RetrievedChunk] = []
+    for chunk in sorted(chunks, key=lambda item: item.score, reverse=True):
+        if chunk.score < settings.retrieval_min_score:
+            continue
+        content_key = _content_key(chunk.content)
+        if chunk.source_id in seen_sources or not content_key or content_key in seen_content:
+            continue
+        seen_sources.add(chunk.source_id)
+        seen_content.add(content_key)
+        selected.append(chunk)
+        if len(selected) == limit:
+            break
+    return selected
 
 
 def _merge_chunks(

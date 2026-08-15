@@ -5,7 +5,11 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from app.retrieval.hybrid_retriever import retrieve
+from app.retrieval.hybrid_retriever import (
+    _select_diverse_chunks,
+    _vector_retrieval,
+    retrieve,
+)
 from app.models.retrieval import RetrievedChunk
 
 
@@ -38,3 +42,48 @@ async def test_retrieve_handles_embed_failure():
     assert result.chunks == []
     assert result.citations == []
     assert result.strategy_used == "vector"
+
+
+def test_diverse_selection_applies_threshold_source_and_content_deduplication(monkeypatch):
+    monkeypatch.setattr(
+        "app.retrieval.hybrid_retriever.settings.retrieval_min_score", 0.60,
+    )
+    chunks = [
+        RetrievedChunk(content="Same supported claim", source_id="nhs", score=0.91),
+        RetrievedChunk(content="A second NHS chunk", source_id="nhs", score=0.89),
+        RetrievedChunk(content="  SAME   supported CLAIM ", source_id="cdc", score=0.87),
+        RetrievedChunk(content="Different supported claim", source_id="who", score=0.83),
+        RetrievedChunk(content="Weak result", source_id="ala", score=0.59),
+    ]
+
+    selected = _select_diverse_chunks(chunks, limit=3)
+
+    assert [(chunk.source_id, chunk.score) for chunk in selected] == [
+        ("nhs", 0.91),
+        ("who", 0.83),
+    ]
+
+
+@pytest.mark.asyncio
+async def test_vector_retrieval_overfetches_and_applies_qdrant_threshold(monkeypatch):
+    monkeypatch.setattr(
+        "app.retrieval.hybrid_retriever.settings.retrieval_min_score", 0.60,
+    )
+    monkeypatch.setattr(
+        "app.retrieval.hybrid_retriever.settings.retrieval_candidate_multiplier", 4,
+    )
+    chunks = [RetrievedChunk(content="Supported", source_id="nhs", score=0.8)]
+    with (
+        patch("app.llm.workers_ai_client.embed", new=AsyncMock(return_value=[0.1] * 384)),
+        patch("app.retrieval.vector_store.search", new=AsyncMock(return_value=chunks)) as search,
+    ):
+        result = await _vector_retrieval("lung recovery", "factual", None, 3)
+
+    assert result == chunks
+    search.assert_awaited_once_with(
+        query_vector=[0.1] * 384,
+        collection="kb_chunks",
+        k=12,
+        filters=None,
+        score_threshold=0.60,
+    )

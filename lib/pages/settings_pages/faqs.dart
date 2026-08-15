@@ -82,7 +82,7 @@ class FAQsPage extends ConsumerWidget {
                   _buildCard(
                     question: 'Is my personal data secure?',
                     answer:
-                        'Absolutely. We value your privacy and ensure that all your data is stored securely. We do not share your information with any third parties.',
+                        'X-hale uses authenticated access and HTTPS service endpoints, but no application can promise absolute security. Appwrite stores application data, while Hailey uses external services such as Hugging Face Spaces, Groq, Cloudflare Workers AI, and Qdrant for its implemented processing paths. See Data & Privacy for the current data flows and available controls.',
                     isDarkMode: isDarkMode,
                   ),
                   _buildCard(

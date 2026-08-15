@@ -1,5 +1,5 @@
-// Static mock data for the biometrics dashboard. The audit (#78) noted this
-// page shows hard-coded weekly values; until real Samsung Health wiring is
+// Static demonstration data for the biometrics dashboard. The screen labels
+// these values as placeholders; until real wearable wiring is
 // in, the same fake data lives here as a single source of truth.
 
 class DailyValue {

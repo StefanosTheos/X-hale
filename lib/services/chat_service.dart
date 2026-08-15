@@ -252,6 +252,23 @@ class ChatService {
     }
   }
 
+  /// POST /memory/{factId}/confirm — renews a fact after user confirmation.
+  static Future<Map<String, dynamic>> confirmFact({
+    required String factId,
+    required String jwt,
+  }) async {
+    final response = await http.post(
+      Uri.parse('$_baseUrl/memory/$factId/confirm'),
+      headers: {'Authorization': 'Bearer $jwt'},
+    );
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body) as Map<String, dynamic>;
+    } else if (response.statusCode == 401) {
+      throw Exception('Session expired. Please sign in again.');
+    }
+    throw Exception('Failed to confirm memory: ${response.statusCode}');
+  }
+
   /// DELETE /memory/ — wipes all memory facts for the authenticated user.
   static Future<void> clearAllMemory({required String jwt}) async {
     final response = await http.delete(

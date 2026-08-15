@@ -112,7 +112,7 @@ class _HaileyDataPrivacyPageState extends ConsumerState<HaileyDataPrivacyPage> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'This will permanently erase your entire conversation history and everything Hailey has learned about you. This cannot be undone.',
+                    'This requests deletion of your Hailey conversation records and structured memory facts through two separate operations. Completed deletions cannot be undone; if either operation fails, the app reports an error and you can retry.',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 13,
@@ -322,7 +322,7 @@ class _HaileyDataPrivacyPageState extends ConsumerState<HaileyDataPrivacyPage> {
                 iconColor: accentColor,
                 collapsedIconColor: subtitleColor,
                 title: Text(
-                  'X-hale Privacy Policy',
+                  'X-hale data-handling summary',
                   style: TextStyle(
                     fontWeight: FontWeight.w600,
                     fontSize: 14,
@@ -330,20 +330,18 @@ class _HaileyDataPrivacyPageState extends ConsumerState<HaileyDataPrivacyPage> {
                   ),
                 ),
                 subtitle: Text(
-                  'Last updated: 2026-06-15',
+                  'Current implementation: 2026-08-15',
                   style: TextStyle(fontSize: 12, color: subtitleColor),
                 ),
                 children: [
                   _PolicySection(
-                    heading: 'What data we collect',
+                    heading: 'Data handled by X-hale',
                     body:
-                        '• Account information — email address and password (authentication only).\n'
-                        '• Quit profile — quit date, cigarettes per day, years smoking, pack price.\n'
-                        '• Diary entries — text entries you write in the app.\n'
-                        '• Chat history — your conversations with Hailey.\n'
-                        '• Hailey memory — facts Hailey extracts from conversations (triggers, coping strategies, emotional patterns).\n'
-                        '• Milestones and achievements — synced to your account.\n\n'
-                        'We do not collect device identifiers, location data, or any data unrelated to smoking cessation.',
+                        '• Account credentials and sessions — handled by Appwrite authentication.\n'
+                        '• Profile and cessation information — including quit date and smoking preferences.\n'
+                        '• Application records — including progress, diary entries, motivations, challenges, achievements, social content, and notification-related records.\n'
+                        '• Hailey records — conversation history and structured memory facts derived from conversations.\n\n'
+                        'The biometrics demonstration contains static placeholder values and does not collect wearable measurements or send biometric data to Hailey.',
                     textColor: textColor,
                     subtitleColor: subtitleColor,
                   ),
@@ -353,34 +351,35 @@ class _HaileyDataPrivacyPageState extends ConsumerState<HaileyDataPrivacyPage> {
                         '• To personalise Hailey\'s responses based on your quit history.\n'
                         '• To display your progress (days smoke-free, money saved, health benefits).\n'
                         '• To send optional push notifications if you enable them.\n\n'
-                        'We do not sell your data. We do not use your data for advertising.',
+                        'The implemented application does not contain an advertising or data-sale function.',
                     textColor: textColor,
                     subtitleColor: subtitleColor,
                   ),
                   _PolicySection(
                     heading: 'Where your data is stored',
                     body:
-                        'All personal data is stored on Appwrite Cloud (AES-256 encryption at rest, Google Cloud Platform, europe-west region).\n\n'
-                        'Conversations are processed in real time by Groq (LLM inference) and Qdrant Cloud (vector search). Neither service retains your conversation data after the request completes.',
+                        'X-hale account, application, conversation, and memory records are stored in the configured Appwrite Cloud project. The Hailey service is hosted on Hugging Face Spaces.\n\n'
+                        'To answer a message, Hailey may send relevant prompt context to Groq for language-model inference. Smoking-cessation questions may also be embedded through Cloudflare Workers AI, or locally when the configured fallback is active, and searched in Qdrant Cloud. Qdrant stores the curated knowledge vectors rather than your conversation history.\n\n'
+                        'Transport, processing, logging, and retention by external providers are governed by their own configurations and policies; this screen does not promise that providers retain no request data.',
                     textColor: textColor,
                     subtitleColor: subtitleColor,
                   ),
                   _PolicySection(
                     heading: 'Your rights',
                     body:
-                        '• View — see everything Hailey knows about you on the "Hailey\'s memory" screen.\n'
+                        '• View active memory — review the active structured facts Hailey may use on the "Hailey\'s memory" screen.\n'
                         '• Delete individual facts — tap the delete icon next to any fact.\n'
-                        '• Export your data — use the Export button below to copy all your data to the clipboard.\n'
-                        '• Delete all chatbot data — use the chatbot Delete button below.\n'
-                        '• Delete your account — permanently removes your Appwrite identity and X-hale application records.\n\n'
-                        'If you are in the EU, these rights are granted under GDPR (Articles 15–17, 20).',
+                        '• Export Hailey data — copy your complete Hailey chat history and structured memory records to the clipboard as JSON. This is not an export of every X-hale application record.\n'
+                        '• Delete chatbot data — request deletion of conversation history and structured memory facts using the control below.\n'
+                        '• Delete your account — request deletion of your Appwrite identity and X-hale records controlled by the configured project.\n\n'
+                        'For access, correction, portability, erasure, or other privacy requests beyond these in-app controls, use the contact address below.',
                     textColor: textColor,
                     subtitleColor: subtitleColor,
                   ),
                   _PolicySection(
                     heading: 'Data retention',
                     body:
-                        'Appwrite application records are retained while your account is active unless you delete them. Account deletion removes the Appwrite-owned records and authentication identity through the deletion workflow. Data already processed or retained independently by external service providers remains subject to those providers\' policies.',
+                        'The application does not promise a fixed erasure deadline or a universal provider-retention period. Appwrite application records remain until they are removed through an available deletion control or another authorized process. Account deletion removes records controlled by the configured Appwrite project and then the authentication identity. Data processed or retained independently by external providers remains subject to those providers\' policies and cannot be erased directly by this workflow.',
                     textColor: textColor,
                     subtitleColor: subtitleColor,
                   ),
@@ -500,7 +499,7 @@ class _HaileyDataPrivacyPageState extends ConsumerState<HaileyDataPrivacyPage> {
                   ),
                 ),
                 subtitle: Text(
-                  'Permanently erase your conversation history and everything Hailey has learned about you.',
+                  'Request deletion of Hailey conversation records and structured memory facts.',
                   style: TextStyle(fontSize: 12, color: subtitleColor),
                 ),
                 trailing: Icon(Icons.chevron_right, color: subtitleColor),
@@ -545,7 +544,7 @@ class _HaileyDataPrivacyPageState extends ConsumerState<HaileyDataPrivacyPage> {
                   ),
                 ),
                 subtitle: Text(
-                  'Permanently erase your account and Appwrite-owned application data.',
+                  'Request deletion of your account and records controlled by the configured Appwrite project.',
                   style: TextStyle(fontSize: 12, color: subtitleColor),
                 ),
                 trailing: Icon(Icons.chevron_right, color: subtitleColor),

@@ -9,11 +9,7 @@ class HaileyMemoryPage extends ConsumerStatefulWidget {
   final String userId;
   final String jwt;
 
-  const HaileyMemoryPage({
-    super.key,
-    required this.userId,
-    required this.jwt,
-  });
+  const HaileyMemoryPage({super.key, required this.userId, required this.jwt});
 
   @override
   ConsumerState<HaileyMemoryPage> createState() => _HaileyMemoryPageState();
@@ -48,12 +44,35 @@ class _HaileyMemoryPageState extends ConsumerState<HaileyMemoryPage> {
   Future<void> _deleteFact(String factId) async {
     try {
       await ChatService.deleteFact(factId: factId, jwt: widget.jwt);
-      if (mounted) setState(() => _facts.removeWhere((f) => f['fact_id'] == factId));
+      if (mounted) {
+        setState(() => _facts.removeWhere((f) => f['fact_id'] == factId));
+      }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to delete: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to delete: $e')));
+      }
+    }
+  }
+
+  Future<void> _confirmFact(String factId) async {
+    try {
+      final updated = await ChatService.confirmFact(
+        factId: factId,
+        jwt: widget.jwt,
+      );
+      if (mounted) {
+        setState(() {
+          final index = _facts.indexWhere((f) => f['fact_id'] == factId);
+          if (index != -1) _facts[index] = updated;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to confirm: $e')));
       }
     }
   }
@@ -62,76 +81,92 @@ class _HaileyMemoryPageState extends ConsumerState<HaileyMemoryPage> {
     final isDark = ref.read(userProvider.select((u) => u.theme == 'dark'));
     showDialog(
       context: context,
-      builder: (_) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        child: Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            gradient: isDark
-                ? AppThemes.darkDeleteDialogGradient
-                : AppThemes.lightDeleteDialogGradient,
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.warning_amber_rounded,
-                  size: 36,
-                  color: isDark
-                      ? AppThemes.darkDeleteButtonColor
-                      : AppThemes.lightDeleteButtonColor),
-              const SizedBox(height: 12),
-              Text('Remove "$label"?',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 15,
-                    color: isDark ? AppThemes.darkTextColor : Colors.black87,
-                  )),
-              const SizedBox(height: 8),
-              Text('Hailey will no longer use this fact in conversations.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: isDark ? AppThemes.darkSubtitleColor : Colors.black54,
-                  )),
-              const SizedBox(height: 20),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      builder:
+          (_) => Dialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                gradient:
+                    isDark
+                        ? AppThemes.darkDeleteDialogGradient
+                        : AppThemes.lightDeleteDialogGradient,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  ElevatedButton(
-                    onPressed: () => Navigator.pop(context),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor:
-                          AppThemes.elevatedButtonBackground(isDark),
-                      foregroundColor:
-                          isDark ? AppThemes.darkTextColor : Colors.black,
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12)),
-                    ),
-                    child: const Text('Cancel'),
+                  Icon(
+                    Icons.warning_amber_rounded,
+                    size: 36,
+                    color:
+                        isDark
+                            ? AppThemes.darkDeleteButtonColor
+                            : AppThemes.lightDeleteButtonColor,
                   ),
-                  ElevatedButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                      _deleteFact(factId);
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: isDark
-                          ? AppThemes.darkDeleteButtonColor
-                          : AppThemes.lightDeleteButtonColor,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12)),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Remove "$label"?',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15,
+                      color: isDark ? AppThemes.darkTextColor : Colors.black87,
                     ),
-                    child: const Text('Remove'),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Hailey will no longer use this fact in conversations.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 13,
+                      color:
+                          isDark ? AppThemes.darkSubtitleColor : Colors.black54,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      ElevatedButton(
+                        onPressed: () => Navigator.pop(context),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppThemes.elevatedButtonBackground(
+                            isDark,
+                          ),
+                          foregroundColor:
+                              isDark ? AppThemes.darkTextColor : Colors.black,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: const Text('Cancel'),
+                      ),
+                      ElevatedButton(
+                        onPressed: () {
+                          Navigator.pop(context);
+                          _deleteFact(factId);
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor:
+                              isDark
+                                  ? AppThemes.darkDeleteButtonColor
+                                  : AppThemes.lightDeleteButtonColor,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: const Text('Remove'),
+                      ),
+                    ],
                   ),
                 ],
               ),
-            ],
+            ),
           ),
-        ),
-      ),
     );
   }
 
@@ -184,17 +219,21 @@ class _HaileyMemoryPageState extends ConsumerState<HaileyMemoryPage> {
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
-          icon: Icon(Icons.arrow_back,
-              color: isDark ? AppThemes.darkTextColor : AppThemes.lightTextColor),
+          icon: Icon(
+            Icons.arrow_back,
+            color: isDark ? AppThemes.darkTextColor : AppThemes.lightTextColor,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
         title: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.psychology_outlined,
-                color:
-                    isDark ? AppThemes.darkTextColor : AppThemes.lightTextColor,
-                size: 22),
+            Icon(
+              Icons.psychology_outlined,
+              color:
+                  isDark ? AppThemes.darkTextColor : AppThemes.lightTextColor,
+              size: 22,
+            ),
             const SizedBox(width: 8),
             Text(
               'Hailey\'s memory',
@@ -213,9 +252,10 @@ class _HaileyMemoryPageState extends ConsumerState<HaileyMemoryPage> {
       ),
       body: Container(
         decoration: BoxDecoration(
-          gradient: isDark
-              ? AppThemes.darkMotivationGradient
-              : AppThemes.lightMotivationGradient,
+          gradient:
+              isDark
+                  ? AppThemes.darkMotivationGradient
+                  : AppThemes.lightMotivationGradient,
         ),
         child: _buildBody(isDark),
       ),
@@ -226,7 +266,8 @@ class _HaileyMemoryPageState extends ConsumerState<HaileyMemoryPage> {
     if (_isLoading) {
       return Center(
         child: CircularProgressIndicator(
-          color: isDark ? AppThemes.darkDiaryTextColor : const Color(0xFF0077B6),
+          color:
+              isDark ? AppThemes.darkDiaryTextColor : const Color(0xFF0077B6),
         ),
       );
     }
@@ -240,17 +281,15 @@ class _HaileyMemoryPageState extends ConsumerState<HaileyMemoryPage> {
             children: [
               Icon(Icons.error_outline, size: 48, color: Colors.red[300]),
               const SizedBox(height: 12),
-              Text(_error!,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                      color: isDark
-                          ? AppThemes.darkSubtitleColor
-                          : Colors.black54)),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: _loadFacts,
-                child: const Text('Retry'),
+              Text(
+                _error!,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: isDark ? AppThemes.darkSubtitleColor : Colors.black54,
+                ),
               ),
+              const SizedBox(height: 16),
+              ElevatedButton(onPressed: _loadFacts, child: const Text('Retry')),
             ],
           ),
         ),
@@ -264,30 +303,28 @@ class _HaileyMemoryPageState extends ConsumerState<HaileyMemoryPage> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.psychology_outlined,
-                  size: 56,
-                  color: isDark
-                      ? AppThemes.darkSubtitleColor
-                      : Colors.black26),
+              Icon(
+                Icons.psychology_outlined,
+                size: 56,
+                color: isDark ? AppThemes.darkSubtitleColor : Colors.black26,
+              ),
               const SizedBox(height: 16),
               Text(
                 'Hailey hasn\'t learned anything about you yet.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                    fontSize: 15,
-                    color: isDark
-                        ? AppThemes.darkSubtitleColor
-                        : Colors.black54),
+                  fontSize: 15,
+                  color: isDark ? AppThemes.darkSubtitleColor : Colors.black54,
+                ),
               ),
               const SizedBox(height: 8),
               Text(
                 'Have a few conversations and she\'ll start remembering your triggers, coping strategies, and more.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                    fontSize: 13,
-                    color: isDark
-                        ? AppThemes.darkSubtitleColor
-                        : Colors.black38),
+                  fontSize: 13,
+                  color: isDark ? AppThemes.darkSubtitleColor : Colors.black38,
+                ),
               ),
             ],
           ),
@@ -304,11 +341,10 @@ class _HaileyMemoryPageState extends ConsumerState<HaileyMemoryPage> {
           Padding(
             padding: const EdgeInsets.only(bottom: 12),
             child: Text(
-              'These are the facts Hailey uses to personalise your experience. You can remove any fact at any time.',
+              'Current facts help Hailey personalise your experience. Outdated facts are not used unless you confirm them. You can remove any fact at any time.',
               style: TextStyle(
                 fontSize: 13,
-                color:
-                    isDark ? AppThemes.darkSubtitleColor : Colors.black54,
+                color: isDark ? AppThemes.darkSubtitleColor : Colors.black54,
               ),
             ),
           ),
@@ -318,14 +354,18 @@ class _HaileyMemoryPageState extends ConsumerState<HaileyMemoryPage> {
               icon: _typeIcons[entry.key] ?? Icons.info_outline,
               isDark: isDark,
             ),
-            ...entry.value.map((fact) => _FactTile(
-                  fact: fact,
-                  isDark: isDark,
-                  onDelete: () => _confirmDelete(
-                    fact['fact_id'] as String,
-                    _formatKey(fact['fact_key'] as String? ?? 'fact'),
-                  ),
-                )),
+            ...entry.value.map(
+              (fact) => _FactTile(
+                fact: fact,
+                isDark: isDark,
+                onDelete:
+                    () => _confirmDelete(
+                      fact['fact_id'] as String,
+                      _formatKey(fact['fact_key'] as String? ?? 'fact'),
+                    ),
+                onConfirm: () => _confirmFact(fact['fact_id'] as String),
+              ),
+            ),
             const SizedBox(height: 8),
           ],
         ],
@@ -353,20 +393,22 @@ class _GroupHeader extends StatelessWidget {
       padding: const EdgeInsets.only(top: 4, bottom: 6),
       child: Row(
         children: [
-          Icon(icon,
-              size: 18,
-              color: isDark
-                  ? AppThemes.darkDiaryTextColor
-                  : const Color(0xFF0077B6)),
+          Icon(
+            icon,
+            size: 18,
+            color:
+                isDark ? AppThemes.darkDiaryTextColor : const Color(0xFF0077B6),
+          ),
           const SizedBox(width: 6),
           Text(
             label,
             style: TextStyle(
               fontWeight: FontWeight.bold,
               fontSize: 14,
-              color: isDark
-                  ? AppThemes.darkDiaryTextColor
-                  : const Color(0xFF0077B6),
+              color:
+                  isDark
+                      ? AppThemes.darkDiaryTextColor
+                      : const Color(0xFF0077B6),
             ),
           ),
         ],
@@ -380,17 +422,27 @@ class _FactTile extends StatelessWidget {
     required this.fact,
     required this.isDark,
     required this.onDelete,
+    required this.onConfirm,
   });
 
   final Map<String, dynamic> fact;
   final bool isDark;
   final VoidCallback onDelete;
+  final VoidCallback onConfirm;
 
   @override
   Widget build(BuildContext context) {
-    final key = _HaileyMemoryPageState._formatKey(fact['fact_key'] as String? ?? '');
+    final key = _HaileyMemoryPageState._formatKey(
+      fact['fact_key'] as String? ?? '',
+    );
     final value = fact['fact_value'] as String? ?? '';
     final confidence = (fact['confidence'] as num?)?.toDouble() ?? 0.0;
+    final isStale = fact['is_stale'] == true;
+    final lastConfirmed = DateTime.tryParse(
+      fact['last_confirmed'] as String? ??
+          fact['first_observed'] as String? ??
+          '',
+    );
 
     return Container(
       margin: const EdgeInsets.only(bottom: 6),
@@ -406,32 +458,61 @@ class _FactTile extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(key,
-                    style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 14,
-                      color: isDark
-                          ? AppThemes.darkTextColor
-                          : Colors.black87,
-                    )),
+                Text(
+                  key,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                    color: isDark ? AppThemes.darkTextColor : Colors.black87,
+                  ),
+                ),
                 const SizedBox(height: 2),
-                Text(value,
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: isDark
-                          ? AppThemes.darkSubtitleColor
-                          : Colors.black54,
-                    )),
+                Text(
+                  value,
+                  style: TextStyle(
+                    fontSize: 13,
+                    color:
+                        isDark ? AppThemes.darkSubtitleColor : Colors.black54,
+                  ),
+                ),
                 const SizedBox(height: 4),
                 _ConfidenceBar(confidence: confidence, isDark: isDark),
+                const SizedBox(height: 5),
+                Text(
+                  lastConfirmed == null
+                      ? 'Confirmation date unavailable'
+                      : 'Last confirmed ${lastConfirmed.toLocal().day}/${lastConfirmed.toLocal().month}/${lastConfirmed.toLocal().year}',
+                  style: TextStyle(
+                    fontSize: 11,
+                    color:
+                        isDark ? AppThemes.darkSubtitleColor : Colors.black38,
+                  ),
+                ),
+                if (isStale) ...[
+                  const SizedBox(height: 7),
+                  Text(
+                    'Outdated — Hailey is not using this fact. Confirm it only if it is still accurate.',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.orange[700],
+                    ),
+                  ),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: TextButton.icon(
+                      onPressed: onConfirm,
+                      icon: const Icon(Icons.check_circle_outline, size: 17),
+                      label: const Text('Still accurate'),
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
           IconButton(
             icon: const Icon(Icons.close, size: 18),
-            color: isDark
-                ? AppThemes.darkSubtitleColor
-                : Colors.black38,
+            color: isDark ? AppThemes.darkSubtitleColor : Colors.black38,
             splashRadius: 16,
             tooltip: 'Remove this fact',
             onPressed: onDelete,
@@ -450,9 +531,10 @@ class _ConfidenceBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = confidence >= 0.8
-        ? Colors.green[400]!
-        : confidence >= 0.5
+    final color =
+        confidence >= 0.8
+            ? Colors.green[400]!
+            : confidence >= 0.5
             ? Colors.orange[400]!
             : Colors.red[300]!;
 

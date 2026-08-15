@@ -8,6 +8,7 @@ from __future__ import annotations
 from functools import lru_cache
 from typing import Optional
 
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -46,6 +47,8 @@ class Settings(BaseSettings):
     qdrant_kb_collection: str = "kb_chunks"
     qdrant_health_benefits_collection: str = "health_benefit_chunks"
     qdrant_vector_size: int = 384   # bge-small-en-v1.5 output dim
+    retrieval_min_score: float = Field(default=0.60, ge=-1.0, le=1.0)
+    retrieval_candidate_multiplier: int = Field(default=4, ge=1, le=20)
 
     # ── Appwrite ────────────────────────────────────────────────────────────
     appwrite_endpoint: str = "https://fra.cloud.appwrite.io/v1"
@@ -90,10 +93,6 @@ class Settings(BaseSettings):
     request_timeout_seconds: int = 60
     max_conversation_turns: int = 10
     max_user_facts: int = 30
-
-    # ── Auth ────────────────────────────────────────────────────────────────
-    jwt_cache_ttl_seconds: int = 60   # how long a verified JWT is trusted in-process
-
 
 @lru_cache
 def get_settings() -> Settings:
