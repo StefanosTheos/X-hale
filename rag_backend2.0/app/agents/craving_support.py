@@ -10,6 +10,7 @@ import json
 
 from app.agents.base import AgentBase
 from app.llm.client import get_triage_client
+from app.llm.schemas import SPECIALIST_DRAFT_SCHEMA
 from app.models.retrieval import AppAction, KeyPoint, SpecialistDraft
 from app.observability.logging import get_logger
 from app.prompts.craving import CRAVING_SYSTEM, CRAVING_USER_TEMPLATE
@@ -38,7 +39,10 @@ class CravingSupportAgent(AgentBase):
             },
         ]
         try:
-            raw = await client.complete(messages=messages, temperature=0.1, json_mode=True, max_tokens=512)
+            raw = await client.complete(
+                messages=messages, temperature=0.1, json_mode=True,
+                response_schema=SPECIALIST_DRAFT_SCHEMA, max_tokens=512,
+            )
             data = json.loads(raw)
             key_points = [KeyPoint(**kp) for kp in data.get("key_points", [])]
             deeplinks_raw = data.get("suggested_deeplinks", [])

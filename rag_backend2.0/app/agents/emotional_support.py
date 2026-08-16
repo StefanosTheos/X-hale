@@ -10,6 +10,7 @@ import json
 
 from app.agents.base import AgentBase
 from app.llm.client import get_triage_client
+from app.llm.schemas import SPECIALIST_DRAFT_SCHEMA
 from app.models.retrieval import KeyPoint, SpecialistDraft
 from app.observability.logging import get_logger
 from app.prompts.emotional import EMOTIONAL_SYSTEM, EMOTIONAL_USER_TEMPLATE
@@ -40,7 +41,10 @@ class EmotionalSupportAgent(AgentBase):
             },
         ]
         try:
-            raw = await client.complete(messages=messages, temperature=0.3, json_mode=True, max_tokens=512)
+            raw = await client.complete(
+                messages=messages, temperature=0.3, json_mode=True,
+                response_schema=SPECIALIST_DRAFT_SCHEMA, max_tokens=512,
+            )
             data = json.loads(raw)
             key_points = [KeyPoint(**kp) for kp in data.get("key_points", [])]
             return SpecialistDraft(

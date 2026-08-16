@@ -1,10 +1,42 @@
 """Cloudflare embedding transport and local fallback behavior."""
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 import requests
 
 from app.llm import workers_ai_client
+
+
+def test_cloudflare_transport_uses_default_tls_first():
+    response = MagicMock()
+    response.json.return_value = {"result": {"data": [[0.0] * 384]}}
+    with patch.object(workers_ai_client.requests, "post", return_value=response) as post:
+        result = workers_ai_client._post_json_sync("https://example.test", {"text": ["x"]})
+
+    assert result == response.json.return_value
+    post.assert_called_once()
+    response.raise_for_status.assert_called_once()
+
+
+def test_cloudflare_transport_retries_tls12_after_default_tls_error():
+    response = MagicMock()
+    response.json.return_value = {"ok": True}
+    session = MagicMock()
+    session.__enter__.return_value = session
+    session.post.return_value = response
+    with (
+        patch.object(
+            workers_ai_client.requests,
+            "post",
+            side_effect=requests.exceptions.SSLError("default TLS failed"),
+        ),
+        patch.object(workers_ai_client.requests, "Session", return_value=session),
+    ):
+        result = workers_ai_client._post_json_sync("https://example.test", {})
+
+    assert result == {"ok": True}
+    session.mount.assert_called_once()
+    response.raise_for_status.assert_called_once()
 
 
 @pytest.mark.asyncio

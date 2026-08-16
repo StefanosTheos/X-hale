@@ -32,6 +32,7 @@ class GeminiClient:
         messages: list[dict],
         temperature: float = 0.7,
         json_mode: bool = False,
+        response_schema: dict | None = None,
         max_tokens: int = 1024,
     ) -> str:
         async def _call() -> str:

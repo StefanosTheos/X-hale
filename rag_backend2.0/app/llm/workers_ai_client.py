@@ -73,12 +73,18 @@ class _TLS12Adapter(HTTPAdapter):
 
 
 def _post_json_sync(url: str, payload: dict, timeout: float = 30.0) -> dict:
-    """POST through requests; its transport is reliable in the Space runtime."""
-    with requests.Session() as session:
-        session.mount("https://", _TLS12Adapter())
-        response = session.post(url, headers=_headers(), json=payload, timeout=timeout)
+    """POST with normal TLS negotiation, retrying TLS 1.2 for legacy edges."""
+    try:
+        response = requests.post(url, headers=_headers(), json=payload, timeout=timeout)
         response.raise_for_status()
         return response.json()
+    except requests.exceptions.SSLError as exc:
+        logger.warning("workers_ai_default_tls_failed", error=str(exc)[:300])
+        with requests.Session() as session:
+            session.mount("https://", _TLS12Adapter())
+            response = session.post(url, headers=_headers(), json=payload, timeout=timeout)
+            response.raise_for_status()
+            return response.json()
 
 
 async def _post_json(url: str, payload: dict, timeout: float = 30.0) -> dict:
@@ -115,7 +121,10 @@ async def embed(text: str) -> list[float]:
     except requests.RequestException as exc:
         if not settings.enable_local_embedding_fallback:
             raise
-        logger.warning("workers_ai_embedding_fallback", error_type=type(exc).__name__)
+        logger.warning(
+            "workers_ai_embedding_fallback",
+            error_type=type(exc).__name__, error=str(exc)[:300],
+        )
         return (await embed_local([text]))[0]
 
 
@@ -129,7 +138,10 @@ async def embed_batch(texts: list[str]) -> list[list[float]]:
     except requests.RequestException as exc:
         if not settings.enable_local_embedding_fallback:
             raise
-        logger.warning("workers_ai_embedding_batch_fallback", error_type=type(exc).__name__)
+        logger.warning(
+            "workers_ai_embedding_batch_fallback",
+            error_type=type(exc).__name__, error=str(exc)[:300],
+        )
         return await embed_local(texts)
 
 
@@ -144,6 +156,7 @@ class WorkersAIClient:
         messages: list[dict],
         temperature: float = 0.0,
         json_mode: bool = False,
+        response_schema: dict | None = None,
         max_tokens: int = 512,
     ) -> str:
         url = _base_url(self._model)

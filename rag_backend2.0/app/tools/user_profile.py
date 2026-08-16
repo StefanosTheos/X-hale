@@ -87,7 +87,7 @@ async def get_user_profile(user_id: str) -> UserProfile:
         num_milestones_completed=d.get("numMilestonesCompleted", 0),
         num_diary_entries=d.get("diaryCount", d.get("numDiaryEntries", 0)),
         num_health_benefits_reached=d.get("numHealthBenefit", 0),
-        locale=d.get("language", d.get("locale", "en")),
+        locale=d.get("language") or d.get("locale") or "en",
         record_created_at=_parse_datetime(docs[0].createdat),
         record_updated_at=_parse_datetime(docs[0].updatedat),
     )

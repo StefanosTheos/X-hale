@@ -10,6 +10,7 @@ from __future__ import annotations
 import json
 
 from app.llm.client import get_triage_client
+from app.llm.schemas import TRIAGE_SCHEMA
 from app.models.user_facts import TriageResult
 from app.observability.logging import get_logger
 from app.observability.metrics import record_fallback, record_triage
@@ -56,6 +57,7 @@ async def run_triage(user_input: str) -> TriageResult:
             messages=messages,
             temperature=0.0,
             json_mode=True,
+            response_schema=TRIAGE_SCHEMA,
             max_tokens=512,
         )
         data = json.loads(_extract_json(raw))

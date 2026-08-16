@@ -11,6 +11,7 @@ import asyncio
 import json
 
 from app.llm.client import get_triage_client
+from app.llm.schemas import MEMORY_FACTS_SCHEMA
 from app.memory.user_facts_store import upsert_fact
 from app.models.user_facts import UserFact
 from app.observability.logging import get_logger
@@ -45,7 +46,10 @@ async def curate_memory(
     for attempt in range(1, max_attempts + 1):
         try:
             client = get_triage_client()
-            raw = await client.complete(messages=messages, temperature=0.0, json_mode=True, max_tokens=512)
+            raw = await client.complete(
+                messages=messages, temperature=0.0, json_mode=True,
+                response_schema=MEMORY_FACTS_SCHEMA, max_tokens=512,
+            )
             facts_raw: list[dict] = json.loads(raw)
             if not isinstance(facts_raw, list):
                 raise ValueError("memory curator output must be a JSON array")

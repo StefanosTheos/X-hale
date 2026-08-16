@@ -16,13 +16,24 @@ import asyncio
 import json
 from typing import AsyncIterator
 
-from groq import AsyncGroq, RateLimitError
+from groq import AsyncGroq, BadRequestError, RateLimitError
 
 from app.config import settings
 from app.observability.logging import get_logger
 from app.llm.usage import record_usage
 
 logger = get_logger(__name__)
+
+
+def _structured_output_error_code(exc: BadRequestError) -> str:
+    """Extract Groq's validation code across SDK response-body shapes."""
+    body = getattr(exc, "body", None) or {}
+    if not isinstance(body, dict):
+        return ""
+    nested = body.get("error")
+    if isinstance(nested, dict):
+        return str(nested.get("code", ""))
+    return str(body.get("code", ""))
 
 
 class GroqClient:
@@ -39,6 +50,7 @@ class GroqClient:
         messages: list[dict],
         temperature: float = 0.7,
         json_mode: bool = False,
+        response_schema: dict | None = None,
         max_tokens: int = 1024,
     ) -> str:
         """Non-streaming completion with retry on 429."""
@@ -50,13 +62,33 @@ class GroqClient:
                 "temperature": temperature,
                 "max_tokens": max_tokens,
             }
-            if json_mode:
+            if response_schema is not None:
+                kwargs["response_format"] = {
+                    "type": "json_schema",
+                    "json_schema": {
+                        "name": "hailey_response",
+                        "strict": True,
+                        "schema": response_schema,
+                    },
+                }
+            elif json_mode:
                 kwargs["response_format"] = {"type": "json_object"}
-
-            resp = await asyncio.wait_for(
-                self._client.chat.completions.create(**kwargs),
-                timeout=settings.request_timeout_seconds,
-            )
+            try:
+                resp = await asyncio.wait_for(
+                    self._client.chat.completions.create(**kwargs),
+                    timeout=settings.request_timeout_seconds,
+                )
+            except BadRequestError as exc:
+                error_code = _structured_output_error_code(exc)
+                if error_code not in {"json_validate_failed", "json_schema_validation_failed"}:
+                    raise
+                logger.warning("groq_structured_output_fallback", error_code=error_code)
+                fallback_kwargs = dict(kwargs)
+                fallback_kwargs.pop("response_format", None)
+                resp = await asyncio.wait_for(
+                    self._client.chat.completions.create(**fallback_kwargs),
+                    timeout=settings.request_timeout_seconds,
+                )
             record_usage(self._model, resp.usage)
             return resp.choices[0].message.content or ""
 
@@ -78,7 +110,7 @@ class GroqClient:
                     temperature=temperature,
                     max_tokens=max_tokens,
                     stream=True,
-                    stream_options={"include_usage": True},
+                    extra_body={"stream_options": {"include_usage": True}},
                 ),
                 timeout=settings.request_timeout_seconds,
             )
