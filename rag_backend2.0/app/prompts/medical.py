@@ -20,7 +20,9 @@ Return ONLY valid JSON matching this schema:
 }
 
 Rules:
-- key_points: 2-5 claims maximum. Each claim must have a source_id from the retrieved content.
+- key_points: 1-5 claims maximum. Each claim must copy the exact value after
+  SOURCE_ID= from the passage that supports it. Never use a passage number such
+  as "1", "2", or "3" as a source_id.
 - tone_hint: always "factual_reassuring" for this agent.
 - raw_context: include a brief (≤150 words) paraphrase of the most relevant retrieved passage.
 - If retrieved content does not contain relevant information, set key_points to [] and explain in raw_context.

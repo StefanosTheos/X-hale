@@ -37,9 +37,11 @@ class RetrievalResult(BaseModel):
         if not self.chunks:
             return "(No relevant knowledge base content found)"
         lines: list[str] = []
-        for i, chunk in enumerate(self.chunks, 1):
-            tag = f"[{chunk.source_type.upper()}:{chunk.source_id}]"
-            lines.append(f"[{i}] {tag}\n{chunk.content[:400].strip()}")
+        for chunk in self.chunks:
+            # Do not add a competing numeric label here. Models previously copied
+            # "1" instead of the canonical source_id, which broke claim attribution.
+            tag = f"[SOURCE_ID={chunk.source_id}; TYPE={chunk.source_type.upper()}]"
+            lines.append(f"{tag}\n{chunk.content[:500].strip()}")
         return "\n\n".join(lines)
 
 

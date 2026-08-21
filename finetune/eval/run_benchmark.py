@@ -718,7 +718,9 @@ def _select_shard(cases: list[TestCase], shard_index: int, shard_count: int) -> 
 def _is_quota_error(detail: str) -> bool:
     lowered = detail.lower()
     return (
-        "tokens per day" in lowered
+        "quota_exhausted" in lowered
+        or "daily token quota" in lowered
+        or "tokens per day" in lowered
         or "rate_limit_exceeded" in lowered and "token" in lowered
         or "resource_exhausted" in lowered and "quota" in lowered
     )

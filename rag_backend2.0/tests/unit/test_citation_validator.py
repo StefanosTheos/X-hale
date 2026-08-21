@@ -1,6 +1,7 @@
 """Claim entailment and citation coverage checks."""
 from app.models.retrieval import Citation
 from app.safety.citation_validator import claim_is_represented, validate_citations
+from app.agents.synthesizer import post_process_synthesis
 
 
 def _citation(source_id: str, snippet: str = "Recovery begins quickly after quitting.") -> Citation:
@@ -97,3 +98,28 @@ def test_retrieved_source_without_attributed_claim_has_rejection_reason():
         "A cautious answer.", {}, {"nhs": _citation("nhs")}, [],
     )
     assert result.rejection_reasons["nhs"] == ["no_specialist_claim_attributed"]
+
+
+def test_medical_post_processing_keeps_supported_canonical_citation():
+    citation = _citation("nhs_nrt", "Nicotine replacement therapy helps manage cravings.")
+    state = {
+        "requested_specialists": ["medical"],
+        "specialist_drafts": {
+            "medical": {
+                "key_points": [{
+                    "claim": "Nicotine replacement therapy helps manage cravings.",
+                    "source_id": "nhs_nrt",
+                }],
+                "citations": [citation.model_dump()],
+            },
+        },
+        "trace": {},
+    }
+    text, citations = post_process_synthesis(
+        "Nicotine replacement therapy helps manage cravings.\n"
+        '<!-- citations: ["nhs_nrt"] -->',
+        state,
+    )
+    assert text == "Nicotine replacement therapy helps manage cravings."
+    assert citations == [citation]
+    assert state["trace"]["citation_validation"]["rejection_reasons"] == {}

@@ -19,6 +19,43 @@ from app.retrieval.hybrid_retriever import retrieve
 logger = get_logger(__name__)
 
 
+def _parse_json_object(raw: str) -> dict:
+    """Parse strict JSON or the first JSON object in a fallback model reply."""
+    try:
+        value = json.loads(raw)
+    except json.JSONDecodeError:
+        start = raw.find("{")
+        end = raw.rfind("}")
+        if start < 0 or end <= start:
+            raise
+        value = json.loads(raw[start:end + 1])
+    if not isinstance(value, dict):
+        raise ValueError("medical specialist output must be a JSON object")
+    return value
+
+
+def _canonicalise_key_points(
+    raw_key_points: list[dict], retrieval,
+) -> list[KeyPoint]:
+    """Accept only retrieved source IDs, repairing legacy numeric references."""
+    source_ids = [chunk.source_id for chunk in retrieval.chunks]
+    by_casefold = {source_id.casefold(): source_id for source_id in source_ids}
+    key_points: list[KeyPoint] = []
+    for value in raw_key_points:
+        claim = str(value.get("claim", "")).strip()
+        raw_source_id = str(value.get("source_id", "")).strip()
+        source_id = by_casefold.get(raw_source_id.casefold())
+        if source_id is None and raw_source_id.isdigit():
+            index = int(raw_source_id) - 1
+            if 0 <= index < len(source_ids):
+                source_id = source_ids[index]
+        if claim and source_id:
+            key_points.append(KeyPoint(claim=claim, source_id=source_id))
+        elif claim:
+            logger.warning("medical_key_point_invalid_source", source_id=raw_source_id)
+    return key_points
+
+
 class MedicalAgent(AgentBase):
     name = "medical"
 
@@ -66,8 +103,8 @@ class MedicalAgent(AgentBase):
                 messages=messages, temperature=0.0, json_mode=True,
                 response_schema=SPECIALIST_DRAFT_SCHEMA, max_tokens=512,
             )
-            data = json.loads(raw)
-            key_points = [KeyPoint(**kp) for kp in data.get("key_points", [])]
+            data = _parse_json_object(raw)
+            key_points = _canonicalise_key_points(data.get("key_points", []), retrieval)
             trace = {
                 "query": retrieval.query,
                 "strategy": retrieval.strategy_used,

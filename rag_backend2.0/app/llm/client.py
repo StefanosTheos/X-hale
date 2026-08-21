@@ -58,9 +58,17 @@ async def retry_with_backoff(
         except Exception as exc:
             exc_name = type(exc).__name__
             status = getattr(exc, "status_code", None)
+            detail = str(exc).lower()
+            # A provider daily-token cap cannot recover during this request.
+            # Surface it immediately so the benchmark can checkpoint instead of
+            # spending time and requests on nested retries.
+            if "tokens per day" in detail or (
+                "rate_limit_exceeded" in detail and "daily" in detail and "token" in detail
+            ):
+                raise
             is_retryable = (
                 any(e in exc_name for e in _RETRYABLE_EXC)
-                or "429" in str(exc)
+                or "429" in detail
                 or status in _RETRYABLE_STATUS
             )
             if is_retryable:

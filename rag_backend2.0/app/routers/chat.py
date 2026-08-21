@@ -15,7 +15,10 @@ SSE event types:
 """
 from __future__ import annotations
 
+import asyncio
 import uuid
+
+from groq import RateLimitError
 
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import StreamingResponse
@@ -175,6 +178,20 @@ async def chat(
                 turn_id=response_turn_id, usage=benchmark_usage, trace=benchmark_trace,
             )
 
+        except RateLimitError as exc:
+            logger.warning("chat_provider_quota_exhausted", user_id=user_id, error=str(exc))
+            record_request("quota_exhausted")
+            yield error_event(
+                "quota_exhausted",
+                "The language-model provider's daily token quota is exhausted; retry later.",
+            )
+        except asyncio.TimeoutError:
+            logger.warning("chat_provider_timeout", user_id=user_id)
+            record_request("provider_timeout")
+            yield error_event(
+                "provider_timeout",
+                "The language-model provider timed out; retry later.",
+            )
         except Exception as exc:
             logger.error("chat_endpoint_error", user_id=user_id, error=str(exc))
             record_request("error")

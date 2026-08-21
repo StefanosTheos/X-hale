@@ -41,7 +41,9 @@ class GroqClient:
         self._model = model or settings.groq_triage_model
         self._client = AsyncGroq(
             api_key=settings.groq_api_key,
-            max_retries=4,
+            # retry_with_backoff is the single retry owner. SDK retries previously
+            # nested beneath it, obscuring quota failures and exceeding request timeouts.
+            max_retries=0,
             timeout=55.0,
         )
 
@@ -123,7 +125,7 @@ class GroqClient:
                     yield delta
         except RateLimitError:
             logger.error("groq_rate_limit_during_stream")
-            yield "\n\n*[Hailey is temporarily unavailable — please try again in a moment]*"
+            raise
         except asyncio.TimeoutError:
             logger.error("groq_stream_timeout")
-            yield "\n\n*[Response timed out — please try again]*"
+            raise

@@ -34,3 +34,9 @@ def test_error_event_format():
     ev = error_event("internal_error", "Something went wrong")
     assert "event: error" in ev
     assert "internal_error" in ev
+
+
+def test_quota_error_event_is_machine_readable():
+    ev = error_event("quota_exhausted", "The daily token quota is exhausted.")
+    assert "quota_exhausted" in ev
+    assert "daily token quota" in ev
