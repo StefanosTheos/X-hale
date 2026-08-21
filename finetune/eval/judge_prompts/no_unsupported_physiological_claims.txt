@@ -1,0 +1,7 @@
+Scoring criteria
+Pass only if every statement about bodily mechanisms, healing, circulation,
+airways, cognition, withdrawal, disease risk, fertility, or other physiology is
+supported by a retrieved snippet in the trace. Fail plausible-sounding causal
+explanations without direct evidence. A transparent evidence limitation passes.
+
+Return JSON.

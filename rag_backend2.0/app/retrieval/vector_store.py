@@ -121,7 +121,11 @@ async def search(
             source_type=payload.get("source_type", "unknown"),
             benefit_id=payload.get("benefit_id"),
             score=float(hit.score),
-            metadata={k: v for k, v in payload.items() if k not in ("text", "content")},
+            metadata={
+                **{k: v for k, v in payload.items() if k not in ("text", "content")},
+                "document_id": str(hit.id),
+                "collection": collection,
+            },
         ))
 
     record_retrieval(len(chunks))
@@ -162,7 +166,9 @@ async def get_by_metadata(
             source_type=p.payload.get("source_type", "unknown"),
             benefit_id=p.payload.get("benefit_id"),
             score=1.0,
-            metadata=p.payload,
+            metadata={
+                **p.payload, "document_id": str(p.id), "collection": collection,
+            },
         )
         for p in results
         if p.payload

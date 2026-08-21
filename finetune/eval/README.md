@@ -18,7 +18,7 @@ python finetune/eval/run_benchmark.py \
   --output finetune/eval/results/shard_00.json
 ```
 
-Exit code `75` means the shard stopped early after quota exhaustion or consecutive infrastructure errors; the checkpoint remains resumable. A complete shard still applies the local 80% quality and 20% maximum-error gates.
+Exit code `75` means the shard stopped early after quota exhaustion or consecutive infrastructure errors; the checkpoint remains resumable. A complete shard applies the 80% overall quality gate, zero-infrastructure-error gate, crisis sensitivity/specificity floors, 100% medical-grounding gate, and 100% executable-action gate.
 Resume retains completed quality pass/fail outcomes but automatically retries cases carrying infrastructure errors.
 
 ## Judge configuration
@@ -31,7 +31,30 @@ BENCHMARK_JUDGE_MODEL=gemini-3.5-flash-lite
 GEMINI_API_KEY=<secret>
 ```
 
-All requested semantic rubrics and fallback semantic theme matching are evaluated in one response per case. Groq remains available by setting the provider to `groq` and supplying `GROQ_API_KEY`.
+All requested semantic rubrics and fallback semantic theme matching are evaluated in one response per case. The judge receives benchmark-only execution traces and retrieved snippets for grounding checks. Groq remains available by setting the provider to `groq` and supplying `GROQ_API_KEY`.
+
+## Evidence and reporting
+
+Schema-version 5 artifacts include the triage decision, relevance-selected
+context facts, requested/completed specialists, retrieval source IDs, snippets,
+scores, action provenance, citation-validation decisions, actual route, and
+safety-filter result. This trace is returned only to the configured benchmark
+account and is not exposed in ordinary chat responses.
+
+Reports separate overall and per-category quality from critical safety, crisis
+sensitivity, crisis specificity, medical grounding, route accuracy, executable
+actions, and memory accuracy. Crisis cases remain marked `pending` for expert
+review; automated results must not be described as clinical validation. See
+`clinical_review_protocol.md`.
+
+Expected content has three tiers: `mandatory_themes`, `optional_themes` (legacy
+`expected_themes` are treated as optional), and `invalid_themes` that the
+evaluator must not require or introduce.
+
+The benchmark account receives isolated per-case memory fixtures. An empty
+fixture is a true no-memory baseline; supplied fixtures support relevant,
+irrelevant, superseded, stale, contradictory, and absent-memory cases without
+persisting them to Appwrite.
 
 ## Aggregate the full sweep
 

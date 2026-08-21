@@ -14,7 +14,7 @@ from app.llm.schemas import SPECIALIST_DRAFT_SCHEMA
 from app.models.retrieval import AppAction, KeyPoint, SpecialistDraft
 from app.observability.logging import get_logger
 from app.prompts.craving import CRAVING_SYSTEM, CRAVING_USER_TEMPLATE
-from app.tools.app_actions import get_craving_actions
+from app.tools.app_actions import get_craving_actions, validate_action
 
 logger = get_logger(__name__)
 
@@ -46,20 +46,32 @@ class CravingSupportAgent(AgentBase):
             data = json.loads(raw)
             key_points = [KeyPoint(**kp) for kp in data.get("key_points", [])]
             deeplinks_raw = data.get("suggested_deeplinks", [])
-            deeplinks = [AppAction(**d) for d in deeplinks_raw] if deeplinks_raw else get_craving_actions(3)
+            proposed = [AppAction(**d) for d in deeplinks_raw]
+            deeplinks = [
+                action.model_copy(update={"provenance": "model_selected"})
+                for action in proposed if validate_action(action)
+            ]
+            provenance = "model_selected"
+            if not deeplinks:
+                deeplinks = get_craving_actions(3, user_input)
+                provenance = "fallback"
             return SpecialistDraft(
                 agent=self.name,
                 key_points=key_points,
                 tone_hint="urge_surfing",
                 raw_context=data.get("raw_context", ""),
                 suggested_deeplinks=deeplinks,
+                action_provenance=provenance,
             )
         except (json.JSONDecodeError, ValueError) as exc:
             logger.warning("craving_agent_parse_failed", error=str(exc))
             return SpecialistDraft(
                 agent=self.name,
-                key_points=[KeyPoint(claim="Cravings peak at 3-5 minutes and then pass. You can do this.")],
+                key_points=[KeyPoint(
+                    claim="Focus on one manageable, smoke-free action in this moment."
+                )],
                 tone_hint="urge_surfing",
                 raw_context="",
-                suggested_deeplinks=get_craving_actions(3),
+                suggested_deeplinks=get_craving_actions(3, user_input),
+                action_provenance="fallback",
             )

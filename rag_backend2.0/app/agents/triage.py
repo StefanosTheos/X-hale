@@ -8,6 +8,7 @@ Falls back to safe defaults on any parse failure (and emits a metric).
 from __future__ import annotations
 
 import json
+import re
 
 from app.llm.client import get_triage_client
 from app.llm.schemas import TRIAGE_SCHEMA
@@ -30,7 +31,7 @@ _SAFE_DEFAULT = TriageResult(
 )
 
 
-async def run_triage(user_input: str) -> TriageResult:
+async def run_triage(user_input: str, memory=None) -> TriageResult:
     """
     Classify the user input. Always returns a TriageResult.
     Layer 1 fast crisis check runs before the LLM call.
@@ -48,9 +49,16 @@ async def run_triage(user_input: str) -> TriageResult:
         )
 
     client = get_triage_client()
+    context = "(No relevant quit-journey context available)"
+    if memory is not None:
+        facts = memory.format_facts_for_prompt(limit=5)
+        history = memory.format_history_for_prompt(limit=4)
+        context = f"Known relevant facts:\n{facts}\nRecent conversation:\n{history}"
     messages = [
         {"role": "system", "content": TRIAGE_SYSTEM},
-        {"role": "user", "content": TRIAGE_USER_TEMPLATE.format(user_input=user_input)},
+        {"role": "user", "content": TRIAGE_USER_TEMPLATE.format(
+            user_input=user_input, context=context,
+        )},
     ]
     try:
         raw = await client.complete(
@@ -62,12 +70,56 @@ async def run_triage(user_input: str) -> TriageResult:
         )
         data = json.loads(_extract_json(raw))
         result = TriageResult(**data)
+        result = _apply_contextual_relevance_policy(user_input, result, memory)
         record_triage(result.intent, result.emotion)
         return result
     except (json.JSONDecodeError, ValueError, TypeError) as exc:
         logger.warning("triage_parse_failed", error=str(exc))
         record_fallback()
         return _SAFE_DEFAULT
+
+
+_CESSATION_RE = re.compile(
+    r"\b(smok|cigarette|nicotine|tobacco|quit|crav|withdraw|nrt|vape|patch|gum)\w*\b",
+    re.IGNORECASE,
+)
+_EMOTIONAL_DISCLOSURE_RE = re.compile(
+    r"\b(feel|feeling|anxious|overwhelm|guilt|guilty|ashamed|lonely|sad|angry|"
+    r"frustrated|irritable|struggling|nightmare of a day|proud)\b",
+    re.IGNORECASE,
+)
+
+
+def _apply_contextual_relevance_policy(user_input: str, result: TriageResult, memory) -> TriageResult:
+    """Deterministic policy layer around probabilistic relevance classification."""
+    has_quit_language = bool(_CESSATION_RE.search(user_input))
+    selected_facts = bool(memory and memory.top_facts)
+    recent_quit_context = bool(
+        memory and any(_CESSATION_RE.search(turn.content) for turn in memory.recent_turns[-2:])
+    )
+
+    # Unrelated health queries are outside Hailey's role. A bare health question
+    # cannot reach the medical agent without cessation language or selected
+    # context tying it to the quit journey.
+    if result.intent == "medical_question" and not has_quit_language and not recent_quit_context:
+        return TriageResult(
+            intent="off_topic", emotion=result.emotion, topic_relevance="irrelevant",
+            urgency="low", crisis_flag=False, requested_specialists=[],
+        )
+
+    # Rescue ambiguous personal statements when compact context or emotional
+    # disclosure makes them plausibly relevant.
+    if result.topic_relevance == "irrelevant" and (
+        selected_facts or _EMOTIONAL_DISCLOSURE_RE.search(user_input)
+    ):
+        emotional = bool(_EMOTIONAL_DISCLOSURE_RE.search(user_input))
+        return TriageResult(
+            intent="emotional_support" if emotional else "general_conversation",
+            emotion=result.emotion, topic_relevance="relevant", urgency=result.urgency,
+            crisis_flag=False,
+            requested_specialists=["emotional_support"] if emotional else [],
+        )
+    return result
 
 
 def _extract_json(raw: str) -> str:

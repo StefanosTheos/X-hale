@@ -31,6 +31,7 @@ from app.observability.logging import get_logger
 from app.observability.metrics import record_request
 from app.config import settings
 from app.llm.usage import begin_usage_tracking, end_usage_tracking
+from app.tools.app_actions import VALID_DEEPLINKS
 
 logger = get_logger(__name__)
 router = APIRouter(prefix="/chat", tags=["chat"])
@@ -44,7 +45,7 @@ def _collect_deeplinks(state: HaileyState) -> list[AppAction]:
             continue
         for value in draft.get("suggested_deeplinks", []):
             action = value if isinstance(value, AppAction) else AppAction.model_validate(value)
-            if action.deeplink not in seen:
+            if action.deeplink in VALID_DEEPLINKS and action.deeplink not in seen:
                 seen.add(action.deeplink)
                 collected.append(action)
     return collected
@@ -84,6 +85,16 @@ async def chat(
                 "error": None,
                 "user_memory": None,
                 "triage": None,
+                "trace": {},
+                "benchmark_memory_facts": (
+                    body.benchmark_memory_facts
+                    if settings.benchmark_test_user_id == user_id else []
+                ),
+                "benchmark_context_override": settings.benchmark_test_user_id == user_id,
+                "benchmark_profile": (
+                    body.benchmark_profile
+                    if settings.benchmark_test_user_id == user_id else {}
+                ),
             }
 
             final_state: HaileyState = dict(initial_state)
@@ -125,6 +136,22 @@ async def chat(
                 final_state["final_response"] = response_text
                 final_state["citations"] = citations
                 final_state["deeplinks"] = _collect_deeplinks(final_state)
+                trace = dict(final_state.get("trace") or {})
+                trace["actual_route"] = "specialists"
+                trace["synthesis"] = {
+                    "completed": True,
+                    "response_characters": len(response_text),
+                    "stream_ended_normally": True,
+                }
+                trace["actions"] = [
+                    {
+                        "deeplink": action.deeplink,
+                        "provenance": action.provenance,
+                        "valid": action.deeplink in VALID_DEEPLINKS,
+                    }
+                    for action in final_state["deeplinks"]
+                ]
+                final_state["trace"] = trace
 
             # Status: saving
             yield status_event("saving")
@@ -142,9 +169,10 @@ async def chat(
                 settings.benchmark_test_user_id
                 and user_id == settings.benchmark_test_user_id
             ) else None
+            benchmark_trace = final_state.get("trace") if benchmark_usage is not None else None
             yield done_event(
                 citations=citations, deeplinks=deeplinks,
-                turn_id=response_turn_id, usage=benchmark_usage,
+                turn_id=response_turn_id, usage=benchmark_usage, trace=benchmark_trace,
             )
 
         except Exception as exc:

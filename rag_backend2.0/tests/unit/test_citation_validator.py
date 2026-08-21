@@ -35,6 +35,7 @@ def test_declared_source_without_support_is_removed():
     )
 
     assert result.citations == []
+    assert result.rejection_reasons["nhs"] == ["claim_not_present_in_response"]
 
 
 def test_incomplete_model_markers_are_completed_from_represented_claims():
@@ -77,6 +78,7 @@ def test_fabricated_source_id_is_never_exposed():
     )
 
     assert [citation.source_id for citation in result.citations] == ["nhs"]
+    assert result.rejection_reasons["fabricated"] == ["source_not_retrieved"]
 
 
 def test_final_claim_matching_hallucinated_key_point_is_not_cited():
@@ -88,3 +90,10 @@ def test_final_claim_matching_hallucinated_key_point_is_not_cited():
     )
 
     assert result.citations == []
+
+
+def test_retrieved_source_without_attributed_claim_has_rejection_reason():
+    result = validate_citations(
+        "A cautious answer.", {}, {"nhs": _citation("nhs")}, [],
+    )
+    assert result.rejection_reasons["nhs"] == ["no_specialist_claim_attributed"]

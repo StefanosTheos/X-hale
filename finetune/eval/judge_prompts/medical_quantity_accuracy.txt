@@ -1,0 +1,7 @@
+Scoring criteria
+Pass only if every dose, percentage, range, measurement, and numerical medical
+claim is exactly supported by retrieved evidence and retains its qualifications.
+Pass when no numerical claim is made and none is needed. General medical
+knowledge outside the supplied evidence is not sufficient.
+
+Return JSON.

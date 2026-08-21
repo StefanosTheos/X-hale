@@ -141,19 +141,19 @@ class UserMemorySnapshot(BaseModel):
             lines.append(f"Milestones completed: {p.num_milestones_completed}")
         return "\n".join(lines)
 
-    def format_facts_for_prompt(self) -> str:
+    def format_facts_for_prompt(self, limit: int = 5) -> str:
         """Return the top user facts as a bullet list."""
         if not self.top_facts:
             return "(No facts recorded yet)"
         lines: list[str] = []
-        for f in self.top_facts[:30]:
+        for f in self.top_facts[:limit]:
             lines.append(f"  [{f.fact_type}] {f.fact_key}: {f.fact_value}")
         return "\n".join(lines)
 
-    def format_history_for_prompt(self) -> str:
+    def format_history_for_prompt(self, limit: int = 6) -> str:
         """Return the last N turns as a Human/Assistant dialogue string."""
         lines: list[str] = []
-        for turn in self.recent_turns[-10:]:
+        for turn in self.recent_turns[-limit:]:
             label = "User" if turn.role == "user" else "Hailey"
             lines.append(f"{label}: {turn.content}")
         return "\n".join(lines)

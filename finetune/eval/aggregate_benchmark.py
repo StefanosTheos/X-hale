@@ -7,7 +7,9 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-from finetune.eval.run_benchmark import _load_cases, _suite_hash
+from finetune.eval.run_benchmark import (
+    CaseResult, _hard_gate_failures, _load_cases, _reporting_metrics, _suite_hash,
+)
 
 
 def aggregate(paths: list[Path]) -> dict:
@@ -55,8 +57,11 @@ def aggregate(paths: list[Path]) -> dict:
     errored = [case for case in cases if case.get("error")]
     quality = round(100 * sum(1 for case in evaluated if case.get("passed")) / len(evaluated)) if evaluated else 0
     error_rate = round(100 * len(errored) / len(cases))
+    typed_cases = [CaseResult.from_dict(case) for case in cases]
+    reporting = _reporting_metrics(typed_cases)
+    hard_gate_failures = _hard_gate_failures(reporting)
     return {
-        "schema_version": 4,
+        "schema_version": 5,
         "aggregation_version": 1,
         "generated_at": datetime.now(timezone.utc).isoformat(),
         **identity,
@@ -71,6 +76,8 @@ def aggregate(paths: list[Path]) -> dict:
         "error_rate_pct": error_rate,
         "quality_threshold_pct": 80,
         "maximum_error_rate_pct": 20,
+        "reporting": reporting,
+        "hard_gate_failures": hard_gate_failures,
         "cases": cases,
     }
 
@@ -91,7 +98,10 @@ def main() -> int:
         f"Full sweep: quality {result['quality_pct']}%, errors {result['error_rate_pct']}% "
         f"({result['total']} unique cases)"
     )
-    return 0 if result["quality_pct"] >= 80 and result["error_rate_pct"] <= 20 else 1
+    return 0 if (
+        result["quality_pct"] >= 80 and result["error_rate_pct"] <= 20
+        and not result["hard_gate_failures"]
+    ) else 1
 
 
 if __name__ == "__main__":

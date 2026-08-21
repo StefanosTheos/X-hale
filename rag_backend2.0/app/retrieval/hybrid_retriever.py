@@ -252,6 +252,8 @@ def _chunks_to_citations(chunks: list[RetrievedChunk]) -> list[Citation]:
                 source_id=chunk.source_id,
                 source_type=chunk.source_type,
                 benefit_id=chunk.benefit_id,
-                snippet=chunk.content[:200],
+                title=str(chunk.metadata.get("title", "")),
+                url=str(chunk.metadata.get("url", chunk.metadata.get("source_url", ""))),
+                snippet=chunk.content[:500],
             ))
     return citations

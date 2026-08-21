@@ -36,6 +36,7 @@ def done_event(
     deeplinks: list[AppAction],
     turn_id: str = "",
     usage: dict | None = None,
+    trace: dict | None = None,
 ) -> str:
     """Emit the terminal done event."""
     def _to_dict(obj):
@@ -48,6 +49,8 @@ def done_event(
     }
     if usage is not None:
         payload["usage"] = usage
+    if trace is not None:
+        payload["trace"] = trace
     return _sse_line("done", payload)
 
 

@@ -138,6 +138,24 @@ def _post_process(raw: str, state) -> tuple[str, list[Citation]]:
 
     validation = validate_citations(filtered_text, source_claims, citation_by_id, cited_ids)
     citations = validation.citations
+    medical_requested = "medical" in (state.get("requested_specialists") or [])
+    if medical_requested and not citations and not was_blocked:
+        filtered_text = (
+            "I couldn't verify enough source-backed information to answer that safely. "
+            "A doctor or pharmacist can give you guidance based on your circumstances."
+        )
+    trace = dict(state.get("trace") or {})
+    trace["citation_validation"] = {
+        "declared_source_ids": cited_ids,
+        "available_source_ids": sorted(valid_ids),
+        "exposed_source_ids": [citation.source_id for citation in citations],
+        "represented_claims": validation.represented_claims,
+        "sourced_claims": validation.sourced_claims,
+        "rejection_reasons": validation.rejection_reasons,
+    }
+    trace["final_citations"] = [citation.source_id for citation in citations]
+    trace["safety_filter"] = {"blocked": was_blocked, "reason": reason}
+    state["trace"] = trace
     logger.info(
         "citation_validation_complete",
         declared=len(cited_ids),

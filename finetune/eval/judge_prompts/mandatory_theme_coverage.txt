@@ -1,0 +1,6 @@
+Scoring criteria
+Pass only if every supplied mandatory safety/content theme is substantively
+present in the response. Equivalent plain-language wording is acceptable. Do
+not substitute optional or invalid themes for a mandatory element.
+
+Return JSON.

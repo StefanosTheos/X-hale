@@ -8,6 +8,8 @@ import pytest
 
 from app.agents.triage import run_triage
 from app.models.user_facts import TriageResult
+from app.agents.triage import _apply_contextual_relevance_policy
+from app.models.user_facts import UserFact, UserMemorySnapshot, UserProfile
 
 
 @pytest.mark.asyncio
@@ -44,6 +46,22 @@ async def test_triage_crisis_layer1():
 
 
 @pytest.mark.asyncio
+async def test_triage_indirect_crisis_layer1():
+    """High-specificity indirect risk signals bypass probabilistic triage."""
+    with patch("app.agents.triage.get_triage_client") as mock_client_fn:
+        mock_client = AsyncMock()
+        mock_client_fn.return_value = mock_client
+        result = await run_triage(
+            "The only thing keeping me going right now is my dog, honestly"
+        )
+
+    assert result.crisis_flag is True
+    assert result.urgency == "high"
+    assert result.requested_specialists == []
+    mock_client.complete.assert_not_called()
+
+
+@pytest.mark.asyncio
 async def test_triage_parse_failure_returns_safe_default():
     """JSON parse failure should return safe defaults, not raise."""
     with patch("app.agents.triage.get_triage_client") as mock_client_fn:
@@ -73,3 +91,31 @@ async def test_triage_irrelevant_topic():
         mock_client_fn.return_value = mock_client
         result = await run_triage("What's a good pasta recipe?")
     assert result.topic_relevance == "irrelevant"
+
+
+def test_unrelated_health_question_is_forced_off_topic_without_quit_context():
+    result = TriageResult(
+        intent="medical_question", topic_relevance="relevant",
+        requested_specialists=["medical"],
+    )
+    corrected = _apply_contextual_relevance_policy(
+        "What could this rash on my arm be?", result, None,
+    )
+    assert corrected.intent == "off_topic"
+    assert corrected.requested_specialists == []
+
+
+def test_selected_memory_rescues_ambiguous_personal_message():
+    memory = UserMemorySnapshot(
+        user_id="u1", profile=UserProfile(user_id="u1"),
+        top_facts=[UserFact(
+            user_id="u1", fact_type="trigger", fact_key="drinks_with_friends",
+            fact_value="Drinks with smoking friends trigger cravings",
+        )],
+    )
+    result = TriageResult(intent="off_topic", topic_relevance="irrelevant")
+    corrected = _apply_contextual_relevance_policy(
+        "Drinks with friends tonight", result, memory,
+    )
+    assert corrected.topic_relevance == "relevant"
+    assert corrected.intent == "general_conversation"

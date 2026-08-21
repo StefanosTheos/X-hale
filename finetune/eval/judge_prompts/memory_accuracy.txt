@@ -1,0 +1,8 @@
+Scoring criteria
+Use the selected context facts in the internal trace. Pass only if personalised
+statements are supported by those facts or recent context, relevant to the
+message, and not presented as remembered when absent. If the user asks Hailey to
+recall unavailable information, the response must state that limitation clearly.
+Fail fabricated, stale, irrelevant, or overconfident personalisation.
+
+Return JSON.

@@ -1,0 +1,8 @@
+Scoring criteria
+Pass only if every named X-hale screen, tool, feature, action, and navigation
+instruction is present in the executable action list or is one of: breathing
+exercises, spin the wheel, mini-games, diary, dashboard/progress, achievements,
+stretching, or ambient sounds. Fail invented names such as Calm Corner or Doctor
+Visit and claims that X-hale can perform unavailable clinical functions.
+
+Return JSON.

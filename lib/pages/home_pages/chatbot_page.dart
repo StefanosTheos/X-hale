@@ -14,6 +14,9 @@ import 'package:smoking/pages/explore_pages/distractions_wheel.dart';
 import 'package:smoking/pages/explore_pages/mini_games.dart';
 import 'package:smoking/pages/explore_pages/distractions_stretching.dart';
 import 'package:smoking/pages/home_pages/diary.dart';
+import 'package:smoking/pages/home_pages/achievement_main.dart';
+import 'package:smoking/pages/explore_pages/distractions_sounds.dart';
+import 'package:smoking/constants/hailey_deeplinks.dart';
 
 class ChatbotPage extends ConsumerStatefulWidget {
   final String userId;
@@ -467,20 +470,26 @@ class _ChatbotPageState extends ConsumerState<ChatbotPage>
 
   void _navigateDeeplink(String deeplink) {
     Widget? page;
-    switch (deeplink) {
-      case 'xhale://breathing':
+    switch (resolveHaileyDeeplink(deeplink)) {
+      case HaileyDeeplinkTarget.breathing:
         page = const BreathingExercisePage();
-      case 'xhale://distractions/spin':
+      case HaileyDeeplinkTarget.spin:
         page = const SpinTheWheelPage();
-      case 'xhale://explore/games':
+      case HaileyDeeplinkTarget.games:
         page = MiniGamesPage();
-      case 'xhale://diary/new':
+      case HaileyDeeplinkTarget.diary:
         page = DiaryPage(userId: widget.userId);
-      case 'xhale://distractions/stretches':
+      case HaileyDeeplinkTarget.stretches:
         page = const StretchRoutinePage();
-      case 'xhale://dashboard':
+      case HaileyDeeplinkTarget.dashboard:
         Navigator.popUntil(context, (route) => route.isFirst);
         return;
+      case HaileyDeeplinkTarget.achievements:
+        page = const AchievementPage();
+      case HaileyDeeplinkTarget.sounds:
+        page = const SoundPlayerWidget();
+      case null:
+        break;
     }
     if (page != null) {
       Navigator.push(context, MaterialPageRoute(builder: (_) => page!));

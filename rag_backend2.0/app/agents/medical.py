@@ -32,7 +32,7 @@ class MedicalAgent(AgentBase):
             user_id=state["user_id"],
             strategy="factual",
             k=3,
-            intent=state.get("intent", "unknown"),
+            intent=(state.get("triage").intent if state.get("triage") else "unknown"),
         )
 
         if not retrieval.chunks:
@@ -43,6 +43,10 @@ class MedicalAgent(AgentBase):
                 tone_hint="factual_reassuring",
                 raw_context="I couldn't find specific information on that in my knowledge base.",
                 citations=[],
+                retrieval_trace={
+                    "query": retrieval.query, "strategy": retrieval.strategy_used,
+                    "collections": ["kb_chunks"], "documents": [],
+                },
             )
 
         client = get_triage_client()  # Low-temperature model for structured extraction
@@ -64,6 +68,22 @@ class MedicalAgent(AgentBase):
             )
             data = json.loads(raw)
             key_points = [KeyPoint(**kp) for kp in data.get("key_points", [])]
+            trace = {
+                "query": retrieval.query,
+                "strategy": retrieval.strategy_used,
+                "collections": sorted({
+                    chunk.metadata.get("collection", "web") for chunk in retrieval.chunks
+                }),
+                "documents": [
+                    {"document_id": chunk.metadata.get("document_id"),
+                     "collection": chunk.metadata.get("collection", "web"),
+                     "source_id": chunk.source_id, "source_type": chunk.source_type,
+                     "score": chunk.score, "snippet": chunk.content[:400]}
+                    for chunk in retrieval.chunks
+                ],
+                "specialist_source_ids": [kp.source_id for kp in key_points if kp.source_id],
+                "proposed_citation_ids": [c.source_id for c in retrieval.citations],
+            }
             return SpecialistDraft(
                 agent=self.name,
                 key_points=key_points,
@@ -71,6 +91,7 @@ class MedicalAgent(AgentBase):
                 raw_context=data.get("raw_context", retrieval.format_for_prompt()[:400]),
                 citations=retrieval.citations,
                 suggested_deeplinks=[],
+                retrieval_trace=trace,
             )
         except (json.JSONDecodeError, ValueError) as exc:
             logger.warning("medical_agent_parse_failed", error=str(exc))
@@ -81,4 +102,19 @@ class MedicalAgent(AgentBase):
                 tone_hint="factual_reassuring",
                 raw_context=retrieval.format_for_prompt()[:600],
                 citations=retrieval.citations,
+                retrieval_trace={
+                    "query": retrieval.query, "strategy": retrieval.strategy_used,
+                    "collections": sorted({
+                        chunk.metadata.get("collection", "web") for chunk in retrieval.chunks
+                    }),
+                    "documents": [
+                        {"document_id": chunk.metadata.get("document_id"),
+                         "collection": chunk.metadata.get("collection", "web"),
+                         "source_id": chunk.source_id, "source_type": chunk.source_type,
+                         "score": chunk.score, "snippet": chunk.content[:400]}
+                        for chunk in retrieval.chunks
+                    ],
+                    "specialist_source_ids": [],
+                    "proposed_citation_ids": [c.source_id for c in retrieval.citations],
+                },
             )

@@ -24,6 +24,7 @@ class CitationValidation:
     supported_source_ids: set[str]
     represented_claims: int
     sourced_claims: int
+    rejection_reasons: dict[str, list[str]]
 
 
 def _normalise_token(token: str) -> str:
@@ -81,22 +82,42 @@ def validate_citations(
     unrelated retrieved sources are never attached.
     """
     represented: set[str] = set()
+    rejection_reasons: dict[str, list[str]] = {}
     represented_claims = 0
     sourced_claims = 0
     for source_id, claims in source_claims.items():
         sourced_claims += len(claims)
         citation = citation_by_id.get(source_id)
-        if citation is None or not citation.snippet.strip():
+        if citation is None:
+            rejection_reasons.setdefault(source_id, []).append("missing_citation_metadata")
+            continue
+        if not citation.snippet.strip():
+            rejection_reasons.setdefault(source_id, []).append("empty_source_snippet")
             continue
         for claim in claims:
             source_supports_claim = claim_is_represented(claim, citation.snippet)
-            if source_supports_claim and claim_is_represented(claim, response):
+            response_represents_claim = claim_is_represented(claim, response)
+            if source_supports_claim and response_represents_claim:
                 represented.add(source_id)
                 represented_claims += 1
+            elif not source_supports_claim:
+                rejection_reasons.setdefault(source_id, []).append("claim_not_entailed_by_source")
+            elif not response_represents_claim:
+                rejection_reasons.setdefault(source_id, []).append("claim_not_present_in_response")
 
     ordered_ids = list(dict.fromkeys(declared_source_ids + list(source_claims)))
     # A declared ID still needs entailment. Claim matching also supplies coverage
     # when markers are absent or incomplete.
     eligible = represented & set(citation_by_id)
     citations = [citation_by_id[sid] for sid in ordered_ids if sid in eligible]
-    return CitationValidation(citations, represented, represented_claims, sourced_claims)
+    for source_id in declared_source_ids:
+        if source_id not in citation_by_id:
+            rejection_reasons.setdefault(source_id, []).append("source_not_retrieved")
+    for source_id in citation_by_id:
+        if source_id not in source_claims:
+            rejection_reasons.setdefault(source_id, []).append(
+                "no_specialist_claim_attributed"
+            )
+    return CitationValidation(
+        citations, represented, represented_claims, sourced_claims, rejection_reasons,
+    )

@@ -52,6 +52,7 @@ class AppAction(BaseModel):
     label: str                       # e.g. "Try breathing exercise"
     deeplink: str                    # e.g. "xhale://breathing"
     description: str = ""
+    provenance: str = "model_selected"  # model_selected | rule_selected | fallback
 
 
 class SpecialistDraft(BaseModel):
@@ -68,3 +69,5 @@ class SpecialistDraft(BaseModel):
     suggested_deeplinks: list[AppAction] = Field(default_factory=list)
     raw_context: str = ""           # retrieved text the synthesizer may quote from
     citations: list[Citation] = Field(default_factory=list)
+    retrieval_trace: dict = Field(default_factory=dict)
+    action_provenance: str = "none"

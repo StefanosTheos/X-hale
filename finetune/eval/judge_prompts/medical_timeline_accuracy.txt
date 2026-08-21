@@ -1,0 +1,7 @@
+Scoring criteria
+Pass only if every medical timeline in the response is exactly supported by the
+retrieved evidence. If the user asks when or how long and no supported timeline
+is available, the response must acknowledge that limitation. Fail unsupported,
+broadened, or compressed recovery timelines.
+
+Return JSON.

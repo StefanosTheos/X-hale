@@ -66,15 +66,14 @@ class _BreathingExercisePageState extends ConsumerState<BreathingExercisePage>
     _runNextPhase();
   }
 
-  final List<String> boxCycle = ['Inhale', 'Hold', 'Exhale', 'Hold'];
-
   void _runNextPhase() {
     if (!_isRunning || _isDisposed || !mounted || _remainingSeconds <= 0) {
       _stopExercise();
       return;
     }
 
-    _phase = boxCycle[_phaseIndex];
+    final phases = _selectedTechnique.phases;
+    _phase = phases[_phaseIndex];
     Duration phaseDuration;
     switch (_phase) {
       case 'Inhale':
@@ -90,8 +89,20 @@ class _BreathingExercisePageState extends ConsumerState<BreathingExercisePage>
         phaseDuration = _selectedTechnique.inhale;
     }
 
+    // Match the circle motion to the breathing instruction: expand while
+    // inhaling, remain still while holding, and contract while exhaling.
     _controller.duration = phaseDuration;
-    _controller.forward(from: 0);
+    switch (_phase) {
+      case 'Inhale':
+        _controller.forward(from: _controller.lowerBound);
+        break;
+      case 'Hold':
+        _controller.stop();
+        break;
+      case 'Exhale':
+        _controller.reverse(from: _controller.upperBound);
+        break;
+    }
     _playPhase(_phase.toLowerCase());
 
     int phaseSeconds = phaseDuration.inSeconds;
@@ -111,9 +122,15 @@ class _BreathingExercisePageState extends ConsumerState<BreathingExercisePage>
         phaseSeconds--;
       });
 
+      if (_remainingSeconds <= 0) {
+        timer.cancel();
+        _stopExercise();
+        return;
+      }
+
       if (phaseSeconds <= 0) {
         timer.cancel();
-        _phaseIndex = (_phaseIndex + 1) % boxCycle.length;
+        _phaseIndex = (_phaseIndex + 1) % phases.length;
         _runNextPhase();
       }
     });
@@ -125,7 +142,7 @@ class _BreathingExercisePageState extends ConsumerState<BreathingExercisePage>
     // Reset every piece of cycle state, not just the visible timer text.
     // Previously only `_remainingSeconds` and the `_phase` label were
     // cleared on stop, so the next `_startExercise` would:
-    //   - resume from the stored `_phaseIndex` (boxCycle[i]) — audio cue
+    //   - resume from the stored `_phaseIndex` — audio cue
     //     started from the wrong phase
     //   - inherit the half-played `_controller` value — the circle's scale
     //     animated from its last position instead of from rest

@@ -38,9 +38,10 @@ class _QuitTimerSectionState extends ConsumerState<QuitTimerSection> {
             borderRadius: BorderRadius.circular(12),
             boxShadow: [
               BoxShadow(
-                color: isDark
-                    ? Colors.black.withAlpha((0.3 * 255).round())
-                    : Colors.grey.shade300,
+                color:
+                    isDark
+                        ? Colors.black.withAlpha((0.3 * 255).round())
+                        : Colors.grey.shade300,
                 blurRadius: 6,
               ),
             ],
@@ -79,16 +80,17 @@ class _QuitTimerSectionState extends ConsumerState<QuitTimerSection> {
     final minutes = progressState.timeSinceQuit.inMinutes % 60;
     final seconds = progressState.timeSinceQuit.inSeconds % 60;
 
-    final now =
-        DateFormat('MMMM d, yyyy - HH:mm').format(DateTime.now().toLocal());
+    final now = DateFormat(
+      'MMMM d, yyyy - HH:mm',
+    ).format(DateTime.now().toLocal());
 
     // Memoised — the `nextMilestoneProvider` only re-runs its `where`/`sort`
     // when the milestone list reference changes (toggle, refresh, etc.),
     // not on every 1 Hz rebuild driven by the progress tick.
-    final nextMilestone =
-        ref.watch(nextMilestoneProvider(_selectedMilestoneType));
-    final startDate =
-        ref.watch(milestoneProvider.select((s) => s.startDate));
+    final nextMilestone = ref.watch(
+      nextMilestoneProvider(_selectedMilestoneType),
+    );
+    final startDate = ref.watch(milestoneProvider.select((s) => s.startDate));
     // Distinguish "milestones haven't loaded yet" (cold-boot, fetch in
     // flight) from "every milestone in this tier is already done". Both
     // make `nextMilestone` null, but only the latter is a legitimate
@@ -147,10 +149,26 @@ class _QuitTimerSectionState extends ConsumerState<QuitTimerSection> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  _buildTimeUnit(days.toString().padLeft(2, '0'), 'DAYS', isDark),
-                  _buildTimeUnit(hours.toString().padLeft(2, '0'), 'HOURS', isDark),
-                  _buildTimeUnit(minutes.toString().padLeft(2, '0'), 'MIN', isDark),
-                  _buildTimeUnit(seconds.toString().padLeft(2, '0'), 'SEC', isDark),
+                  _buildTimeUnit(
+                    days.toString().padLeft(2, '0'),
+                    'DAYS',
+                    isDark,
+                  ),
+                  _buildTimeUnit(
+                    hours.toString().padLeft(2, '0'),
+                    'HOURS',
+                    isDark,
+                  ),
+                  _buildTimeUnit(
+                    minutes.toString().padLeft(2, '0'),
+                    'MIN',
+                    isDark,
+                  ),
+                  _buildTimeUnit(
+                    seconds.toString().padLeft(2, '0'),
+                    'SEC',
+                    isDark,
+                  ),
                 ],
               ),
               const SizedBox(height: 12),
@@ -168,8 +186,7 @@ class _QuitTimerSectionState extends ConsumerState<QuitTimerSection> {
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
-                    color:
-                        isDark ? Colors.grey.shade300 : Colors.grey.shade800,
+                    color: isDark ? Colors.grey.shade300 : Colors.grey.shade800,
                   ),
                 ),
               ),
@@ -189,53 +206,55 @@ class _QuitTimerSectionState extends ConsumerState<QuitTimerSection> {
                       padding: const EdgeInsets.symmetric(horizontal: 12),
                       decoration: BoxDecoration(
                         border: Border.all(
-                          color: isDark
-                              ? Colors.grey.shade700
-                              : Colors.grey.shade300,
+                          color:
+                              isDark
+                                  ? Colors.grey.shade700
+                                  : Colors.grey.shade300,
                         ),
                         borderRadius: BorderRadius.circular(8),
-                        color:
-                            isDark ? AppThemes.darkCardColor : Colors.white,
+                        color: isDark ? AppThemes.darkCardColor : Colors.white,
                       ),
                       child: Theme(
                         data: Theme.of(context).copyWith(
-                          canvasColor: isDark
-                              ? AppThemes.darkCardColor
-                              : Colors.white,
+                          canvasColor:
+                              isDark ? AppThemes.darkCardColor : Colors.white,
                         ),
                         child: DropdownButton<String>(
                           isExpanded: true,
                           value: _selectedMilestoneType,
                           underline: const SizedBox(),
-                          dropdownColor: isDark
-                              ? AppThemes.darkCardColor
-                              : Colors.white,
+                          dropdownColor:
+                              isDark ? AppThemes.darkCardColor : Colors.white,
                           icon: Icon(
                             Icons.arrow_drop_down,
-                            color: isDark
-                                ? AppThemes.darkIconColor
-                                : AppThemes.lightIconColor,
+                            color:
+                                isDark
+                                    ? AppThemes.darkIconColor
+                                    : AppThemes.lightIconColor,
                           ),
                           style: TextStyle(
-                            color: isDark
-                                ? AppThemes.darkTextColor
-                                : AppThemes.lightTextColor,
+                            color:
+                                isDark
+                                    ? AppThemes.darkTextColor
+                                    : AppThemes.lightTextColor,
                           ),
-                          items: ['Day', 'Week', 'Month', 'Year']
-                              .map(
-                                (type) => DropdownMenuItem(
-                                  value: type,
-                                  child: Text(
-                                    type,
-                                    style: TextStyle(
-                                      color: isDark
-                                          ? AppThemes.darkTextColor
-                                          : AppThemes.lightTextColor,
+                          items:
+                              ['Day', 'Week', 'Month', 'Year']
+                                  .map(
+                                    (type) => DropdownMenuItem(
+                                      value: type,
+                                      child: Text(
+                                        type,
+                                        style: TextStyle(
+                                          color:
+                                              isDark
+                                                  ? AppThemes.darkTextColor
+                                                  : AppThemes.lightTextColor,
+                                        ),
+                                      ),
                                     ),
-                                  ),
-                                ),
-                              )
-                              .toList(),
+                                  )
+                                  .toList(),
                           onChanged: (value) {
                             setState(() {
                               _selectedMilestoneType = value!;
@@ -252,9 +271,8 @@ class _QuitTimerSectionState extends ConsumerState<QuitTimerSection> {
                       vertical: 8,
                     ),
                     decoration: BoxDecoration(
-                      color: isDark
-                          ? Colors.grey.shade800
-                          : Colors.grey.shade100,
+                      color:
+                          isDark ? Colors.grey.shade800 : Colors.grey.shade100,
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
@@ -262,9 +280,10 @@ class _QuitTimerSectionState extends ConsumerState<QuitTimerSection> {
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
-                        color: isDark
-                            ? Colors.grey.shade300
-                            : Colors.grey.shade800,
+                        color:
+                            isDark
+                                ? Colors.grey.shade300
+                                : Colors.grey.shade800,
                       ),
                     ),
                   ),
@@ -275,6 +294,10 @@ class _QuitTimerSectionState extends ConsumerState<QuitTimerSection> {
                 borderRadius: BorderRadius.circular(10),
                 child: AnimatedProgressBar(
                   targetProgress: progress,
+                  // The quit duration changes once per second. Render each
+                  // new value directly so a two-second animation is not
+                  // restarted continuously on the dashboard.
+                  animateUpdates: false,
                 ),
               ),
               const SizedBox(height: 8),
@@ -286,9 +309,7 @@ class _QuitTimerSectionState extends ConsumerState<QuitTimerSection> {
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
-                      color: isDark
-                          ? AppThemes.darkSubtitleColor
-                          : Colors.grey,
+                      color: isDark ? AppThemes.darkSubtitleColor : Colors.grey,
                     ),
                   ),
                   Text(
@@ -296,9 +317,7 @@ class _QuitTimerSectionState extends ConsumerState<QuitTimerSection> {
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
-                      color: isDark
-                          ? AppThemes.darkSubtitleColor
-                          : Colors.grey,
+                      color: isDark ? AppThemes.darkSubtitleColor : Colors.grey,
                     ),
                   ),
                 ],
@@ -318,13 +337,13 @@ class _QuitTimerSectionState extends ConsumerState<QuitTimerSection> {
                     content: Text(
                       'Please sign in to view milestones',
                       style: TextStyle(
-                        color:
-                            isDark ? AppThemes.darkTextColor : Colors.white,
+                        color: isDark ? AppThemes.darkTextColor : Colors.white,
                       ),
                     ),
-                    backgroundColor: isDark
-                        ? AppThemes.darkDeleteButtonColor
-                        : AppThemes.lightDeleteButtonColor,
+                    backgroundColor:
+                        isDark
+                            ? AppThemes.darkDeleteButtonColor
+                            : AppThemes.lightDeleteButtonColor,
                   ),
                 );
                 return;
@@ -332,10 +351,11 @@ class _QuitTimerSectionState extends ConsumerState<QuitTimerSection> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => MilestonePage(
-                    startDate: userState.quitDate.toLocal(),
-                    userId: userState.userId,
-                  ),
+                  builder:
+                      (context) => MilestonePage(
+                        startDate: userState.quitDate.toLocal(),
+                        userId: userState.userId,
+                      ),
                 ),
               );
             },

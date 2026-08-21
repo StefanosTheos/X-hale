@@ -34,18 +34,77 @@ from app.observability.logging import get_logger
 logger = get_logger(__name__)
 
 
+def _trace_specialist(state: HaileyState, name: str, draft) -> dict:
+    trace = dict(state.get("trace") or {})
+    completed = list(trace.get("agents_completed") or [])
+    if name not in completed:
+        completed.append(name)
+    trace["agents_completed"] = completed
+    if draft.retrieval_trace:
+        retrieval = dict(trace.get("retrieval_documents") or {})
+        retrieval[name] = draft.retrieval_trace
+        trace["retrieval_documents"] = retrieval
+    actions = list(trace.get("actions") or [])
+    actions.extend({
+        "agent": name, "deeplink": action.deeplink,
+        "provenance": action.provenance,
+    } for action in draft.suggested_deeplinks)
+    trace["actions"] = actions
+    return trace
+
+
 # ── Node implementations ──────────────────────────────────────────────────────
+
+async def crisis_precheck_node(state: HaileyState) -> HaileyState:
+    """Run the deterministic crisis detector before storage or model I/O."""
+    from app.safety.crisis_detector import fast_crisis_check
+    if not fast_crisis_check(state["user_input"]):
+        return state
+    from app.models.user_facts import TriageResult
+    triage = TriageResult(
+        intent="emotional_support", emotion="fear", topic_relevance="relevant",
+        urgency="high", crisis_flag=True, requested_specialists=[],
+    )
+    trace = dict(state.get("trace") or {})
+    trace["triage"] = triage.model_dump()
+    return {**state, "triage": triage, "trace": trace}
 
 async def triage_node(state: HaileyState) -> HaileyState:
     from app.agents.triage import run_triage
-    triage = await run_triage(state["user_input"])
-    return {**state, "triage": triage}
+    triage = await run_triage(state["user_input"], state.get("user_memory"))
+    trace = dict(state.get("trace") or {})
+    trace["triage"] = triage.model_dump()
+    return {**state, "triage": triage, "trace": trace}
 
 
 async def context_loader_node(state: HaileyState) -> HaileyState:
     from app.memory.snapshot import build_snapshot
-    memory = await build_snapshot(state["user_id"])
-    return {**state, "user_memory": memory}
+    memory = await build_snapshot(state["user_id"], query=state["user_input"])
+    benchmark_facts = state.get("benchmark_memory_facts") or []
+    if state.get("benchmark_context_override"):
+        from app.models.user_facts import UserFact, UserProfile
+        from app.memory.snapshot import rank_facts
+        parsed_facts = [
+            UserFact(user_id=state["user_id"], **fact)
+            for fact in benchmark_facts
+        ]
+        memory = memory.model_copy(update={
+            "profile": UserProfile(
+                user_id=state["user_id"], **(state.get("benchmark_profile") or {})
+            ),
+            "recent_turns": [],
+            "top_facts": rank_facts(
+                parsed_facts, state["user_input"], 5, allow_undated=True,
+            )
+        })
+    trace = dict(state.get("trace") or {})
+    trace["context_facts_selected"] = [
+        {"fact_id": fact.fact_id, "type": fact.fact_type, "key": fact.fact_key,
+         "confidence": fact.confidence}
+        for fact in memory.top_facts
+    ]
+    trace["context_profile_selected"] = memory.profile.model_dump(mode="json")
+    return {**state, "user_memory": memory, "trace": trace}
 
 
 async def supervisor_node(state: HaileyState) -> HaileyState:
@@ -54,7 +113,9 @@ async def supervisor_node(state: HaileyState) -> HaileyState:
         triage=state["triage"],
         memory=state.get("user_memory"),
     )
-    return {**state, "requested_specialists": specialists}
+    trace = dict(state.get("trace") or {})
+    trace["agents_requested"] = specialists
+    return {**state, "requested_specialists": specialists, "trace": trace}
 
 
 async def medical_node(state: HaileyState) -> HaileyState:
@@ -62,7 +123,7 @@ async def medical_node(state: HaileyState) -> HaileyState:
     draft = await MedicalAgent().run(state)
     drafts = dict(state.get("specialist_drafts") or {})
     drafts["medical"] = draft.model_dump()
-    return {**state, "specialist_drafts": drafts}
+    return {**state, "specialist_drafts": drafts, "trace": _trace_specialist(state, "medical", draft)}
 
 
 async def craving_support_node(state: HaileyState) -> HaileyState:
@@ -70,7 +131,7 @@ async def craving_support_node(state: HaileyState) -> HaileyState:
     draft = await CravingSupportAgent().run(state)
     drafts = dict(state.get("specialist_drafts") or {})
     drafts["craving_support"] = draft.model_dump()
-    return {**state, "specialist_drafts": drafts}
+    return {**state, "specialist_drafts": drafts, "trace": _trace_specialist(state, "craving_support", draft)}
 
 
 async def emotional_support_node(state: HaileyState) -> HaileyState:
@@ -78,7 +139,7 @@ async def emotional_support_node(state: HaileyState) -> HaileyState:
     draft = await EmotionalSupportAgent().run(state)
     drafts = dict(state.get("specialist_drafts") or {})
     drafts["emotional_support"] = draft.model_dump()
-    return {**state, "specialist_drafts": drafts}
+    return {**state, "specialist_drafts": drafts, "trace": _trace_specialist(state, "emotional_support", draft)}
 
 
 async def reflection_node(state: HaileyState) -> HaileyState:
@@ -86,7 +147,7 @@ async def reflection_node(state: HaileyState) -> HaileyState:
     draft = await ReflectionAgent().run(state)
     drafts = dict(state.get("specialist_drafts") or {})
     drafts["reflection"] = draft.model_dump()
-    return {**state, "specialist_drafts": drafts}
+    return {**state, "specialist_drafts": drafts, "trace": _trace_specialist(state, "reflection", draft)}
 
 
 async def relapse_risk_node(state: HaileyState) -> HaileyState:
@@ -94,7 +155,7 @@ async def relapse_risk_node(state: HaileyState) -> HaileyState:
     draft = await RelapseRiskAgent().run(state)
     drafts = dict(state.get("specialist_drafts") or {})
     drafts["relapse_risk"] = draft.model_dump()
-    return {**state, "specialist_drafts": drafts}
+    return {**state, "specialist_drafts": drafts, "trace": _trace_specialist(state, "relapse_risk", draft)}
 
 
 async def synthesizer_node(state: HaileyState) -> HaileyState:
@@ -160,12 +221,22 @@ async def crisis_handler_node(state: HaileyState) -> HaileyState:
         user_id=state["user_id"],
         locale=state.get("locale", "en"),
     )
-    return {**state, "final_response": message, "is_crisis": True, "citations": [], "deeplinks": []}
+    trace = dict(state.get("trace") or {})
+    trace.update({
+        "actual_route": "crisis", "agents_completed": [],
+        "safety_filter": {"blocked": False, "reason": "deterministic_crisis"},
+    })
+    return {**state, "final_response": message, "is_crisis": True, "citations": [], "deeplinks": [], "trace": trace}
 
 
 async def clarification_node(state: HaileyState) -> HaileyState:
     response = "I want to make sure I understand what you're asking — could you tell me a bit more?"
-    return {**state, "final_response": response, "citations": [], "deeplinks": []}
+    trace = dict(state.get("trace") or {})
+    trace.update({
+        "actual_route": "clarification", "agents_completed": [],
+        "safety_filter": {"blocked": False, "reason": "deterministic_clarification"},
+    })
+    return {**state, "final_response": response, "citations": [], "deeplinks": [], "trace": trace}
 
 
 async def irrelevant_node(state: HaileyState) -> HaileyState:
@@ -173,7 +244,12 @@ async def irrelevant_node(state: HaileyState) -> HaileyState:
         "That's a bit outside what I can help with — I'm here to support your quit journey. "
         "Is there something about quitting smoking, cravings, or how you're feeling that I can help with?"
     )
-    return {**state, "final_response": response, "citations": [], "deeplinks": []}
+    trace = dict(state.get("trace") or {})
+    trace.update({
+        "actual_route": "off_topic", "agents_completed": [],
+        "safety_filter": {"blocked": False, "reason": "deterministic_redirect"},
+    })
+    return {**state, "final_response": response, "citations": [], "deeplinks": [], "trace": trace}
 
 
 # ── Graph assembly ────────────────────────────────────────────────────────────
@@ -182,6 +258,7 @@ def _build_graph(*, stop_before_synthesis: bool = False) -> StateGraph:
     g = StateGraph(HaileyState)
 
     # Add all nodes
+    g.add_node("crisis_precheck_node", crisis_precheck_node)
     g.add_node("triage_node", triage_node)
     g.add_node("context_loader_node", context_loader_node)
     g.add_node("supervisor_node", supervisor_node)
@@ -198,7 +275,20 @@ def _build_graph(*, stop_before_synthesis: bool = False) -> StateGraph:
     g.add_node("irrelevant_node", irrelevant_node)
 
     # Entry point
-    g.add_edge(START, "triage_node")
+    # A small relevance-ranked memory snapshot is loaded first so ambiguous
+    # personal messages can be interpreted in the quit-journey context.
+    g.add_edge(START, "crisis_precheck_node")
+    g.add_conditional_edges(
+        "crisis_precheck_node",
+        lambda state: "crisis_handler_node" if (
+            state.get("triage") and state["triage"].crisis_flag
+        ) else "context_loader_node",
+        {
+            "crisis_handler_node": "crisis_handler_node",
+            "context_loader_node": "context_loader_node",
+        },
+    )
+    g.add_edge("context_loader_node", "triage_node")
 
     # After triage: conditional routing
     g.add_conditional_edges(
@@ -208,12 +298,9 @@ def _build_graph(*, stop_before_synthesis: bool = False) -> StateGraph:
             "crisis_handler_node": "crisis_handler_node",
             "clarification_node": "clarification_node",
             "irrelevant_node": "irrelevant_node",
-            "context_loader_node": "context_loader_node",
+            "context_loader_node": "supervisor_node",
         },
     )
-
-    # Context → Supervisor
-    g.add_edge("context_loader_node", "supervisor_node")
 
     # Supervisor → specialists (conditional fan-out)
     # We use a simpler sequential approach: supervisor sets the list,

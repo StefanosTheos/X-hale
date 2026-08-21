@@ -8,7 +8,13 @@ URI scheme: xhale://<route>
 """
 from __future__ import annotations
 
+import json
+from pathlib import Path
+
 from app.models.retrieval import AppAction
+
+_REGISTRY_PATH = Path(__file__).parents[1] / "data" / "hailey_deeplinks.json"
+VALID_DEEPLINKS = frozenset(json.loads(_REGISTRY_PATH.read_text(encoding="utf-8")))
 
 
 # Static mapping of strategy → AppAction
@@ -52,9 +58,28 @@ CRAVING_ACTIONS: list[AppAction] = [
 ]
 
 
-def get_craving_actions(limit: int = 3) -> list[AppAction]:
-    """Return the top craving-support actions."""
-    return CRAVING_ACTIONS[:limit]
+def validate_action(action: AppAction) -> bool:
+    return action.deeplink in VALID_DEEPLINKS
+
+
+def get_craving_actions(limit: int = 3, situation: str = "") -> list[AppAction]:
+    """Return varied rule-based fallbacks appropriate to the situation."""
+    text = situation.casefold()
+    if any(word in text for word in ("bed", "sleep", "night", "anxious", "panic")):
+        preferred = ["xhale://distractions/sounds", "xhale://breathing", "xhale://diary/new"]
+    elif any(word in text for word in ("work", "meeting", "desk", "call", "break")):
+        preferred = ["xhale://distractions/stretches", "xhale://distractions/spin", "xhale://diary/new"]
+    elif any(word in text for word in ("hands", "bored", "waiting", "alone")):
+        preferred = ["xhale://explore/games", "xhale://distractions/spin", "xhale://diary/new"]
+    elif any(word in text for word in ("motivation", "progress", "why", "proud")):
+        preferred = ["xhale://dashboard", "xhale://achievements", "xhale://diary/new"]
+    else:
+        preferred = ["xhale://distractions/spin", "xhale://breathing", "xhale://explore/games"]
+    by_uri = {action.deeplink: action for action in CRAVING_ACTIONS}
+    return [
+        by_uri[uri].model_copy(update={"provenance": "fallback"})
+        for uri in preferred[:limit]
+    ]
 
 
 def get_action_by_strategy(strategy: str) -> AppAction | None:

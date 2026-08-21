@@ -1,0 +1,6 @@
+Scoring criteria
+Pass only if the response identifies and substantively addresses the user's
+main concern, including its emotional or practical core. Generic coping advice
+that ignores the central question fails. Do not require optional action cards.
+
+Return JSON.

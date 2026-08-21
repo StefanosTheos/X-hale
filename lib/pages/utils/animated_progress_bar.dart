@@ -2,8 +2,13 @@ import 'package:flutter/material.dart';
 
 class AnimatedProgressBar extends StatefulWidget {
   final double targetProgress;
+  final bool animateUpdates;
 
-  const AnimatedProgressBar({super.key, required this.targetProgress});
+  const AnimatedProgressBar({
+    super.key,
+    required this.targetProgress,
+    this.animateUpdates = true,
+  });
 
   @override
   AnimatedProgressBarState createState() => AnimatedProgressBarState();
@@ -42,16 +47,26 @@ class AnimatedProgressBarState extends State<AnimatedProgressBar>
     super.didUpdateWidget(oldWidget);
 
     if (oldWidget.targetProgress != widget.targetProgress) {
-      _animation = Tween<double>(
-        begin: _oldProgress,
-        end: widget.targetProgress.clamp(0, 1),
-      ).animate(
+      final target = widget.targetProgress.clamp(0.0, 1.0);
+
+      // Frequently updated values such as the once-per-second quit timer
+      // must not restart a multi-second animation on every tick. Doing so
+      // keeps the ticker and repaint loop active indefinitely while the
+      // dashboard is visible.
+      if (!widget.animateUpdates) {
+        _controller.stop();
+        _animation = AlwaysStoppedAnimation<double>(target);
+        _oldProgress = target;
+        return;
+      }
+
+      _animation = Tween<double>(begin: _oldProgress, end: target).animate(
         CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),
       );
       _controller
         ..reset()
         ..forward();
-      _oldProgress = widget.targetProgress.clamp(0, 1);
+      _oldProgress = target;
     }
   }
 
@@ -104,9 +119,10 @@ class _ProgressBarPainter extends CustomPainter {
       const Radius.circular(4),
     );
 
-    final backgroundPaint = Paint()
-      ..color = Colors.grey[300]!
-      ..style = PaintingStyle.fill;
+    final backgroundPaint =
+        Paint()
+          ..color = Colors.grey[300]!
+          ..style = PaintingStyle.fill;
     canvas.drawRRect(backgroundRRect, backgroundPaint);
 
     // Draw the foreground as a flat-edged rect *clipped* to the background's
@@ -121,13 +137,11 @@ class _ProgressBarPainter extends CustomPainter {
     if (clipWidth <= 0) return;
     canvas.save();
     canvas.clipRRect(backgroundRRect);
-    final progressPaint = Paint()
-      ..color = color
-      ..style = PaintingStyle.fill;
-    canvas.drawRect(
-      Rect.fromLTWH(0, 0, clipWidth, size.height),
-      progressPaint,
-    );
+    final progressPaint =
+        Paint()
+          ..color = color
+          ..style = PaintingStyle.fill;
+    canvas.drawRect(Rect.fromLTWH(0, 0, clipWidth, size.height), progressPaint);
     canvas.restore();
   }
 

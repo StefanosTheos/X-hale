@@ -20,6 +20,9 @@ class HaileyState(TypedDict, total=False):
 
     # ── Context (loaded once per turn) ──────────────────────────────────────
     user_memory: Optional[UserMemorySnapshot]
+    benchmark_memory_facts: list[dict[str, Any]]
+    benchmark_context_override: bool
+    benchmark_profile: dict[str, Any]
 
     # ── Triage ───────────────────────────────────────────────────────────────
     triage: Optional[TriageResult]
@@ -39,3 +42,6 @@ class HaileyState(TypedDict, total=False):
     is_crisis: bool
     is_irrelevant: bool
     needs_clarification: bool
+
+    # Benchmark/debug trace. Exposed only for the dedicated benchmark user.
+    trace: dict[str, Any]

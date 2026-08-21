@@ -31,13 +31,15 @@ def decide_specialists(
     # Behavioral signals are loaded inside RelapseRiskAgent when triage requests it;
     # they are intentionally not fetched here to avoid duplicate Appwrite reads.
 
-    # Ensure at least one specialist is invoked for relevant messages
+    # Ensure at least one specialist is invoked for relevant messages. Never
+    # default an ambiguous turn to medical: medical generation requires an
+    # explicit medical classification and grounded retrieval.
     if not specialists and triage.topic_relevance == "relevant":
         # Default to emotional support for unclear cases
         if triage.emotion not in ("neutral", "calm", "joy", "hope"):
             specialists = ["emotional_support"]
         else:
-            specialists = ["medical"]  # best-effort knowledge answer
+            specialists = ["emotional_support"]
 
     # Deduplicate while preserving order
     seen: set[str] = set()

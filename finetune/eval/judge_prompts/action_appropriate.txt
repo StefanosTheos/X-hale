@@ -1,0 +1,8 @@
+Scoring criteria
+Pass when each offered action is executable and reasonably suited to the user's
+current context. An action is not automatically required: a response without an
+action passes when conversation, clarification, or professional escalation is
+more appropriate. Fail repetitive or mismatched actions and any action that is
+not in the executable action list.
+
+Return JSON.

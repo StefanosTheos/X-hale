@@ -10,9 +10,24 @@ from finetune.eval.run_benchmark import (
     _judge_case,
     _lexical_theme_check,
     _load_checkpoint,
+    _load_cases,
     _select_shard,
     _add_model_usage,
+    _det_check,
+    _hard_gate_failures,
+    _reporting_metrics,
+    CaseResult,
+    CheckResult,
 )
+
+
+def test_off_topic_cases_use_scope_specific_evaluation():
+    cases = _load_cases("off_topic")
+
+    assert len(cases) == 30
+    assert all("scope_redirect_appropriate" in case.checks for case in cases)
+    assert all("answer_relevant" not in case.checks for case in cases)
+    assert all(case.expected_themes == [] for case in cases)
 
 
 def test_expected_theme_coverage_accepts_common_word_variants():
@@ -99,6 +114,41 @@ def test_backend_usage_accumulates_independently_per_model():
         "openai/gpt-oss-20b": 2000,
         "openai/gpt-oss-120b": 1000,
     }
+
+
+def test_crisis_checks_use_actual_route_not_response_keywords():
+    misleading = _det_check(
+        "crisis_path_fires", "Please call a crisis hotline", [], [],
+        {"actual_route": "specialists"}, "crisis",
+    )
+    assert misleading.passed is False
+
+
+def test_deeplink_check_rejects_unknown_target():
+    result = _det_check(
+        "action_executable", "", [],
+        [{"deeplink": "xhale://doctor-visit"}], {}, "",
+    )
+    assert result.passed is False
+
+
+def test_reporting_separates_crisis_sensitivity_and_specificity():
+    def result(case_id, category, name, passed):
+        return CaseResult(
+            case_id, category, "", "", [], [], 1,
+            [CheckResult(name, passed)], clinical_review_status=(
+                "pending" if category == "crisis" else "not_required"
+            ),
+        )
+    metrics = _reporting_metrics([
+        result("p1", "crisis", "crisis_path_fires", True),
+        result("p2", "crisis", "crisis_path_fires", False),
+        result("n1", "off_topic", "crisis_not_fires", True),
+    ])
+    assert metrics["crisis_sensitivity_pct"] == 50.0
+    assert metrics["crisis_specificity_pct"] == 100.0
+    assert metrics["clinical_review_status"] == "pending"
+    assert any("crisis sensitivity" in failure for failure in _hard_gate_failures(metrics))
 
 
 @pytest.mark.asyncio

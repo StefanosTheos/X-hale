@@ -90,6 +90,7 @@ flutter:
       - assets/audio/
       - assets/images/
       - assets/tiles/
+      - rag_backend2.0/app/data/hailey_deeplinks.json
 
   #   - images/a_dot_ham.jpeg
 

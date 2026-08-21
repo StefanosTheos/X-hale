@@ -15,6 +15,10 @@ from pydantic import BaseModel, Field
 class ChatRequest(BaseModel):
     message: str = Field(..., min_length=1, max_length=4000)
     locale: str = Field(default="en", max_length=10)  # e.g. "el", "en"
+    # Test-only ephemeral facts. Ignored for every account except the configured
+    # benchmark user; they are never persisted.
+    benchmark_memory_facts: list[dict] = Field(default_factory=list, max_length=5)
+    benchmark_profile: dict = Field(default_factory=dict)
 
 
 class SSEStatusEvent(BaseModel):

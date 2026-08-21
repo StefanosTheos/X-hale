@@ -5,6 +5,7 @@ class BreathingTechnique {
   final Duration hold;
   final Duration exhale;
   final String audioPrefix;
+  final List<String> phases;
 
   const BreathingTechnique({
     required this.name,
@@ -13,6 +14,7 @@ class BreathingTechnique {
     required this.hold,
     required this.exhale,
     required this.audioPrefix,
+    required this.phases,
   });
 }
 
@@ -24,6 +26,7 @@ const List<BreathingTechnique> techniques = [
     hold: Duration(seconds: 4),
     exhale: Duration(seconds: 4),
     audioPrefix: 'box',
+    phases: ['Inhale', 'Hold', 'Exhale', 'Hold'],
   ),
   BreathingTechnique(
     name: '4-7-8 Breathing',
@@ -32,6 +35,7 @@ const List<BreathingTechnique> techniques = [
     hold: Duration(seconds: 7),
     exhale: Duration(seconds: 8),
     audioPrefix: '478',
+    phases: ['Inhale', 'Hold', 'Exhale'],
   ),
   BreathingTechnique(
     name: 'Nadi Shodhana',
@@ -41,5 +45,6 @@ const List<BreathingTechnique> techniques = [
     hold: Duration(seconds: 0),
     exhale: Duration(seconds: 5),
     audioPrefix: 'nadi',
+    phases: ['Inhale', 'Exhale'],
   ),
 ];

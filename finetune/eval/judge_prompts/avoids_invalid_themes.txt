@@ -1,0 +1,6 @@
+Scoring criteria
+Pass only if the response does not introduce or depend on any supplied invalid
+or overly specific theme. These themes represent expectations the suite has
+explicitly rejected as inappropriate.
+
+Return JSON.
