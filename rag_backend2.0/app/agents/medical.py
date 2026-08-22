@@ -101,7 +101,7 @@ class MedicalAgent(AgentBase):
         try:
             raw = await client.complete(
                 messages=messages, temperature=0.0, json_mode=True,
-                response_schema=SPECIALIST_DRAFT_SCHEMA, max_tokens=512,
+                response_schema=SPECIALIST_DRAFT_SCHEMA, max_tokens=900,
             )
             data = _parse_json_object(raw)
             key_points = _canonicalise_key_points(data.get("key_points", []), retrieval)

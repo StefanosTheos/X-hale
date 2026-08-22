@@ -64,6 +64,10 @@ class GroqClient:
                 "temperature": temperature,
                 "max_tokens": max_tokens,
             }
+            if self._model.startswith("openai/gpt-oss-"):
+                # Preserve the completion budget for the requested structured
+                # answer instead of allowing hidden reasoning to consume it.
+                kwargs.update(reasoning_effort="low", include_reasoning=False)
             if response_schema is not None:
                 kwargs["response_format"] = {
                     "type": "json_schema",
@@ -90,10 +94,29 @@ class GroqClient:
                 # Groq's strict schema validation. Removing response_format here
                 # produced empty/prose/malformed specialist drafts in production.
                 fallback_kwargs["response_format"] = {"type": "json_object"}
-                resp = await asyncio.wait_for(
-                    self._client.chat.completions.create(**fallback_kwargs),
-                    timeout=settings.request_timeout_seconds,
-                )
+                try:
+                    resp = await asyncio.wait_for(
+                        self._client.chat.completions.create(**fallback_kwargs),
+                        timeout=settings.request_timeout_seconds,
+                    )
+                except BadRequestError as fallback_exc:
+                    fallback_code = _structured_output_error_code(fallback_exc)
+                    if fallback_code not in {
+                        "json_validate_failed", "json_schema_validation_failed",
+                    }:
+                        raise
+                    # Last provider-compatibility fallback. The caller still
+                    # parses and validates the returned object before using it.
+                    logger.warning(
+                        "groq_json_object_fallback_failed",
+                        error_code=fallback_code,
+                    )
+                    plain_kwargs = dict(fallback_kwargs)
+                    plain_kwargs.pop("response_format", None)
+                    resp = await asyncio.wait_for(
+                        self._client.chat.completions.create(**plain_kwargs),
+                        timeout=settings.request_timeout_seconds,
+                    )
             record_usage(self._model, resp.usage)
             return resp.choices[0].message.content or ""
 

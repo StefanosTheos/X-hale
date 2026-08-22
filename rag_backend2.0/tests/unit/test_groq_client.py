@@ -48,6 +48,8 @@ async def test_complete_uses_strict_json_schema():
         "type": "json_schema",
         "json_schema": {"name": "hailey_response", "strict": True, "schema": schema},
     }
+    assert kwargs["reasoning_effort"] == "low"
+    assert kwargs["include_reasoning"] is False
 
 
 @pytest.mark.asyncio
@@ -70,6 +72,28 @@ async def test_complete_downgrades_to_json_object_after_schema_validation_error(
     assert create.await_count == 2
     assert "response_format" in create.await_args_list[0].kwargs
     assert create.await_args_list[1].kwargs["response_format"] == {"type": "json_object"}
+
+
+@pytest.mark.asyncio
+async def test_complete_can_fall_back_from_schema_and_json_object_to_plain_output():
+    client = GroqClient(model="openai/gpt-oss-20b")
+    client._client = MagicMock()
+    request = httpx.Request("POST", "https://api.groq.com/openai/v1/chat/completions")
+    response = httpx.Response(400, request=request)
+    error = BadRequestError(
+        "JSON validation failed", response=response,
+        body={"code": "json_validate_failed"},
+    )
+    create = AsyncMock(side_effect=[error, error, _completion('{"value":"ok"}')])
+    client._client.chat.completions.create = create
+
+    result = await client.complete([], response_schema={"type": "object"})
+
+    assert result == '{"value":"ok"}'
+    assert create.await_count == 3
+    assert create.await_args_list[1].kwargs["response_format"] == {"type": "json_object"}
+    assert "response_format" not in create.await_args_list[2].kwargs
+    assert create.await_args_list[2].kwargs["reasoning_effort"] == "low"
 
 
 @pytest.mark.asyncio
