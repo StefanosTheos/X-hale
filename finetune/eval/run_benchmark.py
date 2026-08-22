@@ -439,6 +439,30 @@ def _parse_json_object(content: str) -> dict:
     return json.loads(content[start:end + 1])
 
 
+def _validate_judge_result(
+    result: dict,
+    check_names: list[str],
+    needs_semantic_themes: bool,
+) -> None:
+    """Reject incomplete judge objects so one recovery call can repair them."""
+    judgments = result.get("judgments")
+    if not isinstance(judgments, dict):
+        raise ValueError("judge result is missing judgments")
+    for name in check_names:
+        judgment = judgments.get(name)
+        if not isinstance(judgment, dict):
+            raise ValueError(f"judge result is missing {name}")
+        if not isinstance(judgment.get("pass"), bool) or not isinstance(
+            judgment.get("reason"), str
+        ):
+            raise ValueError(f"judge result has invalid {name} fields")
+    if needs_semantic_themes and (
+        not isinstance(result.get("matched_themes"), list)
+        or not isinstance(result.get("theme_reason"), str)
+    ):
+        raise ValueError("judge result has invalid theme fields")
+
+
 async def _judge_case(
     question: str,
     response: str,
@@ -515,15 +539,40 @@ async def _judge_case(
             model=_judge_model(),
             messages=[{"role": "user", "content": prompt}],
             temperature=0,
-            max_completion_tokens=900,
+            max_completion_tokens=1600,
         )
         if _judge_provider() == "groq":
             kwargs.update(
                 reasoning_effort="low", include_reasoning=False,
                 response_format={"type": "json_schema", "json_schema": schema},
             )
-        chat = await _judge().chat.completions.create(**kwargs)
-        result = _parse_json_object(chat.choices[0].message.content or "")
+        else:
+            # Gemini's OpenAI-compatible endpoint supports JSON-object mode and
+            # is less prone to wrapping or truncating the combined judgment.
+            kwargs["response_format"] = {"type": "json_object"}
+
+        result: dict | None = None
+        parse_error: Exception | None = None
+        for attempt in range(2):
+            request_kwargs = dict(kwargs)
+            if attempt:
+                request_kwargs["messages"] = [{
+                    "role": "user",
+                    "content": prompt + (
+                        "\n\nYour previous output was malformed or incomplete. Return the complete "
+                        "JSON object only. Use very short reasons and no markdown."
+                    ),
+                }]
+            chat = await _judge().chat.completions.create(**request_kwargs)
+            try:
+                candidate = _parse_json_object(chat.choices[0].message.content or "")
+                _validate_judge_result(candidate, check_names, needs_semantic_themes)
+                result = candidate
+                break
+            except (json.JSONDecodeError, KeyError, TypeError, ValueError) as exc:
+                parse_error = exc
+        if result is None:
+            raise ValueError(f"judge returned invalid JSON after recovery: {parse_error}")
         checks = [
             CheckResult(name, bool(result["judgments"][name]["pass"]), str(result["judgments"][name]["reason"]))
             for name in check_names

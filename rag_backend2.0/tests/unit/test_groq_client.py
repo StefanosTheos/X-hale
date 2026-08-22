@@ -51,7 +51,7 @@ async def test_complete_uses_strict_json_schema():
 
 
 @pytest.mark.asyncio
-async def test_complete_retries_without_response_format_after_json_validation_error():
+async def test_complete_downgrades_to_json_object_after_schema_validation_error():
     client = GroqClient(model="openai/gpt-oss-20b")
     client._client = MagicMock()
     request = httpx.Request("POST", "https://api.groq.com/openai/v1/chat/completions")
@@ -69,7 +69,7 @@ async def test_complete_retries_without_response_format_after_json_validation_er
     assert result == '{"value":"ok"}'
     assert create.await_count == 2
     assert "response_format" in create.await_args_list[0].kwargs
-    assert "response_format" not in create.await_args_list[1].kwargs
+    assert create.await_args_list[1].kwargs["response_format"] == {"type": "json_object"}
 
 
 @pytest.mark.asyncio

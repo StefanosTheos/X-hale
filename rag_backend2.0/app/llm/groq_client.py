@@ -86,7 +86,10 @@ class GroqClient:
                     raise
                 logger.warning("groq_structured_output_fallback", error_code=error_code)
                 fallback_kwargs = dict(kwargs)
-                fallback_kwargs.pop("response_format", None)
+                # Preserve syntactic JSON enforcement even when the model fails
+                # Groq's strict schema validation. Removing response_format here
+                # produced empty/prose/malformed specialist drafts in production.
+                fallback_kwargs["response_format"] = {"type": "json_object"}
                 resp = await asyncio.wait_for(
                     self._client.chat.completions.create(**fallback_kwargs),
                     timeout=settings.request_timeout_seconds,

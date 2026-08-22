@@ -176,3 +176,62 @@ async def test_combined_judge_uses_one_request_for_all_checks(monkeypatch):
         "answer_relevant", "tone_warm_empathetic", "expected_theme_coverage",
     }
     assert all(result.passed for result in results)
+
+
+@pytest.mark.asyncio
+async def test_combined_judge_recovers_once_from_malformed_json(monkeypatch):
+    valid = {
+        "judgments": {
+            "answer_relevant": {"pass": True, "reason": "Direct answer."},
+        },
+        "matched_themes": ["support"],
+        "theme_reason": "Support is present.",
+    }
+    completion = AsyncMock(side_effect=[
+        SimpleNamespace(choices=[SimpleNamespace(
+            message=SimpleNamespace(content='{"judgments": {broken}')
+        )]),
+        SimpleNamespace(choices=[SimpleNamespace(
+            message=SimpleNamespace(content=json.dumps(valid))
+        )]),
+    ])
+    fake = SimpleNamespace(chat=SimpleNamespace(completions=SimpleNamespace(create=completion)))
+    monkeypatch.setenv("BENCHMARK_JUDGE_PROVIDER", "gemini")
+    with patch("finetune.eval.run_benchmark._judge", return_value=fake):
+        results = await _judge_case(
+            "Help", "Here is direct support.", ["answer_relevant"], ["support", "care"],
+        )
+    assert completion.await_count == 2
+    assert all(result.passed for result in results)
+    assert completion.await_args_list[0].kwargs["response_format"] == {"type": "json_object"}
+    assert "previous output was malformed" in (
+        completion.await_args_list[1].kwargs["messages"][0]["content"].lower()
+    )
+
+
+@pytest.mark.asyncio
+async def test_combined_judge_recovers_from_incomplete_object(monkeypatch):
+    incomplete = {"judgments": {}}
+    valid = {
+        "judgments": {
+            "answer_relevant": {"pass": False, "reason": "Does not answer."},
+        },
+    }
+    completion = AsyncMock(side_effect=[
+        SimpleNamespace(choices=[SimpleNamespace(
+            message=SimpleNamespace(content=json.dumps(incomplete))
+        )]),
+        SimpleNamespace(choices=[SimpleNamespace(
+            message=SimpleNamespace(content=json.dumps(valid))
+        )]),
+    ])
+    fake = SimpleNamespace(chat=SimpleNamespace(completions=SimpleNamespace(create=completion)))
+    monkeypatch.setenv("BENCHMARK_JUDGE_PROVIDER", "gemini")
+    with patch("finetune.eval.run_benchmark._judge", return_value=fake):
+        results = await _judge_case(
+            "Question", "Unrelated", ["answer_relevant"], [],
+        )
+    assert completion.await_count == 2
+    assert results[0].name == "answer_relevant"
+    assert results[0].passed is False
+    assert results[0].infrastructure_error is False
