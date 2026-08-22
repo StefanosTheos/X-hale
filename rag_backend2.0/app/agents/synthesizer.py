@@ -138,6 +138,7 @@ def _post_process(raw: str, state) -> tuple[str, list[Citation]]:
 
     validation = validate_citations(filtered_text, source_claims, citation_by_id, cited_ids)
     citations = validation.citations
+    candidate_text = filtered_text
     medical_requested = "medical" in (state.get("requested_specialists") or [])
     if medical_requested and not citations and not was_blocked:
         filtered_text = (
@@ -146,7 +147,7 @@ def _post_process(raw: str, state) -> tuple[str, list[Citation]]:
         )
     trace = dict(state.get("trace") or {})
     trace["citation_validation"] = {
-        "candidate_response": filtered_text,
+        "candidate_response": candidate_text,
         "source_claims": source_claims,
         "declared_source_ids": cited_ids,
         "available_source_ids": sorted(valid_ids),
