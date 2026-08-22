@@ -123,3 +123,9 @@ def test_medical_post_processing_keeps_supported_canonical_citation():
     assert text == "Nicotine replacement therapy helps manage cravings."
     assert citations == [citation]
     assert state["trace"]["citation_validation"]["rejection_reasons"] == {}
+    assert state["trace"]["citation_validation"]["candidate_response"] == (
+        "Nicotine replacement therapy helps manage cravings."
+    )
+    assert state["trace"]["citation_validation"]["source_claims"] == {
+        "nhs_nrt": ["Nicotine replacement therapy helps manage cravings."]
+    }

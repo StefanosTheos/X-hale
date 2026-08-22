@@ -146,6 +146,8 @@ def _post_process(raw: str, state) -> tuple[str, list[Citation]]:
         )
     trace = dict(state.get("trace") or {})
     trace["citation_validation"] = {
+        "candidate_response": filtered_text,
+        "source_claims": source_claims,
         "declared_source_ids": cited_ids,
         "available_source_ids": sorted(valid_ids),
         "exposed_source_ids": [citation.source_id for citation in citations],
