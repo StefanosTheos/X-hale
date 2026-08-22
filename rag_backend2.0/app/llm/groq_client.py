@@ -67,7 +67,12 @@ class GroqClient:
             if self._model.startswith("openai/gpt-oss-"):
                 # Preserve the completion budget for the requested structured
                 # answer instead of allowing hidden reasoning to consume it.
-                kwargs.update(reasoning_effort="low", include_reasoning=False)
+                # The Space's Groq SDK version requires these newer provider
+                # controls in extra_body rather than as top-level parameters.
+                kwargs["extra_body"] = {
+                    "reasoning_effort": "low",
+                    "include_reasoning": False,
+                }
             if response_schema is not None:
                 kwargs["response_format"] = {
                     "type": "json_schema",

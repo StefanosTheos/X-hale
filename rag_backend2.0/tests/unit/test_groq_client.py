@@ -48,8 +48,9 @@ async def test_complete_uses_strict_json_schema():
         "type": "json_schema",
         "json_schema": {"name": "hailey_response", "strict": True, "schema": schema},
     }
-    assert kwargs["reasoning_effort"] == "low"
-    assert kwargs["include_reasoning"] is False
+    assert kwargs["extra_body"] == {
+        "reasoning_effort": "low", "include_reasoning": False,
+    }
 
 
 @pytest.mark.asyncio
@@ -93,7 +94,9 @@ async def test_complete_can_fall_back_from_schema_and_json_object_to_plain_outpu
     assert create.await_count == 3
     assert create.await_args_list[1].kwargs["response_format"] == {"type": "json_object"}
     assert "response_format" not in create.await_args_list[2].kwargs
-    assert create.await_args_list[2].kwargs["reasoning_effort"] == "low"
+    assert create.await_args_list[2].kwargs["extra_body"] == {
+        "reasoning_effort": "low", "include_reasoning": False,
+    }
 
 
 @pytest.mark.asyncio
