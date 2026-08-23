@@ -16,7 +16,7 @@ from app.models.retrieval import Citation, SpecialistDraft
 from app.observability.logging import get_logger
 from app.prompts.system import HAILEY_SYSTEM
 from app.prompts.synthesizer import SYNTHESIZER_SYSTEM, SYNTHESIZER_USER_TEMPLATE
-from app.safety.citation_validator import validate_citations
+from app.safety.citation_validator import claim_is_represented, validate_citations
 from app.safety.content_filter import filter_response
 from app.safety.medical_risk import medical_risk_tier
 
@@ -26,6 +26,12 @@ _CITATION_PATTERN = re.compile(r"<!--\s*citations:\s*(\[.*?\])\s*-->", re.DOTALL
 _INLINE_MARKER_PATTERN = re.compile(r"\[[a-z][a-z0-9_]+\]")
 _NUMBER_PATTERN = re.compile(r"\b\d+(?:\.\d+)?\b")
 _TIME_UNIT_PATTERN = re.compile(r"\b(?:hours?|days?|weeks?|months?|years?)\b", re.IGNORECASE)
+_MEDICAL_FACT_PATTERN = re.compile(
+    r"\b(?:body|brain|heart|lung|blood|circulation|oxygen|carbon monoxide|nicotine|"
+    r"metabolis\w*|appetite|weight|disease|cancer|risk|symptom|withdrawal|craving|"
+    r"heal\w*|recover\w*|function|capacity|breath\w*)\b",
+    re.IGNORECASE,
+)
 _SENTENCE_SPLIT = re.compile(r"(?<=[.!?])\s+|\n+")
 
 
@@ -41,6 +47,20 @@ def _quantitative_sentence_is_attributed(sentence: str, claims: list[str]) -> bo
         if sentence_numbers.issubset(claim_numbers) and sentence_units.issubset(claim_units):
             return True
     return False
+
+
+def _medical_sentence_is_attributed(sentence: str, claims: list[str]) -> bool:
+    if not _MEDICAL_FACT_PATTERN.search(sentence):
+        return True
+    return any(claim_is_represented(claim, sentence) for claim in claims)
+
+
+def _as_sentence(claim: str) -> str:
+    cleaned = claim.strip()
+    if not cleaned:
+        return ""
+    cleaned = cleaned[0].upper() + cleaned[1:]
+    return cleaned if cleaned.endswith((".", "!", "?")) else cleaned + "."
 
 
 def _format_specialist_drafts(drafts: dict[str, str]) -> str:
@@ -170,11 +190,24 @@ def _post_process(raw: str, state) -> tuple[str, list[Citation]]:
                 if source_id in exposed_ids for claim in claims
             ]
             sentences = []
+            removed_unsupported = False
             for sentence in _SENTENCE_SPLIT.split(filtered_text):
-                if not _quantitative_sentence_is_attributed(sentence, attributed_claims):
+                if (
+                    not _quantitative_sentence_is_attributed(sentence, attributed_claims)
+                    or not _medical_sentence_is_attributed(sentence, attributed_claims)
+                ):
+                    removed_unsupported = True
                     continue
                 if sentence.strip():
                     sentences.append(sentence.strip())
+            if removed_unsupported:
+                retained_text = " ".join(sentences)
+                for claim in attributed_claims:
+                    if not claim_is_represented(claim, retained_text):
+                        exact_sentence = _as_sentence(claim)
+                        if exact_sentence:
+                            sentences.append(exact_sentence)
+                            retained_text = " ".join(sentences)
             filtered_text = " ".join(sentences) or filtered_text
         elif risk_tier == "low" and valid_ids:
             # Low-risk general-benefit answers may be shown with explicit

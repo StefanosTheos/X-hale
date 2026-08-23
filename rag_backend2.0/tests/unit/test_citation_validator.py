@@ -1,7 +1,11 @@
 """Claim entailment and citation coverage checks."""
 from app.models.retrieval import Citation
 from app.safety.citation_validator import claim_is_represented, validate_citations
-from app.agents.synthesizer import _quantitative_sentence_is_attributed, post_process_synthesis
+from app.agents.synthesizer import (
+    _medical_sentence_is_attributed,
+    _quantitative_sentence_is_attributed,
+    post_process_synthesis,
+)
 from app.safety.medical_risk import medical_risk_tier
 
 
@@ -180,3 +184,34 @@ def test_generated_timeframe_must_exist_in_attributed_claim():
     assert _quantitative_sentence_is_attributed(
         "By the end of a year, lung function can increase by up to 10%.", claims,
     ) is False
+
+
+def test_unsupported_medical_explanation_is_rejected():
+    claims = ["You may feel hungrier after quitting."]
+    assert _medical_sentence_is_attributed(
+        "You may feel hungrier after quitting.", claims,
+    ) is True
+    assert _medical_sentence_is_attributed(
+        "Your metabolism slows because nicotine changes your body.", claims,
+    ) is False
+
+
+def test_removed_paraphrased_timeline_is_restored_as_exact_key_point():
+    citation = _citation("nhs", "After 48 hours carbon monoxide drops to a non-smoker level.")
+    state = {
+        "user_input": "How quickly does carbon monoxide leave my body?",
+        "requested_specialists": ["medical"],
+        "specialist_drafts": {"medical": {
+            "key_points": [{
+                "claim": "After 48 hours carbon monoxide drops to a non-smoker level.",
+                "source_id": "nhs",
+            }],
+            "citations": [citation.model_dump()],
+        }},
+        "trace": {},
+    }
+    text, citations = post_process_synthesis(
+        "Within two days carbon monoxide drops to a non-smoker level.", state,
+    )
+    assert "After 48 hours carbon monoxide drops to a non-smoker level." in text
+    assert citations == [citation]
