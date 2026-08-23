@@ -55,7 +55,17 @@ async def rerank(query: str, chunks: list[RetrievedChunk]) -> list[RetrievedChun
     _MIN_SCORE (with a guarantee that at least one chunk is always returned).
     """
     if not settings.enable_reranker:
-        return chunks
+        # Always apply a cheap lexical relevance correction on top of vector
+        # similarity. This promotes passages that explicitly mention the user's
+        # requested body system, symptom, or medication without another model.
+        query_terms = {term for term in query.casefold().split() if len(term) > 3}
+        return sorted(
+            chunks,
+            key=lambda chunk: (
+                len(query_terms & set(chunk.content.casefold().split())), chunk.score
+            ),
+            reverse=True,
+        )
 
     if not chunks:
         return chunks

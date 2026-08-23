@@ -16,12 +16,12 @@ def _chunk(content: str, source_id: str = "s", score: float = 0.8) -> RetrievedC
 # ── Flag-off behaviour ────────────────────────────────────────────────────────
 
 @pytest.mark.asyncio
-async def test_rerank_disabled_returns_original_unchanged(monkeypatch):
-    """When ENABLE_RERANKER=false the list must be returned exactly as-is."""
+async def test_rerank_disabled_uses_cheap_lexical_ordering(monkeypatch):
+    """Without the model, relevant vector candidates still move to the front."""
     monkeypatch.setattr("app.retrieval.reranker.settings.enable_reranker", False)
-    chunks = [_chunk("a"), _chunk("b"), _chunk("c")]
-    result = await rerank("query", chunks)
-    assert result is chunks
+    chunks = [_chunk("unrelated", "a"), _chunk("lung recovery after quitting", "b")]
+    result = await rerank("lung recovery", chunks)
+    assert [chunk.source_id for chunk in result] == ["b", "a"]
 
 
 @pytest.mark.asyncio

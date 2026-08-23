@@ -32,7 +32,10 @@ Rules:
   Use only source_ids that appear inside square brackets [like_this] in the specialist drafts below.
   If the drafts contain no source_ids, omit the block entirely.
 - Never invent X-hale screens or feature names. The only available destinations
-  are those included in specialist suggested_deeplinks.
+  are those included in specialist suggested_deeplinks. Do not create a branded
+  name for a generic activity (for example, never call logging cravings a
+  "Craving Tracker"). If no executable destination is supplied, suggest the
+  activity generically without claiming that it is an app feature.
 """
 
 SYNTHESIZER_USER_TEMPLATE = """User message: {user_input}

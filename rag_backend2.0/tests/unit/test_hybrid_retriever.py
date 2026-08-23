@@ -6,11 +6,22 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from app.retrieval.hybrid_retriever import (
+    _expand_medical_query,
     _select_diverse_chunks,
     _vector_retrieval,
     retrieve,
 )
 from app.models.retrieval import RetrievedChunk
+
+
+def test_medical_query_expansion_adds_retrieval_terms_without_claims():
+    expanded = _expand_medical_query("Will quitting improve my fitness?", "medical")
+    assert "lung function" in expanded
+    assert "oxygen circulation" in expanded
+
+
+def test_nonmedical_query_is_not_expanded():
+    assert _expand_medical_query("Who won the match?", "off_topic") == "Who won the match?"
 
 
 @pytest.mark.asyncio

@@ -27,6 +27,33 @@ logger = get_logger(__name__)
 
 RetrievalStrategy = Literal["factual", "exploratory", "benefit", "emotional", "web"]
 
+_MEDICAL_QUERY_EXPANSIONS: tuple[tuple[re.Pattern[str], str], ...] = (
+    (re.compile(r"\b(?:fitness|stamina|exercise|workout|sport)\b", re.I),
+     "physical activity lung function oxygen circulation breathing"),
+    (re.compile(r"\b(?:skin|complexion|wrinkle)\b", re.I), "skin circulation healing"),
+    (re.compile(r"\b(?:eye|eyesight|vision)\b", re.I),
+     "eye health cataract macular degeneration"),
+    (re.compile(r"\b(?:mouth|oral|gum|teeth|tooth)\b", re.I),
+     "oral health gum disease teeth"),
+    (re.compile(r"\b(?:fertility|pregnan|reproductive)\w*\b", re.I),
+     "fertility reproductive health pregnancy"),
+    (re.compile(r"\b(?:wound|surgery|operation)\w*\b", re.I),
+     "wound healing circulation oxygen surgery"),
+    (re.compile(r"\b(?:bone|osteoporosis|fracture)\w*\b", re.I),
+     "bone health osteoporosis fracture"),
+    (re.compile(r"\b(?:immune|infection)\w*\b", re.I), "immune system infection"),
+    (re.compile(r"\b(?:sleep|dream|insomnia)\w*\b", re.I),
+     "nicotine withdrawal sleep dreams insomnia"),
+)
+
+
+def _expand_medical_query(query: str, intent: str) -> str:
+    """Add conservative domain terms without adding medical claims."""
+    if intent not in {"medical", "factual", "exploratory", "unknown"}:
+        return query
+    additions = [terms for pattern, terms in _MEDICAL_QUERY_EXPANSIONS if pattern.search(query)]
+    return f"{query} {' '.join(additions)}".strip() if additions else query
+
 
 async def retrieve(
     query: str,
@@ -56,7 +83,8 @@ async def retrieve(
         return await _benefit_retrieval(query, filters["benefit_id"])
 
     try:
-        chunks = await _vector_retrieval(query, strategy, filters, k)
+        retrieval_query = _expand_medical_query(query, intent)
+        chunks = await _vector_retrieval(retrieval_query, strategy, filters, k)
     except Exception as exc:
         # Public retrieval boundary: callers receive an empty, explicit result
         # even if an unexpected lower-level provider error escapes its adapter.

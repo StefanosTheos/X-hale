@@ -68,7 +68,19 @@ def _read_txt(path: str) -> str:
 def _read_url(url: str) -> str:
     """Fetch and extract text from a URL (HTML or PDF)."""
     import requests
-    resp = requests.get(url, timeout=15, headers={"User-Agent": "Mozilla/5.0"})
+    resp = requests.get(
+        url,
+        timeout=20,
+        headers={
+            "User-Agent": (
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                "AppleWebKit/537.36 (KHTML, like Gecko) "
+                "Chrome/127.0.0.0 Safari/537.36"
+            ),
+            "Accept": "text/html,application/xhtml+xml,application/pdf;q=0.9,*/*;q=0.8",
+            "Accept-Language": "en-US,en;q=0.9",
+        },
+    )
     resp.raise_for_status()
     content_type = resp.headers.get("content-type", "")
     if "pdf" in content_type or url.lower().endswith(".pdf"):

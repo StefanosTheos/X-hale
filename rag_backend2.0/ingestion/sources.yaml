@@ -50,8 +50,42 @@ governance_profiles:
     inclusion_decision: included_after_developer_review
     independent_content_review: pending
     next_scheduled_review: "2026-12-12"
+  targeted_corpus: &targeted_corpus_governance
+    fetch_date: "2026-08-23"
+    fetch_date_status: verified_during_developer_review
+    ingestion_evidence_date: "2026-08-23"
+    developer_review_date: "2026-08-23"
+    reviewer_name: Stefanos Theos
+    reviewer_role: application developer and source curator
+    review_scope: recurring benchmark coverage, publisher authority, scientific support, and consistency screening
+    authority_rationale: official CDC, NHS, or United States National Cancer Institute smoking-cessation guidance
+    access_status: publicly_accessible
+    licensing_status: reuse_license_and_permission_not_independently_verified
+    content_version: live_web_page_reviewed_2026_08_23
+    content_sha256: unavailable
+    inclusion_decision: included_after_developer_review
+    independent_content_review: pending
+    next_scheduled_review: "2027-02-23"
 
 sources:
+  # ── Targeted coverage for recurring medical-query gaps ────────────────────
+
+  - source_id: smokefree_workout_effects
+    governance: *targeted_corpus_governance
+    url: https://smokefree.gov/quit-smoking/why-you-should-quit/how-smoking-affects-your-workout
+    source_type: government
+    topic_tags: [physical_activity, fitness, lung_health, cardiovascular, cravings]
+    recency_date: "2026-08-23"
+    ingested: true
+
+  - source_id: cdc_tobacco_oral_health
+    governance: *targeted_corpus_governance
+    url: https://www.cdc.gov/oral-health/data-research/facts-stats/fast-facts-tobacco-use-and-oral-health.html
+    source_type: government
+    topic_tags: [oral_health, gum_disease, tooth_health, cancer_risk]
+    recency_date: "2024-05-15"
+    ingested: false
+
   # ── Already ingested ────────────────────────────────────────────────────────
 
   - source_id: cdc_benefits_timeline

@@ -16,6 +16,14 @@ _STOPWORDS = frozenset({
     "its", "may", "of", "on", "or", "that", "the", "their", "then", "there",
     "these", "this", "to", "was", "were", "will", "with", "you", "your",
 })
+_SYNONYMS = {
+    "nonsmoker": "non-smoker", "nonsmokers": "non-smoker",
+    "decrease": "drop", "decreases": "drop", "decreased": "drop",
+    "reduce": "drop", "reduces": "drop", "reduced": "drop",
+    "improve": "better", "improves": "better", "improved": "better",
+    "circulation": "bloodflow", "blood": "blood", "flow": "bloodflow",
+    "weeks": "week", "months": "month", "years": "year", "hours": "hour",
+}
 
 
 @dataclass(frozen=True)
@@ -29,13 +37,14 @@ class CitationValidation:
 
 def _normalise_token(token: str) -> str:
     """Apply small, predictable suffix normalisation without external NLP models."""
+    normalized = token
     if len(token) > 5 and token.endswith("ing"):
-        return token[:-3]
-    if len(token) > 4 and token.endswith("ed"):
-        return token[:-2]
-    if len(token) > 4 and token.endswith("s"):
-        return token[:-1]
-    return token
+        normalized = token[:-3]
+    elif len(token) > 4 and token.endswith("ed"):
+        normalized = token[:-2]
+    elif len(token) > 4 and token.endswith("s"):
+        normalized = token[:-1]
+    return _SYNONYMS.get(normalized, normalized)
 
 
 def _content_tokens(text: str) -> set[str]:
@@ -105,7 +114,27 @@ def validate_citations(
             elif not response_represents_claim:
                 rejection_reasons.setdefault(source_id, []).append("claim_not_present_in_response")
 
-    ordered_ids = list(dict.fromkeys(declared_source_ids + list(source_claims)))
+    # Direct evidence alignment is the primary path: a final-answer sentence may
+    # be supported by a retrieved passage even when the specialist paraphrased or
+    # omitted an intermediate key point. Numeric and negation safeguards remain
+    # enforced by claim_is_represented().
+    response_sentences = [
+        sentence.strip() for sentence in _SENTENCE_RE.split(response)
+        if len(_content_tokens(sentence)) >= 3
+    ]
+    for source_id, citation in citation_by_id.items():
+        if source_id in represented or not citation.snippet.strip():
+            continue
+        for sentence in response_sentences:
+            if claim_is_represented(sentence, citation.snippet):
+                represented.add(source_id)
+                represented_claims += 1
+                rejection_reasons.pop(source_id, None)
+                break
+
+    ordered_ids = list(dict.fromkeys(
+        declared_source_ids + list(source_claims) + list(citation_by_id)
+    ))
     # A declared ID still needs entailment. Claim matching also supplies coverage
     # when markers are absent or incomplete.
     eligible = represented & set(citation_by_id)
@@ -114,7 +143,7 @@ def validate_citations(
         if source_id not in citation_by_id:
             rejection_reasons.setdefault(source_id, []).append("source_not_retrieved")
     for source_id in citation_by_id:
-        if source_id not in source_claims:
+        if source_id not in source_claims and source_id not in represented:
             rejection_reasons.setdefault(source_id, []).append(
                 "no_specialist_claim_attributed"
             )

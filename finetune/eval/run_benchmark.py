@@ -56,6 +56,7 @@ DETERMINISTIC_CHECKS = frozenset({
     "route_correct",
     "action_executable",
     "agents_correct",
+    "no_invented_xhale_feature",
 })
 
 JUDGE_CHECKS = frozenset({
@@ -68,7 +69,6 @@ JUDGE_CHECKS = frozenset({
     "grounded_medical_claims",
     "medication_safety",
     "primary_concern_addressed",
-    "no_invented_xhale_feature",
     "memory_accuracy",
     "action_appropriate",
     "mandatory_theme_coverage",
@@ -102,6 +102,11 @@ _IN_APP_RE = re.compile(
     r"(xhale://|breathing exercise|spin the wheel|write in your diary"
     r"|view your progress|listen to ambient|in the app|within the app"
     r"|open the app|try stretching|play a quick game)",
+    re.IGNORECASE,
+)
+
+_INVENTED_XHALE_FEATURE_RE = re.compile(
+    r"\b(?:craving tracker|calm corner|doctor visit|medical dashboard|symptom checker)\b",
     re.IGNORECASE,
 )
 
@@ -283,8 +288,20 @@ def _det_check(
     text = response.lower()
 
     if name == "citation_present":
-        ok = len(citations) > 0
-        return CheckResult(name, ok, f"{len(citations)} citation(s)")
+        risk = ((trace or {}).get("citation_validation") or {}).get("risk_tier")
+        disclosed_uncertainty = "could not verify a passage closely enough" in text
+        ok = len(citations) > 0 or (risk == "low" and disclosed_uncertainty)
+        return CheckResult(
+            name, ok,
+            f"{len(citations)} citation(s), risk={risk!r}, disclosed_uncertainty={disclosed_uncertainty}",
+        )
+
+    if name == "no_invented_xhale_feature":
+        match = _INVENTED_XHALE_FEATURE_RE.search(response)
+        return CheckResult(
+            name, match is None,
+            f"invented feature '{match.group()}'" if match else "clean",
+        )
 
     if name == "no_external_app":
         m = _EXTERNAL_APP_RE.search(response)

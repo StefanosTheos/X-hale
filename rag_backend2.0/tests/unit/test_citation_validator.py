@@ -2,6 +2,7 @@
 from app.models.retrieval import Citation
 from app.safety.citation_validator import claim_is_represented, validate_citations
 from app.agents.synthesizer import post_process_synthesis
+from app.safety.medical_risk import medical_risk_tier
 
 
 def _citation(source_id: str, snippet: str = "Recovery begins quickly after quitting.") -> Citation:
@@ -100,6 +101,14 @@ def test_retrieved_source_without_attributed_claim_has_rejection_reason():
     assert result.rejection_reasons["nhs"] == ["no_specialist_claim_attributed"]
 
 
+def test_final_answer_can_align_directly_with_retrieved_evidence():
+    citation = _citation("cdc", "Blood circulation improves after quitting smoking.")
+    result = validate_citations(
+        "After quitting, your circulation can improve.", {}, {"cdc": citation}, [],
+    )
+    assert result.citations == [citation]
+
+
 def test_medical_post_processing_keeps_supported_canonical_citation():
     citation = _citation("nhs_nrt", "Nicotine replacement therapy helps manage cravings.")
     state = {
@@ -129,3 +138,35 @@ def test_medical_post_processing_keeps_supported_canonical_citation():
     assert state["trace"]["citation_validation"]["source_claims"] == {
         "nhs_nrt": ["Nicotine replacement therapy helps manage cravings."]
     }
+
+
+def test_medical_risk_tiers_protect_medication_and_timeline_queries():
+    assert medical_risk_tier("Can I use a nicotine patch while pregnant?") == "high"
+    assert medical_risk_tier("How long until my lungs improve?") == "medium"
+    assert medical_risk_tier("Can quitting help my fitness?") == "low"
+
+
+def test_low_risk_uncited_answer_is_retained_with_uncertainty():
+    citation = _citation("fitness", "Exercise can support a quit attempt.")
+    state = {
+        "user_input": "Can quitting help my fitness?",
+        "requested_specialists": ["medical"],
+        "specialist_drafts": {"medical": {"key_points": [], "citations": [citation.model_dump()]}},
+        "trace": {},
+    }
+    text, citations = post_process_synthesis("Your fitness may improve after quitting.", state)
+    assert "could not verify a passage closely enough" in text
+    assert citations == []
+
+
+def test_medium_risk_uncited_answer_still_abstains():
+    citation = _citation("timeline", "Recovery varies between people.")
+    state = {
+        "user_input": "How long until my lungs recover?",
+        "requested_specialists": ["medical"],
+        "specialist_drafts": {"medical": {"key_points": [], "citations": [citation.model_dump()]}},
+        "trace": {},
+    }
+    text, citations = post_process_synthesis("It takes two weeks.", state)
+    assert text.startswith("I couldn't verify enough source-backed information")
+    assert citations == []

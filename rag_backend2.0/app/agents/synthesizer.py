@@ -18,11 +18,14 @@ from app.prompts.system import HAILEY_SYSTEM
 from app.prompts.synthesizer import SYNTHESIZER_SYSTEM, SYNTHESIZER_USER_TEMPLATE
 from app.safety.citation_validator import validate_citations
 from app.safety.content_filter import filter_response
+from app.safety.medical_risk import medical_risk_tier
 
 logger = get_logger(__name__)
 
 _CITATION_PATTERN = re.compile(r"<!--\s*citations:\s*(\[.*?\])\s*-->", re.DOTALL)
 _INLINE_MARKER_PATTERN = re.compile(r"\[[a-z][a-z0-9_]+\]")
+_NUMBER_PATTERN = re.compile(r"\b\d+(?:\.\d+)?\b")
+_SENTENCE_SPLIT = re.compile(r"(?<=[.!?])\s+|\n+")
 
 
 def _format_specialist_drafts(drafts: dict[str, str]) -> str:
@@ -140,15 +143,42 @@ def _post_process(raw: str, state) -> tuple[str, list[Citation]]:
     citations = validation.citations
     candidate_text = filtered_text
     medical_requested = "medical" in (state.get("requested_specialists") or [])
-    if medical_requested and not citations and not was_blocked:
-        filtered_text = (
-            "I couldn't verify enough source-backed information to answer that safely. "
-            "A doctor or pharmacist can give you guidance based on your circumstances."
-        )
+    risk_tier = medical_risk_tier(state.get("user_input", "")) if medical_requested else "none"
+    if medical_requested and not was_blocked:
+        if citations:
+            # A failed citation must not erase the whole useful answer. Remove
+            # unsupported numerical sentences, whose timelines/doses carry the
+            # greatest harm, while retaining the supported response and citations.
+            supported_numbers = {
+                number for citation in citations for number in _NUMBER_PATTERN.findall(citation.snippet)
+            }
+            sentences = []
+            for sentence in _SENTENCE_SPLIT.split(filtered_text):
+                numbers = set(_NUMBER_PATTERN.findall(sentence))
+                if numbers and not numbers.issubset(supported_numbers):
+                    continue
+                if sentence.strip():
+                    sentences.append(sentence.strip())
+            filtered_text = " ".join(sentences) or filtered_text
+        elif risk_tier == "low" and valid_ids:
+            # Low-risk general-benefit answers may be shown with explicit
+            # uncertainty when retrieval occurred but no claim-level citation
+            # survived. High-risk and quantitative questions still abstain.
+            filtered_text = (
+                candidate_text.rstrip() +
+                "\n\nI could not verify a passage closely enough to attach a source, "
+                "so treat this as general information rather than medical advice."
+            )
+        else:
+            filtered_text = (
+                "I couldn't verify enough source-backed information to answer that safely. "
+                "A doctor or pharmacist can give you guidance based on your circumstances."
+            )
     trace = dict(state.get("trace") or {})
     trace["citation_validation"] = {
         "candidate_response": candidate_text,
         "source_claims": source_claims,
+        "risk_tier": risk_tier,
         "declared_source_ids": cited_ids,
         "available_source_ids": sorted(valid_ids),
         "exposed_source_ids": [citation.source_id for citation in citations],

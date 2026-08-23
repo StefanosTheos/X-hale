@@ -30,6 +30,20 @@ def test_off_topic_cases_use_scope_specific_evaluation():
     assert all(case.expected_themes == [] for case in cases)
 
 
+def test_invented_xhale_feature_is_deterministically_rejected():
+    result = _det_check("no_invented_xhale_feature", "Open the Craving Tracker.", [], [])
+    assert result.passed is False
+
+
+def test_low_risk_disclosed_uncertainty_satisfies_tiered_citation_policy():
+    result = _det_check(
+        "citation_present",
+        "I could not verify a passage closely enough to attach a source.",
+        [], [], {"citation_validation": {"risk_tier": "low"}},
+    )
+    assert result.passed is True
+
+
 def test_expected_theme_coverage_accepts_common_word_variants():
     result = _lexical_theme_check(
         "Cravings usually improve over several weeks, and breathing can help.",

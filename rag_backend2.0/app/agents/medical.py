@@ -68,7 +68,7 @@ class MedicalAgent(AgentBase):
             query=user_input,
             user_id=state["user_id"],
             strategy="factual",
-            k=3,
+            k=5,
             intent=(state.get("triage").intent if state.get("triage") else "unknown"),
         )
 
