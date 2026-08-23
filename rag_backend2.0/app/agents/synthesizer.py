@@ -25,7 +25,22 @@ logger = get_logger(__name__)
 _CITATION_PATTERN = re.compile(r"<!--\s*citations:\s*(\[.*?\])\s*-->", re.DOTALL)
 _INLINE_MARKER_PATTERN = re.compile(r"\[[a-z][a-z0-9_]+\]")
 _NUMBER_PATTERN = re.compile(r"\b\d+(?:\.\d+)?\b")
+_TIME_UNIT_PATTERN = re.compile(r"\b(?:hours?|days?|weeks?|months?|years?)\b", re.IGNORECASE)
 _SENTENCE_SPLIT = re.compile(r"(?<=[.!?])\s+|\n+")
+
+
+def _quantitative_sentence_is_attributed(sentence: str, claims: list[str]) -> bool:
+    """Require every stated number and time unit to occur in one attributed claim."""
+    sentence_numbers = set(_NUMBER_PATTERN.findall(sentence))
+    sentence_units = {unit.casefold().rstrip("s") for unit in _TIME_UNIT_PATTERN.findall(sentence)}
+    if not sentence_numbers and not sentence_units:
+        return True
+    for claim in claims:
+        claim_numbers = set(_NUMBER_PATTERN.findall(claim))
+        claim_units = {unit.casefold().rstrip("s") for unit in _TIME_UNIT_PATTERN.findall(claim)}
+        if sentence_numbers.issubset(claim_numbers) and sentence_units.issubset(claim_units):
+            return True
+    return False
 
 
 def _format_specialist_drafts(drafts: dict[str, str]) -> str:
@@ -149,13 +164,14 @@ def _post_process(raw: str, state) -> tuple[str, list[Citation]]:
             # A failed citation must not erase the whole useful answer. Remove
             # unsupported numerical sentences, whose timelines/doses carry the
             # greatest harm, while retaining the supported response and citations.
-            supported_numbers = {
-                number for citation in citations for number in _NUMBER_PATTERN.findall(citation.snippet)
-            }
+            exposed_ids = {citation.source_id for citation in citations}
+            attributed_claims = [
+                claim for source_id, claims in source_claims.items()
+                if source_id in exposed_ids for claim in claims
+            ]
             sentences = []
             for sentence in _SENTENCE_SPLIT.split(filtered_text):
-                numbers = set(_NUMBER_PATTERN.findall(sentence))
-                if numbers and not numbers.issubset(supported_numbers):
+                if not _quantitative_sentence_is_attributed(sentence, attributed_claims):
                     continue
                 if sentence.strip():
                     sentences.append(sentence.strip())

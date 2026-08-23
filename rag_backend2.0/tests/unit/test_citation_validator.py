@@ -1,7 +1,7 @@
 """Claim entailment and citation coverage checks."""
 from app.models.retrieval import Citation
 from app.safety.citation_validator import claim_is_represented, validate_citations
-from app.agents.synthesizer import post_process_synthesis
+from app.agents.synthesizer import _quantitative_sentence_is_attributed, post_process_synthesis
 from app.safety.medical_risk import medical_risk_tier
 
 
@@ -170,3 +170,13 @@ def test_medium_risk_uncited_answer_still_abstains():
     text, citations = post_process_synthesis("It takes two weeks.", state)
     assert text.startswith("I couldn't verify enough source-backed information")
     assert citations == []
+
+
+def test_generated_timeframe_must_exist_in_attributed_claim():
+    claims = ["Lung function can increase by up to 10%."]
+    assert _quantitative_sentence_is_attributed(
+        "Lung function can increase by up to 10%.", claims,
+    ) is True
+    assert _quantitative_sentence_is_attributed(
+        "By the end of a year, lung function can increase by up to 10%.", claims,
+    ) is False
