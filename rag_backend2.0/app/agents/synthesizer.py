@@ -18,7 +18,7 @@ from app.prompts.system import HAILEY_SYSTEM
 from app.prompts.synthesizer import SYNTHESIZER_SYSTEM, SYNTHESIZER_USER_TEMPLATE
 from app.safety.citation_validator import claim_is_represented, validate_citations
 from app.safety.content_filter import filter_response
-from app.safety.medical_risk import medical_risk_tier
+from app.safety.medical_risk import medical_risk_tier, professional_escalation_message
 
 logger = get_logger(__name__)
 
@@ -209,20 +209,18 @@ def _post_process(raw: str, state) -> tuple[str, list[Citation]]:
                             sentences.append(exact_sentence)
                             retained_text = " ".join(sentences)
             filtered_text = " ".join(sentences) or filtered_text
-        elif risk_tier == "low" and valid_ids:
-            # Low-risk general-benefit answers may be shown with explicit
-            # uncertainty when retrieval occurred but no claim-level citation
-            # survived. High-risk and quantitative questions still abstain.
-            filtered_text = (
-                candidate_text.rstrip() +
-                "\n\nI could not verify a passage closely enough to attach a source, "
-                "so treat this as general information rather than medical advice."
-            )
         else:
             filtered_text = (
                 "I couldn't verify enough source-backed information to answer that safely. "
                 "A doctor or pharmacist can give you guidance based on your circumstances."
             )
+        escalation = professional_escalation_message(state.get("user_input", ""))
+        if escalation and not re.search(
+            r"\b(?:doctor|pharmacist|healthcare professional|midwife|prescriber)\b",
+            filtered_text,
+            re.IGNORECASE,
+        ):
+            filtered_text = filtered_text.rstrip() + "\n\n" + escalation
     trace = dict(state.get("trace") or {})
     trace["citation_validation"] = {
         "candidate_response": candidate_text,

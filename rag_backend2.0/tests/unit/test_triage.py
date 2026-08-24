@@ -119,3 +119,30 @@ def test_selected_memory_rescues_ambiguous_personal_message():
     )
     assert corrected.topic_relevance == "relevant"
     assert corrected.intent == "general_conversation"
+
+
+def test_champix_interaction_is_forced_to_medical_route():
+    result = TriageResult(
+        intent="medical_question", topic_relevance="relevant",
+        requested_specialists=["medical"],
+    )
+    corrected = _apply_contextual_relevance_policy(
+        "Can I drink alcohol while taking Champix or Chantix?", result, None,
+    )
+    assert corrected.intent == "medical_question"
+    assert corrected.topic_relevance == "relevant"
+    assert "medical" in corrected.requested_specialists
+
+
+def test_patch_with_persistent_cravings_adds_medical_specialist():
+    result = TriageResult(
+        intent="craving_support", topic_relevance="relevant", urgency="high",
+        requested_specialists=["craving_support"],
+    )
+    corrected = _apply_contextual_relevance_policy(
+        "I've been on patches for 3 weeks and still having intense cravings — what should I do?",
+        result,
+        None,
+    )
+    assert corrected.intent == "medical_question"
+    assert corrected.requested_specialists == ["craving_support", "medical"]

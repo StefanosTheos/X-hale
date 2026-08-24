@@ -17,6 +17,7 @@ from app.observability.logging import get_logger
 from app.observability.metrics import record_fallback, record_triage
 from app.prompts.triage import TRIAGE_SYSTEM, TRIAGE_USER_TEMPLATE
 from app.safety.crisis_detector import fast_crisis_check
+from app.safety.medical_risk import is_cessation_medication_query
 
 logger = get_logger(__name__)
 
@@ -80,7 +81,8 @@ async def run_triage(user_input: str, memory=None) -> TriageResult:
 
 
 _CESSATION_RE = re.compile(
-    r"\b(smok|cigarette|nicotine|tobacco|quit|crav|withdraw|nrt|vape|patch|gum)\w*\b",
+    r"\b(smok|cigarette|nicotine|tobacco|quit|crav|withdraw|nrt|vape|patch|gum|"
+    r"varenicline|champix|chantix|bupropion|zyban|cytisine)\w*\b",
     re.IGNORECASE,
 )
 _EMOTIONAL_DISCLOSURE_RE = re.compile(
@@ -97,6 +99,19 @@ def _apply_contextual_relevance_policy(user_input: str, result: TriageResult, me
     recent_quit_context = bool(
         memory and any(_CESSATION_RE.search(turn.content) for turn in memory.recent_turns[-2:])
     )
+
+    # Cessation medications are always in scope. Medication use combined with
+    # cravings still needs the medical agent even when the LLM selected only
+    # craving support.
+    if is_cessation_medication_query(user_input):
+        specialists = list(result.requested_specialists)
+        if "medical" not in specialists:
+            specialists.append("medical")
+        return TriageResult(
+            intent="medical_question", emotion=result.emotion,
+            topic_relevance="relevant", urgency=result.urgency,
+            crisis_flag=result.crisis_flag, requested_specialists=specialists,
+        )
 
     # Unrelated health queries are outside Hailey's role. A bare health question
     # cannot reach the medical agent without cessation language or selected

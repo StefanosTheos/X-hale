@@ -23,6 +23,9 @@ _SYNONYMS = {
     "improve": "better", "improves": "better", "improved": "better",
     "circulation": "bloodflow", "blood": "blood", "flow": "bloodflow",
     "weeks": "week", "months": "month", "years": "year", "hours": "hour",
+    "dying": "death", "chance": "risk", "chances": "risk",
+    "half": "50", "halved": "50", "decade": "10",
+    "abstinent": "abstinence",
 }
 
 
@@ -55,23 +58,67 @@ def _content_tokens(text: str) -> set[str]:
     }
 
 
-def claim_is_represented(claim: str, response: str) -> bool:
+def _numbers(text: str) -> set[str]:
+    """Return canonical numeric values so 19 and 19.0 compare equally."""
+    values: set[str] = set()
+    for raw in _NUMBER_RE.findall(text):
+        try:
+            values.add(f"{float(raw):g}")
+        except ValueError:
+            values.add(raw)
+    lowered = text.casefold()
+    if re.search(r"\b(?:half|halved)\b", lowered):
+        values.add("50")
+    if re.search(r"\b(?:a|one) decade\b|\bdecade\b", lowered):
+        values.add("10")
+    return values
+
+
+def _comparison_windows(text: str) -> list[str]:
+    """Use adjacent sentences because scraped passages often split a timeline heading."""
+    sentences = [part.strip() for part in _SENTENCE_RE.split(text) if part.strip()]
+    windows = list(sentences)
+    windows.extend(
+        f"{sentences[index]} {sentences[index + 1]}"
+        for index in range(len(sentences) - 1)
+    )
+    return windows or [text]
+
+
+def claim_is_represented(
+    claim: str,
+    response: str,
+    *,
+    allow_partial_numeric_claim: bool = False,
+) -> bool:
     """Return whether response materially represents a source-attributed claim."""
     claim_tokens = _content_tokens(claim)
     if not claim_tokens:
         return False
-    claim_numbers = set(_NUMBER_RE.findall(claim))
+    claim_numbers = _numbers(claim)
     claim_has_negation = bool(_NEGATION_RE.search(claim))
     required_overlap = 0.5 if len(claim_tokens) <= 4 else 0.4
-    for sentence in _SENTENCE_RE.split(response):
+    for sentence in _comparison_windows(response):
         response_tokens = _content_tokens(sentence)
         overlap = len(claim_tokens & response_tokens) / len(claim_tokens)
-        if overlap < required_overlap:
+        minimum_overlap = 0.3 if allow_partial_numeric_claim and claim_numbers else required_overlap
+        if overlap < minimum_overlap:
             continue
         # Numeric claims must retain their source's numbers; otherwise a similar
         # sentence could cite evidence for a different dose or timeline.
-        if claim_numbers and not claim_numbers.issubset(set(_NUMBER_RE.findall(sentence))):
-            continue
+        response_numbers = _numbers(sentence)
+        if claim_numbers:
+            if allow_partial_numeric_claim:
+                # A generated sentence may accurately represent a bounded part
+                # of a long evidence statement (for example, abstinence rates
+                # without also repeating its RR and confidence interval). It
+                # must never introduce a number absent from the source claim.
+                if response_numbers and not response_numbers.issubset(claim_numbers):
+                    continue
+                if not response_numbers and overlap < 0.6:
+                    continue
+            elif not claim_numbers.issubset(response_numbers):
+                continue
         if claim_has_negation != bool(_NEGATION_RE.search(sentence)):
             continue
         return True
@@ -105,7 +152,9 @@ def validate_citations(
             continue
         for claim in claims:
             source_supports_claim = claim_is_represented(claim, citation.snippet)
-            response_represents_claim = claim_is_represented(claim, response)
+            response_represents_claim = claim_is_represented(
+                claim, response, allow_partial_numeric_claim=True,
+            )
             if source_supports_claim and response_represents_claim:
                 represented.add(source_id)
                 represented_claims += 1

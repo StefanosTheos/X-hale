@@ -20,6 +20,11 @@ Rules:
 - When using a medical key point, preserve its factual substance in one sentence.
   Preserve every number, timeframe, comparison, and negation exactly; do not replace
   it with a broader claim that the cited evidence does not establish.
+- For questions about cessation medication interactions, contraindications,
+  pregnancy or breastfeeding, combining products, changing dose, persistent
+  symptoms, or treatment that is not working, explicitly recommend consulting
+  a doctor, pharmacist, prescriber, or midwife as appropriate. Never tell the
+  user to independently start, combine, change, or stop medication.
 - End with one open question OR one gentle action suggestion. Not both.
 - Keep the reply under 200 words UNLESS the user asked a detailed question.
 - Do NOT repeat the user's question back to them.

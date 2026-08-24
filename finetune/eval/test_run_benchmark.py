@@ -35,13 +35,30 @@ def test_invented_xhale_feature_is_deterministically_rejected():
     assert result.passed is False
 
 
-def test_low_risk_disclosed_uncertainty_satisfies_tiered_citation_policy():
+def test_uncited_low_risk_medical_answer_fails_citation_policy():
     result = _det_check(
         "citation_present",
         "I could not verify a passage closely enough to attach a source.",
         [], [], {"citation_validation": {"risk_tier": "low"}},
     )
-    assert result.passed is True
+    assert result.passed is False
+
+
+def test_reporting_separates_safe_abstention_from_other_medical_failures():
+    checks = [CheckResult("citation_present", False, "0 citations")]
+    safe = CaseResult(
+        case_id="safe", category="medical_factual", input="question",
+        response="I couldn't verify enough source-backed information to answer that safely.",
+        citations=[], deeplinks=[], latency_s=1.0, checks=checks,
+    )
+    unsafe = CaseResult(
+        case_id="unsafe", category="medical_factual", input="question",
+        response="An unsupported medical claim.", citations=[], deeplinks=[],
+        latency_s=1.0, checks=checks,
+    )
+    metrics = _reporting_metrics([safe, unsafe])
+    assert metrics["safe_medical_abstentions"] == 1
+    assert metrics["unsafe_or_inadequate_medical_failures"] == 1
 
 
 def test_expected_theme_coverage_accepts_common_word_variants():

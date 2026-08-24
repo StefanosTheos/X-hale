@@ -7,6 +7,10 @@ from app.agents.synthesizer import (
     post_process_synthesis,
 )
 from app.safety.medical_risk import medical_risk_tier
+from app.safety.medical_risk import (
+    professional_escalation_message,
+    requires_professional_escalation,
+)
 
 
 def _citation(source_id: str, snippet: str = "Recovery begins quickly after quitting.") -> Citation:
@@ -150,7 +154,7 @@ def test_medical_risk_tiers_protect_medication_and_timeline_queries():
     assert medical_risk_tier("Can quitting help my fitness?") == "low"
 
 
-def test_low_risk_uncited_answer_is_retained_with_uncertainty():
+def test_low_risk_uncited_medical_answer_abstains():
     citation = _citation("fitness", "Exercise can support a quit attempt.")
     state = {
         "user_input": "Can quitting help my fitness?",
@@ -159,7 +163,7 @@ def test_low_risk_uncited_answer_is_retained_with_uncertainty():
         "trace": {},
     }
     text, citations = post_process_synthesis("Your fitness may improve after quitting.", state)
-    assert "could not verify a passage closely enough" in text
+    assert text.startswith("I couldn't verify enough source-backed information")
     assert citations == []
 
 
@@ -215,3 +219,54 @@ def test_removed_paraphrased_timeline_is_restored_as_exact_key_point():
     )
     assert "After 48 hours carbon monoxide drops to a non-smoker level." in text
     assert citations == [citation]
+
+
+def test_timeline_heading_and_halved_paraphrase_are_aligned():
+    citation = _citation(
+        "nhs",
+        "After 10 years More great news! Your risk of death from lung cancer "
+        "will have halved compared with a smoker's.",
+    )
+    result = validate_citations(
+        "Within about a decade, the chance of dying from lung cancer drops roughly 50%.",
+        {"nhs": [
+            "After 10 years, your risk of death from lung cancer will have halved "
+            "compared with a smoker's."
+        ]},
+        {"nhs": citation},
+        ["nhs"],
+    )
+    assert result.citations == [citation]
+
+
+def test_response_may_use_supported_subset_of_long_statistical_claim():
+    citation = _citation(
+        "uspstf",
+        "Bupropion SR was associated with abstinence at 6 months or more "
+        "(19.0% vs 11.0%; RR 1.64, 95% CI 1.52-1.77).",
+    )
+    result = validate_citations(
+        "Bupropion SR can improve abstinence at six months. About 19% remained "
+        "abstinent compared with roughly 11% using placebo.",
+        {"uspstf": [
+            "Bupropion SR was associated with abstinence at 6 months or more "
+            "(19.0% vs 11.0%; RR 1.64, 95% CI 1.52-1.77)."
+        ]},
+        {"uspstf": citation},
+        ["uspstf"],
+    )
+    assert result.citations == [citation]
+
+
+def test_medication_decision_requires_professional_escalation():
+    query = "Can I drink alcohol while taking Champix?"
+    assert requires_professional_escalation(query) is True
+    assert "doctor or pharmacist" in professional_escalation_message(query)
+
+
+def test_pregnancy_uses_specific_professional_escalation():
+    message = professional_escalation_message(
+        "Can I use nicotine replacement therapy while pregnant?"
+    )
+    assert message is not None
+    assert "midwife" in message
