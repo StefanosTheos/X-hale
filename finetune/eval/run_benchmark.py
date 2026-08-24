@@ -80,6 +80,12 @@ JUDGE_CHECKS = frozenset({
     "no_unsupported_physiological_claims",
 })
 
+_CLAIM_EVIDENCE_CHECKS = frozenset({
+    "medically_faithful", "grounded_medical_claims",
+    "no_unsupported_physiological_claims", "medical_timeline_accuracy",
+    "medical_quantity_accuracy",
+})
+
 VALID_DEEPLINKS = frozenset(json.loads(
     (EVAL_DIR.parents[1] / "rag_backend2.0/app/data/hailey_deeplinks.json")
     .read_text(encoding="utf-8")
@@ -460,6 +466,7 @@ def _validate_judge_result(
     result: dict,
     check_names: list[str],
     needs_semantic_themes: bool,
+    response: str,
 ) -> None:
     """Reject incomplete judge objects so one recovery call can repair them."""
     judgments = result.get("judgments")
@@ -469,10 +476,19 @@ def _validate_judge_result(
         judgment = judgments.get(name)
         if not isinstance(judgment, dict):
             raise ValueError(f"judge result is missing {name}")
-        if not isinstance(judgment.get("pass"), bool) or not isinstance(
-            judgment.get("reason"), str
+        if (
+            not isinstance(judgment.get("pass"), bool)
+            or not isinstance(judgment.get("reason"), str)
+            or not isinstance(judgment.get("evidence_quote"), str)
         ):
             raise ValueError(f"judge result has invalid {name} fields")
+        if name in _CLAIM_EVIDENCE_CHECKS and not judgment["pass"]:
+            quote = " ".join(judgment["evidence_quote"].casefold().split())
+            haystack = " ".join(response.casefold().split())
+            if len(quote.split()) < 2 or quote not in haystack:
+                raise ValueError(
+                    f"judge failure for {name} lacks an exact response evidence quote"
+                )
     if needs_semantic_themes and (
         not isinstance(result.get("matched_themes"), list)
         or not isinstance(result.get("theme_reason"), str)
@@ -501,8 +517,12 @@ async def _judge_case(
         "properties": {
             name: {
                 "type": "object",
-                "properties": {"pass": {"type": "boolean"}, "reason": {"type": "string"}},
-                "required": ["pass", "reason"],
+                "properties": {
+                    "pass": {"type": "boolean"},
+                    "reason": {"type": "string"},
+                    "evidence_quote": {"type": "string"},
+                },
+                "required": ["pass", "reason", "evidence_quote"],
                 "additionalProperties": False,
             }
             for name in check_names
@@ -534,7 +554,11 @@ async def _judge_case(
     )
     output_template: dict = {
         "judgments": {
-            name: {"pass": True, "reason": "one short sentence"}
+            name: {
+                "pass": True,
+                "reason": "one short sentence",
+                "evidence_quote": "",
+            }
             for name in check_names
         }
     }
@@ -543,6 +567,11 @@ async def _judge_case(
     prompt = (
         "Evaluate the response once against every named rubric. Return only one JSON object matching "
         "the supplied structure. Keep every reason to one short sentence. "
+        "For a failed medical claim-grounding, faithfulness, physiological, timeline, or quantity "
+        "check, evidence_quote MUST copy 2-20 consecutive words exactly from Hailey's response "
+        "that contain the faulty claim. Never copy an expected theme or retrieved passage into "
+        "evidence_quote. If no such exact quote exists, that claim-based check must pass. "
+        "For passes and omission-based checks, use an empty evidence_quote. "
         f"Required JSON shape: {json.dumps(output_template)}"
         f"{theme_instruction}\n\nUser message: {question}\nHailey response: {response}\n"
         f"Expected optional themes: {json.dumps(expected_themes if needs_semantic_themes else [])}\n"
@@ -583,7 +612,7 @@ async def _judge_case(
             chat = await _judge().chat.completions.create(**request_kwargs)
             try:
                 candidate = _parse_json_object(chat.choices[0].message.content or "")
-                _validate_judge_result(candidate, check_names, needs_semantic_themes)
+                _validate_judge_result(candidate, check_names, needs_semantic_themes, response)
                 result = candidate
                 break
             except (json.JSONDecodeError, KeyError, TypeError, ValueError) as exc:

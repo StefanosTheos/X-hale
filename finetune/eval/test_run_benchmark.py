@@ -186,8 +186,8 @@ def test_reporting_separates_crisis_sensitivity_and_specificity():
 async def test_combined_judge_uses_one_request_for_all_checks(monkeypatch):
     payload = {
         "judgments": {
-            "answer_relevant": {"pass": True, "reason": "Directly answers."},
-            "tone_warm_empathetic": {"pass": True, "reason": "Warm tone."},
+            "answer_relevant": {"pass": True, "reason": "Directly answers.", "evidence_quote": ""},
+            "tone_warm_empathetic": {"pass": True, "reason": "Warm tone.", "evidence_quote": ""},
         },
         "matched_themes": ["craving relief"],
         "theme_reason": "Equivalent coping guidance is present.",
@@ -213,7 +213,7 @@ async def test_combined_judge_uses_one_request_for_all_checks(monkeypatch):
 async def test_combined_judge_recovers_once_from_malformed_json(monkeypatch):
     valid = {
         "judgments": {
-            "answer_relevant": {"pass": True, "reason": "Direct answer."},
+            "answer_relevant": {"pass": True, "reason": "Direct answer.", "evidence_quote": ""},
         },
         "matched_themes": ["support"],
         "theme_reason": "Support is present.",
@@ -245,7 +245,7 @@ async def test_combined_judge_recovers_from_incomplete_object(monkeypatch):
     incomplete = {"judgments": {}}
     valid = {
         "judgments": {
-            "answer_relevant": {"pass": False, "reason": "Does not answer."},
+            "answer_relevant": {"pass": False, "reason": "Does not answer.", "evidence_quote": ""},
         },
     }
     completion = AsyncMock(side_effect=[
@@ -266,3 +266,42 @@ async def test_combined_judge_recovers_from_incomplete_object(monkeypatch):
     assert results[0].name == "answer_relevant"
     assert results[0].passed is False
     assert results[0].infrastructure_error is False
+
+
+@pytest.mark.asyncio
+async def test_medical_judge_retries_hallucinated_failure_quote(monkeypatch):
+    hallucinated = {
+        "judgments": {
+            "grounded_medical_claims": {
+                "pass": False,
+                "reason": "The response mentions cotinine.",
+                "evidence_quote": "nicotine half-life and cotinine",
+            },
+        },
+    }
+    corrected = {
+        "judgments": {
+            "grounded_medical_claims": {
+                "pass": True,
+                "reason": "Every stated timeline is supported.",
+                "evidence_quote": "",
+            },
+        },
+    }
+    completion = AsyncMock(side_effect=[
+        SimpleNamespace(choices=[SimpleNamespace(
+            message=SimpleNamespace(content=json.dumps(hallucinated))
+        )]),
+        SimpleNamespace(choices=[SimpleNamespace(
+            message=SimpleNamespace(content=json.dumps(corrected))
+        )]),
+    ])
+    fake = SimpleNamespace(chat=SimpleNamespace(completions=SimpleNamespace(create=completion)))
+    monkeypatch.setenv("BENCHMARK_JUDGE_PROVIDER", "gemini")
+    with patch("finetune.eval.run_benchmark._judge", return_value=fake):
+        results = await _judge_case(
+            "How long?", "Withdrawal can begin within a few hours.",
+            ["grounded_medical_claims"], [],
+        )
+    assert completion.await_count == 2
+    assert results[0].passed is True
