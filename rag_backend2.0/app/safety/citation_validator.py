@@ -9,7 +9,12 @@ from app.models.retrieval import Citation
 _TOKEN_RE = re.compile(r"[a-z0-9]+")
 _NUMBER_RE = re.compile(r"\b\d+(?:\.\d+)?\b")
 _SENTENCE_RE = re.compile(r"(?<=[.!?])\s+|\n+")
-_NEGATION_RE = re.compile(r"\b(?:not|no|never|neither|nor|without|cannot|can't|won't)\b", re.IGNORECASE)
+_NEGATION_RE = re.compile(
+    r"\b(?:not|no|never|neither|nor|without|cannot|can['’]t|won['’]t|"
+    r"hasn['’]t|haven['’]t|hadn['’]t|isn['’]t|aren['’]t|doesn['’]t|didn['’]t)\b",
+    re.IGNORECASE,
+)
+_REFERENCE_MARKER_RE = re.compile(r"\(\s*\d{1,3}\s*\)")
 _STOPWORDS = frozenset({
     "a", "an", "and", "are", "as", "at", "be", "been", "being", "but", "by",
     "can", "could", "for", "from", "has", "have", "in", "into", "is", "it",
@@ -26,6 +31,13 @@ _SYNONYMS = {
     "dying": "death", "chance": "risk", "chances": "risk",
     "half": "50", "halved": "50", "decade": "10",
     "abstinent": "abstinence",
+    "inconclusive": "unclear", "mixed": "unclear",
+    "study": "evidence", "studies": "evidence", "research": "evidence",
+    "therapy": "aid", "therapies": "aid",
+    "hypnosis": "hypnotherapy",
+    "shown": "demonstrate", "found": "demonstrate", "show": "demonstrate",
+    "help": "increase", "helps": "increase", "helped": "increase",
+    "rates": "rate",
 }
 
 
@@ -51,6 +63,7 @@ def _normalise_token(token: str) -> str:
 
 
 def _content_tokens(text: str) -> set[str]:
+    text = _REFERENCE_MARKER_RE.sub("", text)
     return {
         _normalise_token(token)
         for token in _TOKEN_RE.findall(text.lower())
@@ -60,6 +73,7 @@ def _content_tokens(text: str) -> set[str]:
 
 def _numbers(text: str) -> set[str]:
     """Return canonical numeric values so 19 and 19.0 compare equally."""
+    text = _REFERENCE_MARKER_RE.sub("", text)
     values: set[str] = set()
     for raw in _NUMBER_RE.findall(text):
         try:

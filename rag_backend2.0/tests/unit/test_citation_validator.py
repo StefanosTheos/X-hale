@@ -289,3 +289,15 @@ def test_pregnancy_uses_specific_professional_escalation():
     )
     assert message is not None
     assert "midwife" in message
+
+
+def test_bibliographic_marker_is_not_treated_as_medical_quantity():
+    claim = "Clinical studies have not found hypnosis to help people quit tobacco ( 13 )."
+    response = "Clinical evidence hasn't shown hypnotherapy to increase quit rates."
+    assert claim_is_represented(claim, response, allow_partial_numeric_claim=True)
+
+
+def test_unicode_contracted_negation_matches_explicit_not():
+    claim = "FDA has not approved any e-cigarette as a smoking cessation therapy."
+    response = "The FDA hasn’t approved an e-cigarette product as a smoking-cessation aid."
+    assert claim_is_represented(claim, response, allow_partial_numeric_claim=True)
