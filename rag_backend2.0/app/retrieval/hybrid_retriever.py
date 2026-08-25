@@ -20,7 +20,7 @@ import re
 from typing import Literal, Optional
 
 from app.config import settings
-from app.models.retrieval import Citation, RetrievalResult, RetrievedChunk
+from app.models.retrieval import Citation, RetrievalResult, RetrievedChunk, bounded_excerpt
 from app.observability.logging import get_logger
 
 logger = get_logger(__name__)
@@ -44,6 +44,16 @@ _MEDICAL_QUERY_EXPANSIONS: tuple[tuple[re.Pattern[str], str], ...] = (
     (re.compile(r"\b(?:immune|infection)\w*\b", re.I), "immune system infection"),
     (re.compile(r"\b(?:sleep|dream|insomnia)\w*\b", re.I),
      "nicotine withdrawal sleep dreams insomnia"),
+    (re.compile(r"\b(?:diabetes|blood sugar|glucose|insulin)\b", re.I),
+     "diabetes blood sugar glucose insulin nicotine cessation"),
+    (re.compile(r"\b(?:hormone|menstrual|period|cycle)\w*\b", re.I),
+     "hormones menstrual cycle reproductive health smoking cessation"),
+    (re.compile(r"\b(?:acupuncture|hypnosis|hypnotherapy|herbal cigarette)\w*\b", re.I),
+     "alternative methods evidence acupuncture hypnosis herbal cigarettes cessation"),
+    (re.compile(r"\b(?:champix|chantix|varenicline|alcohol)\w*\b", re.I),
+     "varenicline alcohol interaction medication safety"),
+    (re.compile(r"\b(?:prescription|pharmacy|over the counter|2mg|4mg|step.down)\b", re.I),
+     "nicotine replacement pharmacy prescription gum 2 mg 4 mg patch step down"),
 )
 
 
@@ -282,6 +292,6 @@ def _chunks_to_citations(chunks: list[RetrievedChunk]) -> list[Citation]:
                 benefit_id=chunk.benefit_id,
                 title=str(chunk.metadata.get("title", "")),
                 url=str(chunk.metadata.get("url", chunk.metadata.get("source_url", ""))),
-                snippet=chunk.content[:500],
+                snippet=bounded_excerpt(chunk.content, 500),
             ))
     return citations

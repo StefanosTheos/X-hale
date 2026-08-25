@@ -5,4 +5,9 @@ trace. General model knowledge is not sufficient. Exact figures and timelines
 must be supported exactly. A response that transparently declines to provide
 unverified information passes.
 
+Judge against the supplied retrieved text, not a stricter external preference.
+If an NHS passage explicitly states that NRT is safe in pregnancy, wording such
+as "generally regarded as safe" is faithful when the response also preserves
+the passage's recommendation to consult a healthcare professional.
+
 Return JSON.

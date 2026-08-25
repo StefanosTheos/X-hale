@@ -5,7 +5,23 @@ These are the data contracts between the retrieval layer and the agent layer.
 from __future__ import annotations
 
 from typing import Optional
+import re
 from pydantic import BaseModel, Field
+
+
+def bounded_excerpt(text: str, limit: int = 500) -> str:
+    """Return a complete-sentence excerpt instead of cutting claims mid-sentence."""
+    cleaned = " ".join(text.split()).strip()
+    if len(cleaned) <= limit:
+        return cleaned
+    prefix = cleaned[:limit]
+    boundary = max(prefix.rfind(marker) for marker in (". ", "? ", "! "))
+    if boundary >= max(80, limit // 2):
+        return prefix[:boundary + 1].strip()
+    match = re.search(r"[.!?](?:\s|$)", cleaned[limit:limit + 300])
+    if match:
+        return cleaned[:limit + match.end()].strip()
+    return prefix.rsplit(" ", 1)[0].strip() + "…"
 
 
 class Citation(BaseModel):
@@ -41,7 +57,7 @@ class RetrievalResult(BaseModel):
             # Do not add a competing numeric label here. Models previously copied
             # "1" instead of the canonical source_id, which broke claim attribution.
             tag = f"[SOURCE_ID={chunk.source_id}; TYPE={chunk.source_type.upper()}]"
-            lines.append(f"{tag}\n{chunk.content[:500].strip()}")
+            lines.append(f"{tag}\n{bounded_excerpt(chunk.content, 500)}")
         return "\n\n".join(lines)
 
 

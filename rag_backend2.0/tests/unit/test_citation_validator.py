@@ -109,10 +109,20 @@ def test_retrieved_source_without_attributed_claim_has_rejection_reason():
     assert result.rejection_reasons["nhs"] == ["no_specialist_claim_attributed"]
 
 
-def test_final_answer_can_align_directly_with_retrieved_evidence():
+def test_unattributed_retrieved_source_cannot_gain_direct_citation():
     citation = _citation("cdc", "Blood circulation improves after quitting smoking.")
     result = validate_citations(
         "After quitting, your circulation can improve.", {}, {"cdc": citation}, [],
+    )
+    assert result.citations == []
+
+
+def test_direct_alignment_is_limited_to_specialist_attributed_source():
+    citation = _citation("cdc", "Blood circulation improves after quitting smoking.")
+    result = validate_citations(
+        "After quitting, your circulation can improve.",
+        {"cdc": ["Blood circulation improves after quitting smoking."]},
+        {"cdc": citation}, [],
     )
     assert result.citations == [citation]
 
@@ -197,6 +207,15 @@ def test_unsupported_medical_explanation_is_rejected():
     ) is True
     assert _medical_sentence_is_attributed(
         "Your metabolism slows because nicotine changes your body.", claims,
+    ) is False
+
+
+def test_new_medical_domains_require_attributed_evidence():
+    assert _medical_sentence_is_attributed(
+        "Quitting boosts immunity and helps gums heal.", [],
+    ) is False
+    assert _medical_sentence_is_attributed(
+        "Nicotine patches can cause vivid dreams.", [],
     ) is False
 
 

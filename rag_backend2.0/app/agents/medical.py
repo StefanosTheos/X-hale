@@ -7,16 +7,36 @@ a SpecialistDraft with key_points, each traced to a source_id.
 from __future__ import annotations
 
 import json
+import re
 
 from app.agents.base import AgentBase
 from app.llm.client import get_triage_client
 from app.llm.schemas import SPECIALIST_DRAFT_SCHEMA
-from app.models.retrieval import Citation, KeyPoint, SpecialistDraft
+from app.models.retrieval import Citation, KeyPoint, SpecialistDraft, bounded_excerpt
 from app.observability.logging import get_logger
 from app.prompts.medical import MEDICAL_SYSTEM, MEDICAL_USER_TEMPLATE
 from app.retrieval.hybrid_retriever import retrieve
 
 logger = get_logger(__name__)
+
+_SENTENCE_RE = re.compile(r"(?<=[.!?])\s+|\n+")
+_WORD_RE = re.compile(r"[a-z0-9]+")
+_EVIDENCE_STOPWORDS = frozenset({
+    "a", "an", "and", "are", "can", "do", "does", "for", "how", "i", "in",
+    "is", "it", "my", "of", "or", "the", "to", "use", "what", "when", "while",
+    "will", "with", "after", "quit", "quitting", "smoking",
+})
+_QUERY_EVIDENCE_EXPANSIONS: tuple[tuple[re.Pattern[str], set[str]], ...] = (
+    (re.compile(r"\bskin|complexion|wrinkle", re.I), {"skin", "complexion", "wrinkle"}),
+    (re.compile(r"\bfertil|reproduct", re.I), {"fertility", "fertile", "reproductive"}),
+    (re.compile(r"\bwound|surgery", re.I), {"wound", "healing", "surgery", "surgical"}),
+    (re.compile(r"\bimmune|infection", re.I), {"immune", "infection"}),
+    (re.compile(r"\bbone|osteoporosis", re.I), {"bone", "density", "osteoporosis", "fracture"}),
+    (re.compile(r"\bsleep|dream", re.I), {"sleep", "dream", "dreams", "insomnia"}),
+    (re.compile(r"\b(?:mouth|oral|gum|teeth)", re.I), {"mouth", "oral", "gum", "gums", "teeth", "periodontitis"}),
+    (re.compile(r"\b(?:nrt|patch|gum|varenicline|champix|chantix)", re.I),
+     {"nrt", "nicotine", "patch", "patches", "gum", "varenicline", "champix", "chantix"}),
+)
 
 
 def _parse_json_object(raw: str) -> dict:
@@ -54,6 +74,39 @@ def _canonicalise_key_points(
         elif claim:
             logger.warning("medical_key_point_invalid_source", source_id=raw_source_id)
     return key_points
+
+
+def _promote_retrieved_evidence(user_input: str, retrieval, limit: int = 2) -> list[KeyPoint]:
+    """Copy complete, query-relevant source sentences when extraction is empty."""
+    query_terms = {
+        token for token in _WORD_RE.findall(user_input.casefold())
+        if token not in _EVIDENCE_STOPWORDS and len(token) > 2
+    }
+    for pattern, terms in _QUERY_EVIDENCE_EXPANSIONS:
+        if pattern.search(user_input):
+            query_terms.update(terms)
+    ranked: list[tuple[float, str, str]] = []
+    for chunk in retrieval.chunks:
+        for sentence in _SENTENCE_RE.split(chunk.content):
+            sentence = " ".join(sentence.split()).strip()
+            if len(sentence) < 35 or len(sentence) > 420:
+                continue
+            sentence_terms = set(_WORD_RE.findall(sentence.casefold()))
+            overlap = query_terms & sentence_terms
+            if not overlap:
+                continue
+            ranked.append((len(overlap) + float(chunk.score), sentence, chunk.source_id))
+    promoted: list[KeyPoint] = []
+    seen: set[tuple[str, str]] = set()
+    for _, sentence, source_id in sorted(ranked, reverse=True):
+        key = (sentence.casefold(), source_id)
+        if key in seen:
+            continue
+        seen.add(key)
+        promoted.append(KeyPoint(claim=sentence, source_id=source_id))
+        if len(promoted) == limit:
+            break
+    return promoted
 
 
 class MedicalAgent(AgentBase):
@@ -105,6 +158,13 @@ class MedicalAgent(AgentBase):
             )
             data = _parse_json_object(raw)
             key_points = _canonicalise_key_points(data.get("key_points", []), retrieval)
+            if not key_points:
+                key_points = _promote_retrieved_evidence(user_input, retrieval)
+                if key_points:
+                    logger.info(
+                        "medical_evidence_promoted",
+                        source_ids=[point.source_id for point in key_points],
+                    )
             trace = {
                 "query": retrieval.query,
                 "strategy": retrieval.strategy_used,
@@ -115,7 +175,7 @@ class MedicalAgent(AgentBase):
                     {"document_id": chunk.metadata.get("document_id"),
                      "collection": chunk.metadata.get("collection", "web"),
                      "source_id": chunk.source_id, "source_type": chunk.source_type,
-                     "score": chunk.score, "snippet": chunk.content[:400]}
+                     "score": chunk.score, "snippet": bounded_excerpt(chunk.content, 400)}
                     for chunk in retrieval.chunks
                 ],
                 "specialist_source_ids": [kp.source_id for kp in key_points if kp.source_id],
@@ -148,7 +208,7 @@ class MedicalAgent(AgentBase):
                         {"document_id": chunk.metadata.get("document_id"),
                          "collection": chunk.metadata.get("collection", "web"),
                          "source_id": chunk.source_id, "source_type": chunk.source_type,
-                         "score": chunk.score, "snippet": chunk.content[:400]}
+                         "score": chunk.score, "snippet": bounded_excerpt(chunk.content, 400)}
                         for chunk in retrieval.chunks
                     ],
                     "specialist_source_ids": [],

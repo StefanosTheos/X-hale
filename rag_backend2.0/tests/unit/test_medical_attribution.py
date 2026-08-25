@@ -1,5 +1,7 @@
 """Medical-agent source attribution regressions."""
-from app.agents.medical import _canonicalise_key_points, _parse_json_object
+from app.agents.medical import (
+    _canonicalise_key_points, _parse_json_object, _promote_retrieved_evidence,
+)
 from app.models.retrieval import RetrievalResult, RetrievedChunk
 
 
@@ -35,3 +37,26 @@ def test_retrieval_prompt_has_only_canonical_source_label():
     prompt = _retrieval().format_for_prompt()
     assert "[SOURCE_ID=nhs_nrt_guide; TYPE=UNKNOWN]" in prompt
     assert "[1]" not in prompt
+
+
+def test_empty_extraction_promotes_exact_relevant_source_sentence():
+    retrieval = RetrievalResult(chunks=[RetrievedChunk(
+        content=(
+            "General introduction. Sleep problems or vivid dreams may occur while "
+            "using a nicotine patch. Contact a clinician for severe effects."
+        ), source_id="smokefree_patch", score=0.8,
+    )])
+    points = _promote_retrieved_evidence(
+        "Are vivid dreams caused by my nicotine patch?", retrieval,
+    )
+    assert points
+    assert points[0].source_id == "smokefree_patch"
+    assert points[0].claim == "Sleep problems or vivid dreams may occur while using a nicotine patch."
+
+
+def test_evidence_promotion_does_not_use_unrelated_sentence():
+    retrieval = RetrievalResult(chunks=[RetrievedChunk(
+        content="Exercise can help some people manage cravings.",
+        source_id="exercise", score=0.9,
+    )])
+    assert _promote_retrieved_evidence("Does quitting improve fertility?", retrieval) == []

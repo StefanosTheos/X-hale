@@ -174,6 +174,10 @@ def validate_citations(
     for source_id, citation in citation_by_id.items():
         if source_id in represented or not citation.snippet.strip():
             continue
+        # Broad topical similarity is not claim-level evidence. Only repair
+        # alignment for sources explicitly attributed by the medical specialist.
+        if source_id not in source_claims:
+            continue
         for sentence in response_sentences:
             if claim_is_represented(sentence, citation.snippet):
                 represented.add(source_id)

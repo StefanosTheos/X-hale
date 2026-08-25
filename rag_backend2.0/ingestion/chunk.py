@@ -113,11 +113,17 @@ def chunk_text(
     if current:
         chunks.append(current)
 
-    # Apply overlap: each chunk starts with the last `chunk_overlap` chars of the previous
+    # Apply overlap at a word boundary. Character slicing previously produced
+    # leading fragments such as "ughs" and encouraged incomplete key points.
     overlapped: list[str] = []
     for i, chunk in enumerate(chunks):
         if i > 0 and chunk_overlap > 0:
-            overlap_text = chunks[i - 1][-chunk_overlap:]
+            previous = chunks[i - 1]
+            overlap_start = max(0, len(previous) - chunk_overlap)
+            if overlap_start:
+                next_space = previous.find(" ", overlap_start)
+                overlap_start = next_space + 1 if next_space >= 0 else overlap_start
+            overlap_text = previous[overlap_start:]
             chunk = overlap_text + " " + chunk
         overlapped.append(chunk)
 

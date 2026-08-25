@@ -1,7 +1,10 @@
 """Focused tests for deterministic and resumable benchmark execution."""
 import json
+from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch
+
+import yaml
 
 import pytest
 
@@ -305,3 +308,25 @@ async def test_medical_judge_retries_hallucinated_failure_quote(monkeypatch):
         )
     assert completion.await_count == 2
     assert results[0].passed is True
+
+
+def test_pregnancy_nrt_rubrics_follow_explicit_retrieved_evidence():
+    root = Path("finetune/eval/judge_prompts")
+    faithful = (root / "medically_faithful.txt").read_text(encoding="utf-8")
+    grounded = (root / "grounded_medical_claims.txt").read_text(encoding="utf-8")
+    contraindications = (root / "contraindication_handling.txt").read_text(encoding="utf-8")
+    assert "NRT is safe in pregnancy" in faithful
+    assert "NRTs are safe to use in pregnancy" in grounded
+    assert "appropriate healthcare professional" in contraindications
+
+    suite = yaml.safe_load(Path("finetune/eval/categories.yaml").read_text(encoding="utf-8"))
+    pregnancy_case = next(
+        case
+        for category in suite["categories"].values()
+        for case in category["cases"]
+        if case["id"] == "med_med_016"
+    )
+    assert {"medically_faithful", "grounded_medical_claims", "contraindication_handling"} <= set(
+        pregnancy_case["checks"]
+    )
+    assert "directly supported by retrieved evidence" in pregnancy_case["notes"]

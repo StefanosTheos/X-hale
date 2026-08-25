@@ -51,9 +51,9 @@ def _auto_source_id(path_or_url: str) -> str:
 def _read_pdf(path: str) -> str:
     """Extract text from a PDF file using PyMuPDF."""
     try:
-        import fitz  # pymupdf
-        doc = fitz.open(path)
-        pages = [page.get_text() for page in doc]
+        import pymupdf
+        with pymupdf.open(path) as doc:
+            pages = [page.get_text() for page in doc]
         return "\n\n".join(pages)
     except ImportError:
         logger.error("pymupdf_not_installed", hint="pip install '.[ingestion]'")
@@ -84,14 +84,15 @@ def _read_url(url: str) -> str:
     resp.raise_for_status()
     content_type = resp.headers.get("content-type", "")
     if "pdf" in content_type or url.lower().endswith(".pdf"):
-        import tempfile, fitz
+        import tempfile, pymupdf
         with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as f:
             f.write(resp.content)
             tmp = f.name
-        doc = fitz.open(tmp)
-        text = "\n\n".join(page.get_text() for page in doc)
-        os.unlink(tmp)
-        return text
+        try:
+            with pymupdf.open(tmp) as doc:
+                return "\n\n".join(page.get_text() for page in doc)
+        finally:
+            os.unlink(tmp)
     else:
         from bs4 import BeautifulSoup
         soup = BeautifulSoup(resp.content, "html.parser")

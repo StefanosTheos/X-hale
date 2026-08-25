@@ -66,9 +66,113 @@ governance_profiles:
     inclusion_decision: included_after_developer_review
     independent_content_review: pending
     next_scheduled_review: "2027-02-23"
+  benchmark_gap_corpus: &benchmark_gap_corpus_governance
+    fetch_date: "2026-08-25"
+    fetch_date_status: verified_during_developer_review
+    ingestion_evidence_date: "2026-08-25"
+    developer_review_date: "2026-08-25"
+    reviewer_name: Stefanos Theos
+    reviewer_role: application developer and source curator
+    review_scope: benchmark abstention gaps, publisher authority, scientific support, and claim-level relevance
+    authority_rationale: official NHS, CDC, FDA, NCI, NIH, NIDDK, NIDCR, NCBI, or Smokefree guidance directly addressing observed medical benchmark gaps
+    access_status: publicly_accessible
+    licensing_status: reuse_license_and_permission_not_independently_verified
+    content_version: live_web_page_reviewed_2026_08_25
+    content_sha256: unavailable
+    inclusion_decision: included_after_developer_review
+    independent_content_review: pending
+    next_scheduled_review: "2027-02-25"
 
 sources:
   # ── Targeted coverage for recurring medical-query gaps ────────────────────
+
+  - source_id: nhs_smoking_appearance_family
+    governance: *benchmark_gap_corpus_governance
+    url: https://www.nhs.uk/better-health/quit-smoking/why-quit-smoking/understanding-the-true-impact-of-smoking/
+    source_type: government
+    topic_tags: [skin, complexion, wound_healing, secondhand_smoke, family]
+    recency_date: "2025-01-24"
+    ingested: true
+
+  - source_id: niddk_diabetes_healthy_living
+    governance: *benchmark_gap_corpus_governance
+    url: https://www.niddk.nih.gov/health-information/diabetes/overview/healthy-living-with-diabetes
+    source_type: government
+    topic_tags: [diabetes, blood_sugar, metabolism, nrt]
+    recency_date: "2024-05-15"
+    ingested: true
+
+  - source_id: nhs_infertility_risk_factors
+    governance: *benchmark_gap_corpus_governance
+    url: https://www.nhs.uk/conditions/infertility/
+    source_type: government
+    topic_tags: [fertility, reproductive_health, pregnancy, secondhand_smoke]
+    recency_date: "2025-01-31"
+    ingested: true
+
+  - source_id: nhs_breastfeeding_smoking_nrt
+    governance: *benchmark_gap_corpus_governance
+    url: https://www.nhs.uk/baby/breastfeeding-and-bottle-feeding/breastfeeding-and-lifestyle/smoking/
+    source_type: government
+    topic_tags: [breastfeeding, nrt, nicotine, pregnancy, infant_health]
+    recency_date: "2026-05-22"
+    ingested: true
+
+  - source_id: smokefree_veterans_nicotine_patch
+    governance: *benchmark_gap_corpus_governance
+    url: https://veterans.smokefree.gov/tools-tips-vet/how-to-quit-with-nrt/nicotine-patch-counseling
+    source_type: government
+    topic_tags: [nrt, nicotine_patch, vivid_dreams, sleep, step_down]
+    recency_date: "2026-08-25"
+    ingested: true
+
+  - source_id: nci_withdrawal_alternative_methods
+    governance: *benchmark_gap_corpus_governance
+    url: https://www.cancer.gov/about-cancer/causes-prevention/risk/tobacco/withdrawal-fact-sheet
+    source_type: government
+    topic_tags: [withdrawal, acupuncture, hypnotherapy, alternative_treatments, nrt]
+    recency_date: "2022-01-12"
+    ingested: true
+
+  - source_id: fda_cessation_products
+    governance: *benchmark_gap_corpus_governance
+    url: https://www.fda.gov/consumers/consumer-updates/want-quit-smoking-fda-approved-and-fda-cleared-cessation-products-can-help
+    source_type: government
+    topic_tags: [nrt, vaping, pharmacy, over_the_counter, varenicline, alcohol, medication_safety]
+    recency_date: "2024-02-22"
+    ingested: true
+
+  - source_id: fda_nicotine_gum_label
+    governance: *benchmark_gap_corpus_governance
+    url: https://www.accessdata.fda.gov/drugsatfda_docs/label/2018/020066Orig1s062%2C018612Orig1s081lbl.pdf
+    source_type: government
+    topic_tags: [nrt, nicotine_gum, dosage, 2mg, 4mg, step_down]
+    recency_date: "2018-01-01"
+    ingested: true
+
+  - source_id: nhs_varenicline_alcohol
+    governance: *benchmark_gap_corpus_governance
+    url: https://www.nhs.uk/medicines/varenicline/common-questions-about-varenicline/
+    source_type: government
+    topic_tags: [varenicline, champix, chantix, alcohol, medication_safety]
+    recency_date: "2025-01-24"
+    ingested: true
+
+  - source_id: cdc_surgeon_general_other_effects
+    governance: *benchmark_gap_corpus_governance
+    url: https://archive.cdc.gov/www_cdc_gov/tobacco/sgr/2004/highlights.html
+    source_type: government
+    topic_tags: [wound_healing, immune_system, infection, bone_density, osteoporosis, oral_health, gum_disease]
+    recency_date: "2004-05-27"
+    ingested: true
+
+  - source_id: pmc_menstrual_cessation_review
+    governance: *benchmark_gap_corpus_governance
+    url: https://pmc.ncbi.nlm.nih.gov/articles/PMC4429881/
+    source_type: peer_reviewed
+    topic_tags: [hormones, menstrual_cycle, reproductive_health, fertility]
+    recency_date: "2006-01-01"
+    ingested: true
 
   - source_id: smokefree_workout_effects
     governance: *targeted_corpus_governance
@@ -78,13 +182,13 @@ sources:
     recency_date: "2026-08-23"
     ingested: true
 
-  - source_id: cdc_tobacco_oral_health
-    governance: *targeted_corpus_governance
-    url: https://www.cdc.gov/oral-health/data-research/facts-stats/fast-facts-tobacco-use-and-oral-health.html
+  - source_id: nidcr_periodontal_disease
+    governance: *benchmark_gap_corpus_governance
+    url: https://www.nidcr.nih.gov/health-info/gum-disease
     source_type: government
     topic_tags: [oral_health, gum_disease, tooth_health, cancer_risk]
-    recency_date: "2024-05-15"
-    ingested: false
+    recency_date: "2026-08-25"
+    ingested: true
 
   # ── Already ingested ────────────────────────────────────────────────────────
 

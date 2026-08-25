@@ -29,7 +29,11 @@ _TIME_UNIT_PATTERN = re.compile(r"\b(?:hours?|days?|weeks?|months?|years?)\b", r
 _MEDICAL_FACT_PATTERN = re.compile(
     r"\b(?:body|brain|heart|lung|blood|circulation|oxygen|carbon monoxide|nicotine|"
     r"metabolis\w*|appetite|weight|disease|cancer|risk|symptom|withdrawal|craving|"
-    r"heal\w*|recover\w*|function|capacity|breath\w*)\b",
+    r"heal\w*|recover\w*|function|capacity|breath\w*|skin|complexion|wrinkle\w*|"
+    r"taste|smell|sense\w*|immune|immunity|infection\w*|inflammation|gum\w*|oral|"
+    r"tooth|teeth|tissue|fertil\w*|reproduct\w*|hormon\w*|menstrual|period\w*|"
+    r"bone|density|osteoporosis|fracture|wound\w*|sleep|dream\w*|dependen\w*|"
+    r"addict\w*|dose|dosage|patch\w*|lozenge\w*|varenicline|bupropion|alcohol)\b",
     re.IGNORECASE,
 )
 _SENTENCE_SPLIT = re.compile(r"(?<=[.!?])\s+|\n+")

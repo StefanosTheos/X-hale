@@ -12,13 +12,16 @@ def test_all_manifest_sources_have_bounded_governance_metadata():
     data = yaml.safe_load(MANIFEST.read_text(encoding="utf-8"))
     sources = data["sources"]
 
-    assert len(sources) == 30
-    assert len({source["source_id"] for source in sources}) == 30
+    assert len(sources) == 41
+    assert len({source["source_id"] for source in sources}) == 41
 
     for source in sources:
         governance = source["governance"]
-        if source["source_id"] in {"smokefree_workout_effects", "cdc_tobacco_oral_health"}:
+        if source["source_id"] == "smokefree_workout_effects":
             assert str(governance["fetch_date"]) == "2026-08-23"
+            assert governance["fetch_date_status"] == "verified_during_developer_review"
+        elif str(governance["ingestion_evidence_date"]) == "2026-08-25":
+            assert str(governance["fetch_date"]) == "2026-08-25"
             assert governance["fetch_date_status"] == "verified_during_developer_review"
         else:
             assert governance["fetch_date"] is None
@@ -44,4 +47,5 @@ def test_ingestion_evidence_dates_match_repository_history_groups():
 
     assert evidence_dates.count("2026-05-27") == 5
     assert evidence_dates.count("2026-06-12") == 23
-    assert evidence_dates.count("2026-08-23") == 2
+    assert evidence_dates.count("2026-08-23") == 1
+    assert evidence_dates.count("2026-08-25") == 12
