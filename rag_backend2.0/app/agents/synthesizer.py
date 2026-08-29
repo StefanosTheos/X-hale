@@ -178,11 +178,35 @@ def _post_process(raw: str, state) -> tuple[str, list[Citation]]:
         cited_ids = []
         source_claims = {}
 
-    validation = validate_citations(filtered_text, source_claims, citation_by_id, cited_ids)
-    citations = validation.citations
     candidate_text = filtered_text
     medical_requested = "medical" in (state.get("requested_specialists") or [])
     risk_tier = medical_risk_tier(state.get("user_input", "")) if medical_requested else "none"
+    promoted_claims: list[str] = []
+    if medical_requested and not was_blocked:
+        # Preserve a small number of exact specialist-selected evidence claims
+        # when synthesis omitted or paraphrased them beyond reliable matching.
+        # Only claims independently entailed by their retrieved snippets qualify.
+        for source_id, claims in source_claims.items():
+            citation = citation_by_id.get(source_id)
+            if citation is None:
+                continue
+            for claim in claims:
+                if (
+                    claim_is_represented(claim, citation.snippet)
+                    and not claim_is_represented(claim, filtered_text, allow_partial_numeric_claim=True)
+                ):
+                    exact_sentence = _as_sentence(claim)
+                    if exact_sentence:
+                        promoted_claims.append(exact_sentence)
+                if len(promoted_claims) >= 2:
+                    break
+            if len(promoted_claims) >= 2:
+                break
+        if promoted_claims:
+            filtered_text = (filtered_text.rstrip() + " " + " ".join(promoted_claims)).strip()
+
+    validation = validate_citations(filtered_text, source_claims, citation_by_id, cited_ids)
+    citations = validation.citations
     if medical_requested and not was_blocked:
         if citations:
             # A failed citation must not erase the whole useful answer. Remove
@@ -228,6 +252,7 @@ def _post_process(raw: str, state) -> tuple[str, list[Citation]]:
     trace = dict(state.get("trace") or {})
     trace["citation_validation"] = {
         "candidate_response": candidate_text,
+        "promoted_canonical_claims": promoted_claims,
         "source_claims": source_claims,
         "risk_tier": risk_tier,
         "declared_source_ids": cited_ids,

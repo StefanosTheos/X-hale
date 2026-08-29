@@ -21,6 +21,8 @@ Rules:
 - When a message plausibly concerns whether the user wants to remain alive, choose the safety-first classification: crisis_flag = true, urgency = "high", and no specialists.
 - Do NOT set crisis_flag for ordinary frustration, figurative expressions (for example, "I'm dying for a cigarette"), giving up on a task, or discussion of smoking harming health without a self-harm or hopelessness signal.
 - topic_relevance = "irrelevant" ONLY for clearly unrelated topics (recipes, sports, coding, unrelated health questions, etc.). Unrelated medical or wellness questions must be redirected; do not route them to the medical specialist merely because they concern health.
+- Literal statements about traffic, navigation, books, films, articles, schoolwork, or another person's situation remain unrelated unless the user explicitly connects them to smoking cessation.
+- Do not infer a crisis from quoted, literary, hypothetical, academic, or third-person language. For example, "the book argues that life is meaningless" is not a crisis disclosure. A first-person statement such as "my life feels meaningless" remains a crisis signal.
 - Any message that mentions smoking, cigarettes, cravings, quitting, triggers, or the user's habits is ALWAYS "relevant" — even if expressed positively (e.g. "I love smoking with coffee" reveals a trigger and is relevant).
 - Use the supplied quit-journey context to rescue short or ambiguous messages such as "drinks with friends tonight", "rough day at work", or "my run felt easier" when a stored trigger, prior turn, or progress fact makes them relevant.
 - Emotional disclosure is relevant unless it is clearly about an unrelated task or topic. Do not reject distress, guilt, loneliness, relationship difficulty, or a request for personally tailored support merely because smoking is implicit.
@@ -28,6 +30,13 @@ Rules:
 - requested_specialists: include the agents most suited to this message. Can be empty for simple greetings.
 - For craving messages: always include "craving_support". For emotional messages: always include "emotional_support".
 - For medical questions: always include "medical". For both craving+emotional: include both.
+- Mixed messages are additive: withdrawal symptoms plus distress use "medical" and
+  "emotional_support"; active cravings plus distress use "craving_support" and
+  "emotional_support"; a slip plus guilt or shame uses "relapse_risk" and
+  "emotional_support"; medication difficulties plus cravings use "medical" and
+  "craving_support".
+- For requests about the user's own quit history, progress, milestones, savings, cigarettes avoided, triggers, patterns, coping history, diary content, reasons for quitting, changes over time, or what you remember about them: always include "reflection".
+- Reflection is additive for mixed requests: retain "medical", "craving_support", "emotional_support", or "relapse_risk" when that expertise is also needed.
 - Default emotion to "neutral" if none is evident.
 """
 

@@ -28,6 +28,19 @@ def decide_specialists(
     if triage.requested_specialists:
         specialists = list(triage.requested_specialists)
 
+    # Enforce the specialist implied by an explicit intent without replacing
+    # any specialists selected for a mixed request.
+    intent_specialist: dict[str, SpecialistName] = {
+        "medical_question": "medical",
+        "craving_support": "craving_support",
+        "emotional_support": "emotional_support",
+        "reflection": "reflection",
+        "relapse_concern": "relapse_risk",
+    }
+    required = intent_specialist.get(triage.intent)
+    if required and required not in specialists:
+        specialists.append(required)
+
     # Behavioral signals are loaded inside RelapseRiskAgent when triage requests it;
     # they are intentionally not fetched here to avoid duplicate Appwrite reads.
 
@@ -35,11 +48,9 @@ def decide_specialists(
     # default an ambiguous turn to medical: medical generation requires an
     # explicit medical classification and grounded retrieval.
     if not specialists and triage.topic_relevance == "relevant":
-        # Default to emotional support for unclear cases
-        if triage.emotion not in ("neutral", "calm", "joy", "hope"):
-            specialists = ["emotional_support"]
-        else:
-            specialists = ["emotional_support"]
+        # Emotional support remains the safe fallback only when no explicit
+        # intent-to-specialist invariant applies.
+        specialists = ["emotional_support"]
 
     # Deduplicate while preserving order
     seen: set[str] = set()

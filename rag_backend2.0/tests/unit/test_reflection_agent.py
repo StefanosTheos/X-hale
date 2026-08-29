@@ -128,7 +128,7 @@ async def test_reflection_parse_failure_returns_fallback(sample_state):
 
     assert draft.agent == "reflection"
     assert len(draft.key_points) == 1
-    assert "strength" in draft.key_points[0].claim.lower()
+    assert "won't guess" in draft.key_points[0].claim.lower()
 
 
 @pytest.mark.asyncio
@@ -175,3 +175,59 @@ async def test_reflection_diary_fetch_failure_degrades_gracefully(sample_state):
         draft = await ReflectionAgent().run(sample_state)
 
     assert draft.agent == "reflection"
+
+
+@pytest.mark.asyncio
+async def test_benchmark_diary_entries_are_injected_without_appwrite_access(sample_state):
+    """Benchmark evidence is in-memory, isolated, and never fetched from Appwrite."""
+    sample_state["benchmark_context_override"] = True
+    sample_state["benchmark_diary_entries"] = [{
+        "entry_id": "fixture-entry",
+        "created_at": "2026-08-27T18:00:00Z",
+        "mood": "proud",
+        "tags": ["exercise"],
+        "content": "A short walk helped the craving pass.",
+    }]
+    client = _mock_llm({
+        "agent": "reflection",
+        "key_points": [{"claim": "A short walk helped a recent craving.", "source_id": ""}],
+        "tone_hint": "warm_supportive",
+        "suggested_deeplinks": [],
+        "raw_context": "The diary records one useful coping response.",
+    })
+    fetch = AsyncMock(side_effect=AssertionError("Appwrite must not be called"))
+
+    with (
+        patch("app.agents.reflection.get_recent_diary_entries", new=fetch),
+        patch("app.agents.reflection.get_triage_client", return_value=client),
+    ):
+        await ReflectionAgent().run(sample_state)
+
+    fetch.assert_not_awaited()
+    prompt = client.complete.call_args.kwargs["messages"][1]["content"]
+    assert "short walk helped" in prompt.lower()
+    assert sample_state["trace"]["benchmark_diary_entries_selected"] == ["fixture-entry"]
+
+
+@pytest.mark.asyncio
+async def test_empty_benchmark_diary_is_an_explicit_no_data_condition(sample_state):
+    sample_state["benchmark_context_override"] = True
+    sample_state["benchmark_diary_entries"] = []
+    client = _mock_llm({
+        "agent": "reflection",
+        "key_points": [{"claim": "There is not enough recorded information to know.", "source_id": ""}],
+        "tone_hint": "warm_supportive",
+        "suggested_deeplinks": [],
+        "raw_context": "I will not guess without recorded information.",
+    })
+    fetch = AsyncMock(side_effect=AssertionError("Appwrite must not be called"))
+
+    with (
+        patch("app.agents.reflection.get_recent_diary_entries", new=fetch),
+        patch("app.agents.reflection.get_triage_client", return_value=client),
+    ):
+        await ReflectionAgent().run(sample_state)
+
+    fetch.assert_not_awaited()
+    prompt = client.complete.call_args.kwargs["messages"][1]["content"]
+    assert "No diary entries" in prompt

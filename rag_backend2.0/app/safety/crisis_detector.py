@@ -26,6 +26,17 @@ _CRISIS_PATTERNS: list[re.Pattern] = [
     re.compile(r"\b(no reason to live|life (is|has) no (point|meaning))\b", re.IGNORECASE),
     re.compile(r"\bwish(ing)? i (was|were|could be) dead\b", re.IGNORECASE),
     re.compile(r"\b(overdose|od'?ing)\b", re.IGNORECASE),
+    re.compile(
+        r"\b(?:thinking (?:of|about)|want(?:ing)? to|going to|might)\s+"
+        r"(?:tak(?:e|ing)|swallow(?:ing)?)\s+(?:all|every one of)\s+(?:of\s+)?(?:my\s+)?"
+        r"(?:medication|medications|medicine|medicines|pills?)\b",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"\b(?:take|swallow)\s+(?:the\s+)?whole\s+(?:bottle|packet|pack)\s+of\s+"
+        r"(?:medication|medicine|pills?)\b",
+        re.IGNORECASE,
+    ),
     re.compile(r"\b(cut(ting)? (my)?self|slash(ing)? (my)?self)\b", re.IGNORECASE),
     # Passive death wishes and statements about no longer being present.
     re.compile(r"\bwoke up\b.{0,40}\bwish(?:ing|ed)?\s+i\s+hadn['’]?t\b", re.IGNORECASE),

@@ -20,6 +20,8 @@ Rules:
 - When using a medical key point, preserve its factual substance in one sentence.
   Preserve every number, timeframe, comparison, and negation exactly; do not replace
   it with a broader claim that the cited evidence does not establish.
+- Do not add a physiological mechanism, causal explanation, benefit, or recovery
+  outcome unless that specific statement appears in a source-attributed medical key point.
 - For questions about cessation medication interactions, contraindications,
   pregnancy or breastfeeding, combining products, changing dose, persistent
   symptoms, or treatment that is not working, explicitly recommend consulting

@@ -23,6 +23,7 @@ class HaileyState(TypedDict, total=False):
     benchmark_memory_facts: list[dict[str, Any]]
     benchmark_context_override: bool
     benchmark_profile: dict[str, Any]
+    benchmark_diary_entries: list[dict[str, Any]]
 
     # ── Triage ───────────────────────────────────────────────────────────────
     triage: Optional[TriageResult]

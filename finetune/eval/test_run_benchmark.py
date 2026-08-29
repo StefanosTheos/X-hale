@@ -18,6 +18,7 @@ from finetune.eval.run_benchmark import (
     _add_model_usage,
     _det_check,
     _hard_gate_failures,
+    _effective_checks,
     _reporting_metrics,
     CaseResult,
     CheckResult,
@@ -33,9 +34,61 @@ def test_off_topic_cases_use_scope_specific_evaluation():
     assert all(case.expected_themes == [] for case in cases)
 
 
+def test_off_topic_evaluation_does_not_require_answering_unrelated_concern():
+    """The redirect contract must not conflict with primary-concern scoring."""
+    cases = _load_cases("off_topic")
+
+    assert all("primary_concern_addressed" not in _effective_checks(case) for case in cases)
+    assert all("scope_redirect_appropriate" in _effective_checks(case) for case in cases)
+
+
+def test_every_reflection_case_has_an_explicit_benchmark_fixture():
+    cases = _load_cases("reflection")
+
+    assert len(cases) == 30
+    assert all(case.benchmark_fixture for case in cases)
+    assert {case.benchmark_fixture for case in cases} == {
+        "reflection_progress", "reflection_patterns",
+        "reflection_wellbeing", "reflection_no_data",
+    }
+
+
+def test_reflection_no_data_controls_are_explicit_and_do_not_leak_evidence():
+    cases = _load_cases("reflection")
+    controls = [case for case in cases if case.benchmark_fixture == "reflection_no_data"]
+
+    assert {case.id for case in controls} == {"refl_005", "refl_013", "refl_024", "refl_026"}
+    assert all(not case.memory_facts for case in controls)
+    assert all(not case.benchmark_profile for case in controls)
+    assert all(not case.benchmark_diary_entries for case in controls)
+    assert all("uncertainty" in case.mandatory_themes for case in controls)
+
+
+def test_reflection_fixture_values_are_deep_copied_per_case():
+    first_load = _load_cases("reflection")
+    progress_cases = [case for case in first_load if case.benchmark_fixture == "reflection_progress"]
+    original_name = progress_cases[1].benchmark_profile["name"]
+    progress_cases[0].benchmark_profile["name"] = "MUTATED"
+    progress_cases[0].memory_facts[0]["fact_value"] = "MUTATED"
+
+    assert progress_cases[1].benchmark_profile["name"] == original_name
+    assert progress_cases[1].memory_facts[0]["fact_value"] != "MUTATED"
+    assert _load_cases("reflection")[0].benchmark_profile["name"] == "Alex"
+
+
 def test_invented_xhale_feature_is_deterministically_rejected():
     result = _det_check("no_invented_xhale_feature", "Open the Craving Tracker.", [], [])
     assert result.passed is False
+
+
+@pytest.mark.parametrize("feature", [
+    "Open the symptom tracker.",
+    "Record that in the symptom log.",
+    "Use the cravings log.",
+    "Add it to the quit-plan feature.",
+])
+def test_additional_invented_xhale_features_are_rejected(feature):
+    assert _det_check("no_invented_xhale_feature", feature, [], []).passed is False
 
 
 def test_uncited_low_risk_medical_answer_fails_citation_policy():

@@ -44,6 +44,10 @@ _MEDICAL_QUERY_EXPANSIONS: tuple[tuple[re.Pattern[str], str], ...] = (
     (re.compile(r"\b(?:immune|infection)\w*\b", re.I), "immune system infection"),
     (re.compile(r"\b(?:sleep|dream|insomnia)\w*\b", re.I),
      "nicotine withdrawal sleep dreams insomnia"),
+    (re.compile(r"\b(?:taste|smell|senses?)\w*\b", re.I),
+     "taste smell senses improve recovery quit timeline"),
+    (re.compile(r"\b(?:cough|phlegm|mucus)\w*\b", re.I),
+     "cough phlegm mucus airways clearing short term after quitting"),
     (re.compile(r"\b(?:diabetes|blood sugar|glucose|insulin)\b", re.I),
      "diabetes blood sugar glucose insulin nicotine cessation"),
     (re.compile(r"\b(?:hormone|menstrual|period|cycle)\w*\b", re.I),
@@ -54,6 +58,13 @@ _MEDICAL_QUERY_EXPANSIONS: tuple[tuple[re.Pattern[str], str], ...] = (
      "varenicline alcohol interaction medication safety"),
     (re.compile(r"\b(?:prescription|pharmacy|over the counter|2mg|4mg|step.down)\b", re.I),
      "nicotine replacement pharmacy prescription gum 2 mg 4 mg patch step down"),
+    (re.compile(r"\b(?:long time|long.term|months|years|addicted|addiction)\b.*\b(?:nrt|patches?|gum)\b|"
+                r"\b(?:nrt|patches?|gum)\b.*\b(?:long time|long.term|months|years|addicted|addiction)\b", re.I),
+     "nicotine replacement long-term use safety dependence duration 8 12 weeks"),
+    (re.compile(r"\b(?:patch|patches)\b.*\b(?:gum|lozenge)|\b(?:gum|lozenge)\b.*\bpatch", re.I),
+     "combination NRT long-acting patch short-acting gum lozenge safety"),
+    (re.compile(r"\b(?:teen|teenager|adolescent)\b.*\b(?:nrt|nicotine replacement)", re.I),
+     "teen adolescent nicotine replacement doctor healthcare professional"),
 )
 
 

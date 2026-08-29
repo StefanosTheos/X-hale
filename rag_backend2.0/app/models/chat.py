@@ -19,6 +19,7 @@ class ChatRequest(BaseModel):
     # benchmark user; they are never persisted.
     benchmark_memory_facts: list[dict] = Field(default_factory=list, max_length=5)
     benchmark_profile: dict = Field(default_factory=dict)
+    benchmark_diary_entries: list[dict] = Field(default_factory=list, max_length=15)
 
 
 class SSEStatusEvent(BaseModel):

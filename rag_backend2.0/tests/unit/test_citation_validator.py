@@ -240,6 +240,32 @@ def test_removed_paraphrased_timeline_is_restored_as_exact_key_point():
     assert citations == [citation]
 
 
+def test_omitted_supported_claim_is_promoted_before_citation_validation():
+    citation = _citation(
+        "nhs_nrt", "Using a combination of slow-acting and fast-acting NRT can improve results."
+    )
+    state = {
+        "user_input": "Can I use nicotine patches and gum at the same time?",
+        "requested_specialists": ["medical"],
+        "specialist_drafts": {"medical": {
+            "key_points": [{
+                "claim": "Using a combination of slow-acting and fast-acting NRT can improve results.",
+                "source_id": "nhs_nrt",
+            }],
+            "citations": [citation.model_dump()],
+        }},
+        "trace": {},
+    }
+
+    text, citations = post_process_synthesis(
+        "A clinician can help you choose an appropriate approach.", state,
+    )
+
+    assert "Using a combination of slow-acting and fast-acting NRT can improve results." in text
+    assert citations == [citation]
+    assert state["trace"]["citation_validation"]["promoted_canonical_claims"]
+
+
 def test_timeline_heading_and_halved_paraphrase_are_aligned():
     citation = _citation(
         "nhs",

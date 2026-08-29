@@ -3,12 +3,19 @@ from app.agents.medical import (
     _canonicalise_key_points, _parse_json_object, _promote_retrieved_evidence,
 )
 from app.models.retrieval import RetrievalResult, RetrievedChunk
+from app.models.retrieval import bounded_excerpt
 
 
 def _retrieval() -> RetrievalResult:
     return RetrievalResult(chunks=[
-        RetrievedChunk(content="First", source_id="nhs_nrt_guide"),
-        RetrievedChunk(content="Second", source_id="cdc_quitting"),
+        RetrievedChunk(
+            content="Nicotine replacement therapy can help manage nicotine cravings.",
+            source_id="nhs_nrt_guide",
+        ),
+        RetrievedChunk(
+            content="Stopping smoking reduces exposure to harmful tobacco smoke.",
+            source_id="cdc_quitting",
+        ),
     ])
 
 
@@ -18,6 +25,20 @@ def test_numeric_model_source_is_mapped_to_canonical_id():
         _retrieval(),
     )
     assert points[0].source_id == "nhs_nrt_guide"
+    assert points[0].claim == "Nicotine replacement therapy can help manage nicotine cravings."
+
+
+def test_broader_model_mechanism_is_replaced_by_exact_source_sentence():
+    retrieval = RetrievalResult(chunks=[RetrievedChunk(
+        content="The risk of stroke decreases steadily after smoking cessation.",
+        source_id="cdc_stroke",
+    )])
+    points = _canonicalise_key_points([{
+        "claim": "Blood vessels recover and reduce clot formation after quitting.",
+        "source_id": "cdc_stroke",
+    }], retrieval)
+
+    assert points == []
 
 
 def test_unknown_model_source_is_not_accepted():
@@ -60,3 +81,8 @@ def test_evidence_promotion_does_not_use_unrelated_sentence():
         source_id="exercise", score=0.9,
     )])
     assert _promote_retrieved_evidence("Does quitting improve fertility?", retrieval) == []
+
+
+def test_legacy_mid_sentence_chunk_prefix_is_removed_from_excerpt():
+    text = "ing from a broken prior sentence. Sleep problems can occur during withdrawal."
+    assert bounded_excerpt(text) == "Sleep problems can occur during withdrawal."

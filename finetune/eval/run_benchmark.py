@@ -24,6 +24,7 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+from copy import deepcopy
 import hashlib
 import json
 import os
@@ -112,7 +113,8 @@ _IN_APP_RE = re.compile(
 )
 
 _INVENTED_XHALE_FEATURE_RE = re.compile(
-    r"\b(?:craving tracker|calm corner|doctor visit|medical dashboard|symptom checker)\b",
+    r"\b(?:cravings? (?:tracker|log)|calm corner|doctor visit|medical dashboard|"
+    r"symptom (?:checker|tracker|log)|quit[- ]plan feature)\b",
     re.IGNORECASE,
 )
 
@@ -133,6 +135,8 @@ class TestCase:
     expected_route: str = ""
     memory_facts: list[dict] = field(default_factory=list)
     benchmark_profile: dict = field(default_factory=dict)
+    benchmark_diary_entries: list[dict] = field(default_factory=list)
+    benchmark_fixture: str = ""
     clinical_review_status: str = "not_required"
     human_review_pass: bool | None = None
     expected_agents: list[str] = field(default_factory=list)
@@ -224,6 +228,7 @@ async def _call_chat(
     user_input: str,
     memory_facts: list[dict] | None = None,
     benchmark_profile: dict | None = None,
+    benchmark_diary_entries: list[dict] | None = None,
 ) -> tuple[str, list, list, float, dict, dict]:
     """Stream /chat SSE; return text, metadata, latency, and backend LLM usage."""
     start = time.monotonic()
@@ -241,6 +246,7 @@ async def _call_chat(
             "message": user_input, "locale": "en",
             "benchmark_memory_facts": memory_facts or [],
             "benchmark_profile": benchmark_profile or {},
+            "benchmark_diary_entries": benchmark_diary_entries or [],
         },
         headers={"Authorization": f"Bearer {jwt}", "Accept": "text/event-stream"},
         timeout=90.0,
@@ -656,7 +662,8 @@ async def _run_case(
     for attempt in range(3):  # up to 2 retries on transient errors
         try:
             response, citations, deeplinks, latency, backend_usage, trace = await _call_chat(
-                client, api_url, jwt, case.input, case.memory_facts, case.benchmark_profile
+                client, api_url, jwt, case.input, case.memory_facts,
+                case.benchmark_profile, case.benchmark_diary_entries,
             )
             last_exc = None
             break
@@ -681,32 +688,10 @@ async def _run_case(
 
     check_results: list[CheckResult] = []
     judge_names: list[str] = []
-    effective_checks = list(dict.fromkeys(case.checks + [
-        "response_complete", "primary_concern_addressed", "no_invented_xhale_feature",
-        "no_unsupported_physiological_claims", "action_executable",
-    ]))
-    if case.category.startswith("medical_"):
-        effective_checks += [
-            "citation_present", "grounded_medical_claims", "medical_timeline_accuracy",
-            "medical_quantity_accuracy", "no_unsupported_physiological_claims",
-        ]
-    if case.category == "medical_medication":
-        effective_checks += [
-            "medication_safety", "contraindication_handling", "professional_escalation",
-        ]
-    if case.category == "personalisation":
-        effective_checks.append("memory_accuracy")
-    if case.expected_route:
-        effective_checks.append("route_correct")
     if case.expected_agents:
-        effective_checks.append("agents_correct")
         trace = dict(trace)
         trace["expected_agents"] = case.expected_agents
-    if case.mandatory_themes:
-        effective_checks.append("mandatory_theme_coverage")
-    if case.invalid_themes:
-        effective_checks.append("avoids_invalid_themes")
-    effective_checks = list(dict.fromkeys(effective_checks))
+    effective_checks = _effective_checks(case)
     for check_name in effective_checks:
         if check_name in DETERMINISTIC_CHECKS:
             result = _det_check(check_name, response, citations, deeplinks, trace, case.expected_route)
@@ -745,10 +730,46 @@ async def _run_case(
     )
 
 
+def _effective_checks(case: TestCase) -> list[str]:
+    """Build the category-aware check contract for one benchmark case."""
+    universal_checks = [
+        "response_complete", "no_invented_xhale_feature",
+        "no_unsupported_physiological_claims", "action_executable",
+    ]
+    # An off-topic answer succeeds by declining the unrelated request and
+    # redirecting the user to Hailey's cessation scope. Asking the generic
+    # judge whether that unrelated concern was answered contradicts the
+    # category-specific scope_redirect_appropriate contract.
+    if case.category != "off_topic":
+        universal_checks.append("primary_concern_addressed")
+    effective_checks = list(dict.fromkeys(case.checks + universal_checks))
+    if case.category.startswith("medical_"):
+        effective_checks += [
+            "citation_present", "grounded_medical_claims", "medical_timeline_accuracy",
+            "medical_quantity_accuracy", "no_unsupported_physiological_claims",
+        ]
+    if case.category == "medical_medication":
+        effective_checks += [
+            "medication_safety", "contraindication_handling", "professional_escalation",
+        ]
+    if case.category == "personalisation":
+        effective_checks.append("memory_accuracy")
+    if case.expected_route:
+        effective_checks.append("route_correct")
+    if case.expected_agents:
+        effective_checks.append("agents_correct")
+    if case.mandatory_themes:
+        effective_checks.append("mandatory_theme_coverage")
+    if case.invalid_themes:
+        effective_checks.append("avoids_invalid_themes")
+    return list(dict.fromkeys(effective_checks))
+
+
 # ── YAML loader ───────────────────────────────────────────────────────────────
 
 def _load_cases(category_filter: str | None = None) -> list[TestCase]:
     raw = yaml.safe_load(CATEGORIES_FILE.read_text(encoding="utf-8"))
+    fixtures = raw.get("benchmark_fixtures", {})
     cases: list[TestCase] = []
     default_agents = {
         "medical_factual": ["medical"],
@@ -763,6 +784,10 @@ def _load_cases(category_filter: str | None = None) -> list[TestCase]:
         if category_filter and cat_name != category_filter:
             continue
         for item in cat_data.get("cases", []):
+            fixture_name = item.get("benchmark_fixture", "")
+            fixture = fixtures.get(fixture_name, {}) if fixture_name else {}
+            if fixture_name and fixture_name not in fixtures:
+                raise ValueError(f"unknown benchmark fixture: {fixture_name}")
             cases.append(TestCase(
                 id=item["id"],
                 category=cat_name,
@@ -783,8 +808,12 @@ def _load_cases(category_filter: str | None = None) -> list[TestCase]:
                         "off_topic" if cat_name == "off_topic" else "specialists"
                     ),
                 ),
-                memory_facts=item.get("memory_facts", []),
-                benchmark_profile=item.get("benchmark_profile", {}),
+                memory_facts=deepcopy(item.get("memory_facts", fixture.get("memory_facts", []))),
+                benchmark_profile=deepcopy(item.get("benchmark_profile", fixture.get("benchmark_profile", {}))),
+                benchmark_diary_entries=deepcopy(item.get(
+                    "benchmark_diary_entries", fixture.get("benchmark_diary_entries", []),
+                )),
+                benchmark_fixture=fixture_name,
                 clinical_review_status=item.get(
                     "clinical_review_status", "pending" if cat_name == "crisis" else "not_required",
                 ),

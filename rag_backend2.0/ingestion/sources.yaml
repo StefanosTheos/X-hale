@@ -82,9 +82,33 @@ governance_profiles:
     inclusion_decision: included_after_developer_review
     independent_content_review: pending
     next_scheduled_review: "2027-02-25"
+  campaign_repair_corpus: &campaign_repair_corpus_governance
+    fetch_date: "2026-08-29"
+    fetch_date_status: verified_during_developer_review
+    ingestion_evidence_date: "2026-08-29"
+    developer_review_date: "2026-08-29"
+    reviewer_name: Stefanos Theos
+    reviewer_role: application developer and source curator
+    review_scope: completed-campaign medical coverage gaps and claim-level relevance
+    authority_rationale: official NHS or CDC smoking-cessation guidance directly addressing observed benchmark gaps
+    access_status: publicly_accessible
+    licensing_status: reuse_license_and_permission_not_independently_verified
+    content_version: live_web_page_reviewed_2026_08_29
+    content_sha256: unavailable
+    inclusion_decision: included_after_developer_review
+    independent_content_review: pending
+    next_scheduled_review: "2027-02-28"
 
 sources:
   # ── Targeted coverage for recurring medical-query gaps ────────────────────
+
+  - source_id: nhs_quit_temporary_effects
+    governance: *campaign_repair_corpus_governance
+    url: https://www.nhs.uk/better-health/quit-smoking/ready-to-quit-smoking/what-could-happen-when-you-quit-smoking/
+    source_type: government
+    topic_tags: [withdrawal, cough, phlegm, mucus, taste, smell, quit_timeline]
+    recency_date: "2024-10-01"
+    ingested: true
 
   - source_id: nhs_smoking_appearance_family
     governance: *benchmark_gap_corpus_governance

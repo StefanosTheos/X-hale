@@ -35,6 +35,23 @@ _SAFE_MEDICAL_FALLBACK = (
     "If your symptoms feel severe or urgent, please contact local emergency services now."
 )
 
+_INVENTED_FEATURE_REPLACEMENTS: tuple[tuple[re.Pattern, str], ...] = (
+    (
+        re.compile(
+            r"(?:the\s+app(?:['’]s)?\s+)?(?:symptom|craving)\s+(?:tracker|log)",
+            re.IGNORECASE,
+        ),
+        "your diary",
+    ),
+    (
+        re.compile(
+            r"(?:the\s+app(?:['’]s)?\s+)?quit[- ]plan\s+feature",
+            re.IGNORECASE,
+        ),
+        "your progress dashboard",
+    ),
+)
+
 
 def filter_response(content: str) -> tuple[str, bool, str]:
     """
@@ -48,4 +65,10 @@ def filter_response(content: str) -> tuple[str, bool, str]:
         if pattern.search(content):
             return _SAFE_MEDICAL_FALLBACK, True, "diagnosis_language_detected"
 
-    return content, False, ""
+    sanitised = content
+    replaced = False
+    for pattern, replacement in _INVENTED_FEATURE_REPLACEMENTS:
+        sanitised, count = pattern.subn(replacement, sanitised)
+        replaced = replaced or count > 0
+
+    return sanitised, False, "invented_feature_sanitised" if replaced else ""

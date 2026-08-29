@@ -24,6 +24,18 @@ def test_nonmedical_query_is_not_expanded():
     assert _expand_medical_query("Who won the match?", "off_topic") == "Who won the match?"
 
 
+@pytest.mark.parametrize(("query", "required"), [
+    ("Will my taste and smell come back?", {"taste", "recovery", "timeline"}),
+    ("Why is my cough worse after quitting?", {"phlegm", "airways", "clearing"}),
+    ("Is it safe to use patches for years?", {"long-term", "safety", "duration"}),
+    ("Can I use patches and gum together?", {"combination", "long-acting", "short-acting"}),
+    ("Can my teenager use NRT?", {"teen", "doctor", "professional"}),
+])
+def test_campaign_gap_queries_receive_targeted_retrieval_terms(query, required):
+    expanded = _expand_medical_query(query, "medical")
+    assert required.issubset(set(expanded.split()))
+
+
 @pytest.mark.asyncio
 async def test_retrieve_emotional_returns_empty():
     """Emotional strategy should return empty result without calling Qdrant."""

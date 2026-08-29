@@ -29,3 +29,25 @@ def test_general_health_information_passes_unchanged():
 def test_coping_instruction_is_not_mistaken_for_prescription():
     safe = "Take a slow, deep breath and let the craving pass."
     assert filter_response(safe) == (safe, False, "")
+
+
+def test_invented_tracking_feature_is_replaced_with_canonical_diary():
+    content, blocked, reason = filter_response(
+        "Record this in the app's symptom tracker and review it tomorrow."
+    )
+
+    assert blocked is False
+    assert reason == "invented_feature_sanitised"
+    assert "symptom tracker" not in content.lower()
+    assert "your diary" in content.lower()
+
+
+def test_invented_quit_plan_feature_is_replaced_with_dashboard():
+    content, blocked, reason = filter_response(
+        "Add that date to the app’s quit-plan feature."
+    )
+
+    assert blocked is False
+    assert reason == "invented_feature_sanitised"
+    assert "quit-plan feature" not in content.lower()
+    assert "progress dashboard" in content.lower()

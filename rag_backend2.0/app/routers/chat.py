@@ -98,6 +98,10 @@ async def chat(
                     body.benchmark_profile
                     if settings.benchmark_test_user_id == user_id else {}
                 ),
+                "benchmark_diary_entries": (
+                    body.benchmark_diary_entries
+                    if settings.benchmark_test_user_id == user_id else []
+                ),
             }
 
             final_state: HaileyState = dict(initial_state)

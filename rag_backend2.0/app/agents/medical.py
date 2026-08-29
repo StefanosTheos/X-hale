@@ -57,7 +57,7 @@ def _parse_json_object(raw: str) -> dict:
 def _canonicalise_key_points(
     raw_key_points: list[dict], retrieval,
 ) -> list[KeyPoint]:
-    """Accept only retrieved source IDs, repairing legacy numeric references."""
+    """Map model claims to complete source sentences with canonical source IDs."""
     source_ids = [chunk.source_id for chunk in retrieval.chunks]
     by_casefold = {source_id.casefold(): source_id for source_id in source_ids}
     key_points: list[KeyPoint] = []
@@ -70,7 +70,28 @@ def _canonicalise_key_points(
             if 0 <= index < len(source_ids):
                 source_id = source_ids[index]
         if claim and source_id:
-            key_points.append(KeyPoint(claim=claim, source_id=source_id))
+            claim_terms = set(_WORD_RE.findall(claim.casefold())) - _EVIDENCE_STOPWORDS
+            candidates: list[tuple[float, str]] = []
+            for chunk in retrieval.chunks:
+                if chunk.source_id != source_id:
+                    continue
+                for sentence in _SENTENCE_RE.split(chunk.content):
+                    sentence = " ".join(sentence.split()).strip()
+                    if len(sentence) < 25 or len(sentence) > 420:
+                        continue
+                    sentence_terms = set(_WORD_RE.findall(sentence.casefold())) - _EVIDENCE_STOPWORDS
+                    if not claim_terms or not sentence_terms:
+                        continue
+                    overlap = len(claim_terms & sentence_terms) / len(claim_terms)
+                    if overlap >= 0.25:
+                        candidates.append((overlap, sentence))
+            if candidates:
+                # Preserve the retrieved wording rather than allowing synthesis
+                # to attribute a broader model-created mechanism to the source.
+                _, supported_sentence = max(candidates, key=lambda item: item[0])
+                key_points.append(KeyPoint(claim=supported_sentence, source_id=source_id))
+            else:
+                logger.warning("medical_key_point_not_grounded", source_id=source_id)
         elif claim:
             logger.warning("medical_key_point_invalid_source", source_id=raw_source_id)
     return key_points
@@ -185,19 +206,21 @@ class MedicalAgent(AgentBase):
                 agent=self.name,
                 key_points=key_points,
                 tone_hint=data.get("tone_hint", "factual_reassuring"),
-                raw_context=data.get("raw_context", retrieval.format_for_prompt()[:400]),
+                # Do not give synthesis a second, unattributed paraphrase path.
+                # The canonical key points are the complete evidence contract.
+                raw_context=" ".join(point.claim for point in key_points),
                 citations=retrieval.citations,
                 suggested_deeplinks=[],
                 retrieval_trace=trace,
             )
         except (json.JSONDecodeError, ValueError) as exc:
             logger.warning("medical_agent_parse_failed", error=str(exc))
-            # Graceful degradation: return raw context without structured key_points
+            promoted = _promote_retrieved_evidence(user_input, retrieval)
             return SpecialistDraft(
                 agent=self.name,
-                key_points=[],
+                key_points=promoted,
                 tone_hint="factual_reassuring",
-                raw_context=retrieval.format_for_prompt()[:600],
+                raw_context=" ".join(point.claim for point in promoted),
                 citations=retrieval.citations,
                 retrieval_trace={
                     "query": retrieval.query, "strategy": retrieval.strategy_used,
@@ -211,7 +234,7 @@ class MedicalAgent(AgentBase):
                          "score": chunk.score, "snippet": bounded_excerpt(chunk.content, 400)}
                         for chunk in retrieval.chunks
                     ],
-                    "specialist_source_ids": [],
+                    "specialist_source_ids": [point.source_id for point in promoted],
                     "proposed_citation_ids": [c.source_id for c in retrieval.citations],
                 },
             )

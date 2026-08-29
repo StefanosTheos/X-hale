@@ -12,8 +12,8 @@ def test_all_manifest_sources_have_bounded_governance_metadata():
     data = yaml.safe_load(MANIFEST.read_text(encoding="utf-8"))
     sources = data["sources"]
 
-    assert len(sources) == 41
-    assert len({source["source_id"] for source in sources}) == 41
+    assert len(sources) == 42
+    assert len({source["source_id"] for source in sources}) == 42
 
     for source in sources:
         governance = source["governance"]
@@ -22,6 +22,10 @@ def test_all_manifest_sources_have_bounded_governance_metadata():
             assert governance["fetch_date_status"] == "verified_during_developer_review"
         elif str(governance["ingestion_evidence_date"]) == "2026-08-25":
             assert str(governance["fetch_date"]) == "2026-08-25"
+            assert governance["fetch_date_status"] == "verified_during_developer_review"
+        elif str(governance["ingestion_evidence_date"]) == "2026-08-29":
+            assert str(governance["fetch_date"]) == "2026-08-29"
+            assert source["ingested"] is True
             assert governance["fetch_date_status"] == "verified_during_developer_review"
         else:
             assert governance["fetch_date"] is None
@@ -49,3 +53,4 @@ def test_ingestion_evidence_dates_match_repository_history_groups():
     assert evidence_dates.count("2026-06-12") == 23
     assert evidence_dates.count("2026-08-23") == 1
     assert evidence_dates.count("2026-08-25") == 12
+    assert evidence_dates.count("2026-08-29") == 1

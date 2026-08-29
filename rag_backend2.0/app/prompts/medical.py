@@ -24,7 +24,7 @@ Rules:
   SOURCE_ID= from the passage that supports it. Never use a passage number such
   as "1", "2", or "3" as a source_id.
 - tone_hint: always "factual_reassuring" for this agent.
-- raw_context: include a brief (≤150 words) paraphrase of the most relevant retrieved passage.
+- raw_context: repeat only the selected source-backed key points; do not add a second paraphrase.
 - If retrieved content does not contain relevant information, set key_points to [] and explain in raw_context.
 - If any retrieved passage directly addresses the user's question, you MUST return
   at least one key point from it. Copy a complete evidence sentence with its

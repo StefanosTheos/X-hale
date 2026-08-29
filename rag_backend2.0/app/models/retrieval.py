@@ -12,6 +12,12 @@ from pydantic import BaseModel, Field
 def bounded_excerpt(text: str, limit: int = 500) -> str:
     """Return a complete-sentence excerpt instead of cutting claims mid-sentence."""
     cleaned = " ".join(text.split()).strip()
+    # Some legacy chunks begin in the middle of a scraped sentence. Drop that
+    # leading fragment when a proper sentence boundary follows shortly.
+    if cleaned and cleaned[0].islower():
+        first_boundary = re.search(r"[.!?](?:\s|$)", cleaned[:160])
+        if first_boundary and first_boundary.end() < len(cleaned):
+            cleaned = cleaned[first_boundary.end():].strip()
     if len(cleaned) <= limit:
         return cleaned
     prefix = cleaned[:limit]

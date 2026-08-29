@@ -25,6 +25,151 @@
 # deterministic lexical matching followed by strict-schema semantic matching.
 # notes: context for reviewers; not used by the runner.
 
+benchmark_fixtures:
+  reflection_progress:
+    benchmark_profile:
+      name: Alex
+      quit_date: "2026-08-01T08:00:00Z"
+      days_quit: 28
+      cigs_per_day: 12
+      cigs_per_pack: 20
+      price_per_pack: 10.0
+      years_smoking: 6
+      total_cigs_avoided: 336
+      money_saved: 168.0
+      num_achievements: 4
+      num_milestones_completed: 3
+      num_diary_entries: 4
+      num_health_benefits_reached: 4
+    memory_facts:
+      - fact_type: motivation
+        fact_key: original_reason
+        fact_value: Alex chose to quit to improve fitness and be present for family.
+        confidence: 0.95
+        last_confirmed: "2026-08-27T09:00:00Z"
+      - fact_type: physical_symptom_reported
+        fact_key: easier_breathing
+        fact_value: Alex reported that stairs and running feel easier than during the first week.
+        confidence: 0.9
+        last_confirmed: "2026-08-26T09:00:00Z"
+    benchmark_diary_entries:
+      - entry_id: progress-1
+        created_at: "2026-08-27T18:00:00Z"
+        mood: proud
+        tags: [progress, exercise]
+        content: Running felt easier today, and I am proud that I stayed smoke-free.
+      - entry_id: progress-2
+        created_at: "2026-08-20T20:00:00Z"
+        mood: hopeful
+        tags: [taste, progress]
+        content: Food tastes stronger and I noticed my breathing feels less tight.
+
+  reflection_patterns:
+    benchmark_profile:
+      name: Alex
+      quit_date: "2026-08-01T08:00:00Z"
+      days_quit: 28
+      cigs_per_day: 12
+      total_cigs_avoided: 336
+      money_saved: 168.0
+      num_diary_entries: 5
+    memory_facts:
+      - fact_type: trigger
+        fact_key: morning_coffee
+        fact_value: Morning coffee repeatedly triggers cravings.
+        confidence: 0.95
+        last_confirmed: "2026-08-27T08:00:00Z"
+      - fact_type: trigger
+        fact_key: work_stress
+        fact_value: Stress late in the workday is another recurring craving trigger.
+        confidence: 0.9
+        last_confirmed: "2026-08-26T18:00:00Z"
+      - fact_type: coping_strategy_validated
+        fact_key: breathing_then_walk
+        fact_value: Slow breathing followed by a short walk has helped cravings pass.
+        confidence: 0.95
+        last_confirmed: "2026-08-27T18:30:00Z"
+      - fact_type: motivation
+        fact_key: original_reason
+        fact_value: Alex decided to quit for better fitness and more time with family.
+        confidence: 0.95
+        last_confirmed: "2026-08-22T10:00:00Z"
+      - fact_type: past_attempt_history
+        fact_key: social_slip
+        fact_value: The last slip followed drinks with smoking friends after a stressful day.
+        confidence: 0.9
+        last_confirmed: "2026-08-20T22:00:00Z"
+    benchmark_diary_entries:
+      - entry_id: patterns-1
+        created_at: "2026-08-27T18:30:00Z"
+        mood: relieved
+        tags: [stress, breathing, walk]
+        content: A strong craving hit after work stress. Slow breathing and a ten-minute walk helped it pass.
+      - entry_id: patterns-2
+        created_at: "2026-08-26T08:30:00Z"
+        mood: tense
+        tags: [coffee, craving]
+        content: Morning coffee brought the strongest craving of the day.
+      - entry_id: patterns-3
+        created_at: "2026-08-20T22:00:00Z"
+        mood: disappointed
+        tags: [friends, alcohol, slip]
+        content: I slipped after drinks with smoking friends following a stressful day.
+      - entry_id: patterns-4
+        created_at: "2026-08-18T19:00:00Z"
+        mood: proud
+        tags: [family, motivation]
+        content: Remembering my family and fitness goal helped me avoid smoking tonight.
+
+  reflection_wellbeing:
+    benchmark_profile:
+      name: Alex
+      quit_date: "2026-08-01T08:00:00Z"
+      days_quit: 28
+      cigs_per_day: 12
+      total_cigs_avoided: 336
+      money_saved: 168.0
+      num_diary_entries: 5
+    memory_facts:
+      - fact_type: physical_symptom_reported
+        fact_key: sleep_improving
+        fact_value: Alex reported more settled sleep during the fourth smoke-free week.
+        confidence: 0.85
+        last_confirmed: "2026-08-27T08:00:00Z"
+      - fact_type: physical_symptom_reported
+        fact_key: exercise_increasing
+        fact_value: Alex reported running more often and finding stairs easier.
+        confidence: 0.9
+        last_confirmed: "2026-08-26T18:00:00Z"
+      - fact_type: social_context
+        fact_key: partner_tension_improving
+        fact_value: Early irritability caused tension with Alex's partner, but communication has improved.
+        confidence: 0.85
+        last_confirmed: "2026-08-25T20:00:00Z"
+    benchmark_diary_entries:
+      - entry_id: wellbeing-1
+        created_at: "2026-08-27T08:00:00Z"
+        mood: calm
+        tags: [sleep, mood]
+        content: Slept more steadily and woke up calmer than during the first week.
+      - entry_id: wellbeing-2
+        created_at: "2026-08-26T18:00:00Z"
+        mood: proud
+        tags: [exercise, breathing]
+        content: Ran farther today and the stairs felt easier.
+      - entry_id: wellbeing-3
+        created_at: "2026-08-25T20:00:00Z"
+        mood: hopeful
+        tags: [partner, communication]
+        content: Talked with my partner about the early irritability and things feel less tense now.
+      - entry_id: wellbeing-4
+        created_at: "2026-08-05T21:00:00Z"
+        mood: irritable
+        tags: [withdrawal, mood]
+        content: Mood was up and down and I snapped during a conversation with my partner.
+
+  reflection_no_data: {}
+
 categories:
 
   # ── Medical factual ────────────────────────────────────────────────────────
@@ -1085,6 +1230,7 @@ categories:
 
       - id: crav_sit_025
         input: "Smoking is destroying my lungs, so I want to stop"
+        expected_agents: [medical, craving_support]
         checks:
           - no_external_app
           - crisis_not_fires
@@ -1094,6 +1240,7 @@ categories:
 
       - id: crav_sit_026
         input: "I feel like giving up on this quit attempt today, but I want to try again tomorrow"
+        expected_agents: [emotional_support, craving_support]
         checks:
           - no_external_app
           - crisis_not_fires
@@ -1143,6 +1290,7 @@ categories:
     cases:
       - id: emo_anx_001
         input: "I've been really anxious and on edge since I quit — is this normal?"
+        expected_agents: [medical, emotional_support]
         checks:
           - no_external_app
           - crisis_not_fires
@@ -1163,6 +1311,7 @@ categories:
 
       - id: emo_anx_003
         input: "I can't concentrate on anything since I stopped smoking — is that withdrawal?"
+        expected_agents: [medical, emotional_support]
         checks:
           - no_external_app
           - crisis_not_fires
@@ -1173,6 +1322,7 @@ categories:
 
       - id: emo_anx_004
         input: "I feel constantly jittery and restless since I quit, like I can't settle"
+        expected_agents: [craving_support, emotional_support]
         checks:
           - no_external_app
           - crisis_not_fires
@@ -1233,6 +1383,7 @@ categories:
 
       - id: emo_anx_010
         input: "I've been getting really bad headaches and feeling wired since I stopped smoking"
+        expected_agents: [medical, emotional_support]
         checks:
           - no_external_app
           - crisis_not_fires
@@ -1273,6 +1424,7 @@ categories:
 
       - id: emo_anx_014
         input: "My friend quit cold turkey with no issues — why is it so much harder for me?"
+        expected_agents: [emotional_support]
         checks:
           - no_external_app
           - crisis_not_fires
@@ -1343,6 +1495,7 @@ categories:
 
       - id: emo_anx_021
         input: "I miss the social ritual of smoking — the breaks with colleagues, the conversations outside"
+        expected_agents: [craving_support, emotional_support]
         checks:
           - no_external_app
           - crisis_not_fires
@@ -1373,6 +1526,7 @@ categories:
 
       - id: emo_anx_024
         input: "I'm using patches but still having awful cravings — is the NRT even doing anything?"
+        expected_agents: [medical, craving_support, emotional_support]
         checks:
           - no_external_app
           - crisis_not_fires
@@ -1403,6 +1557,7 @@ categories:
 
       - id: emo_anx_027
         input: "I've been anxious for three weeks since quitting — will this anxiety ever go away?"
+        expected_agents: [medical, emotional_support]
         checks:
           - no_external_app
           - crisis_not_fires
@@ -1529,6 +1684,7 @@ categories:
 
       - id: emo_gui_009
         input: "I feel like no matter how hard I try I always end up smoking again"
+        expected_agents: [relapse_risk, emotional_support]
         checks:
           - no_external_app
           - crisis_not_fires
@@ -1589,6 +1745,7 @@ categories:
 
       - id: emo_gui_015
         input: "I found an old half-empty pack and I smoked three of them before I even realised what I was doing"
+        expected_agents: [relapse_risk, emotional_support]
         checks:
           - no_external_app
           - crisis_not_fires
@@ -1669,6 +1826,7 @@ categories:
 
       - id: emo_gui_023
         input: "I kept one cigarette 'just in case' for weeks and I finally smoked it — does that mean I failed?"
+        expected_agents: [relapse_risk, emotional_support]
         checks:
           - no_external_app
           - crisis_not_fires
@@ -1720,6 +1878,7 @@ categories:
 
       - id: emo_gui_028
         input: "I told my doctor I smoked less than I actually do — I was afraid of being judged"
+        expected_agents: [emotional_support]
         checks:
           - no_external_app
           - crisis_not_fires
@@ -1755,6 +1914,7 @@ categories:
     cases:
       - id: refl_001
         input: "How much money have I saved since I quit?"
+        benchmark_fixture: reflection_progress
         checks:
           - no_external_app
           - crisis_not_fires
@@ -1765,6 +1925,7 @@ categories:
 
       - id: refl_002
         input: "How many cigarettes have I not smoked since I quit?"
+        benchmark_fixture: reflection_progress
         checks:
           - no_external_app
           - crisis_not_fires
@@ -1774,6 +1935,7 @@ categories:
 
       - id: refl_003
         input: "Am I actually making progress or am I just fooling myself?"
+        benchmark_fixture: reflection_progress
         checks:
           - no_external_app
           - crisis_not_fires
@@ -1784,6 +1946,7 @@ categories:
 
       - id: refl_004
         input: "What are my biggest triggers? I want to understand my patterns better"
+        benchmark_fixture: reflection_patterns
         checks:
           - no_external_app
           - crisis_not_fires
@@ -1793,15 +1956,20 @@ categories:
 
       - id: refl_005
         input: "Can you summarise what you know about my quit journey so far?"
+        benchmark_fixture: reflection_no_data
         checks:
           - no_external_app
           - crisis_not_fires
           - answer_relevant
           - tone_warm_empathetic
-        optional_themes: [memory, facts, journey, profile]
+        mandatory_themes: [uncertainty, no guessing]
+        optional_themes: [invite context, diary, profile]
+        notes: No-data control; the response must state that reliable personal information is unavailable.
 
       - id: refl_006
         input: "How has my health been improving since I quit?"
+        benchmark_fixture: reflection_progress
+        expected_agents: [reflection, medical]
         checks:
           - no_external_app
           - crisis_not_fires
@@ -1812,6 +1980,7 @@ categories:
 
       - id: refl_007
         input: "What coping strategies have worked best for me?"
+        benchmark_fixture: reflection_patterns
         checks:
           - no_external_app
           - crisis_not_fires
@@ -1821,6 +1990,7 @@ categories:
 
       - id: refl_008
         input: "How long have I been smoke-free now?"
+        benchmark_fixture: reflection_progress
         checks:
           - no_external_app
           - crisis_not_fires
@@ -1830,6 +2000,7 @@ categories:
 
       - id: refl_009
         input: "Looking back, what's been the hardest part of quitting for me?"
+        benchmark_fixture: reflection_patterns
         checks:
           - no_external_app
           - crisis_not_fires
@@ -1840,6 +2011,7 @@ categories:
 
       - id: refl_010
         input: "What milestones have I reached on my quit journey?"
+        benchmark_fixture: reflection_progress
         checks:
           - no_external_app
           - crisis_not_fires
@@ -1849,6 +2021,7 @@ categories:
 
       - id: refl_011
         input: "How many extra hours do I get back each day now that I don't smoke?"
+        benchmark_fixture: reflection_progress
         checks:
           - no_external_app
           - crisis_not_fires
@@ -1859,6 +2032,7 @@ categories:
 
       - id: refl_012
         input: "What could I buy with all the money I've saved since I quit?"
+        benchmark_fixture: reflection_progress
         checks:
           - no_external_app
           - crisis_not_fires
@@ -1868,16 +2042,21 @@ categories:
 
       - id: refl_013
         input: "Looking back, what do you think was my hardest day so far?"
+        benchmark_fixture: reflection_no_data
         checks:
           - no_external_app
           - crisis_not_fires
           - answer_relevant
           - tone_warm_empathetic
           - mi_style
-        optional_themes: [hardest day, reflection, patterns, insight]
+        mandatory_themes: [uncertainty, no guessing]
+        optional_themes: [invite context, diary]
+        notes: No-data control; Hailey must not invent a hardest day.
 
       - id: refl_014
         input: "Do you notice a pattern in when my cravings tend to be worst?"
+        benchmark_fixture: reflection_patterns
+        expected_agents: [reflection, craving_support]
         checks:
           - no_external_app
           - crisis_not_fires
@@ -1887,6 +2066,8 @@ categories:
 
       - id: refl_015
         input: "What health benefits should I be noticing by now?"
+        benchmark_fixture: reflection_progress
+        expected_agents: [reflection, medical]
         checks:
           - no_external_app
           - crisis_not_fires
@@ -1898,6 +2079,7 @@ categories:
 
       - id: refl_016
         input: "Do I actually feel healthier since I quit, or is it all in my head?"
+        benchmark_fixture: reflection_progress
         checks:
           - no_external_app
           - crisis_not_fires
@@ -1908,6 +2090,8 @@ categories:
 
       - id: refl_017
         input: "What did I do the last time a craving hit me? Did it work?"
+        benchmark_fixture: reflection_patterns
+        expected_agents: [reflection, craving_support]
         checks:
           - no_external_app
           - crisis_not_fires
@@ -1918,6 +2102,8 @@ categories:
 
       - id: refl_018
         input: "Has my mood gotten better since I quit, or has it been more up and down?"
+        benchmark_fixture: reflection_wellbeing
+        expected_agents: [reflection, emotional_support]
         checks:
           - no_external_app
           - crisis_not_fires
@@ -1928,6 +2114,8 @@ categories:
 
       - id: refl_019
         input: "I think my sleep might be improving — does quitting smoking actually help with that?"
+        benchmark_fixture: reflection_wellbeing
+        expected_agents: [reflection, medical]
         checks:
           - no_external_app
           - crisis_not_fires
@@ -1938,6 +2126,8 @@ categories:
 
       - id: refl_020
         input: "What do you think caused my last slip or big craving?"
+        benchmark_fixture: reflection_patterns
+        expected_agents: [reflection, relapse_risk]
         checks:
           - no_external_app
           - crisis_not_fires
@@ -1948,6 +2138,8 @@ categories:
 
       - id: refl_021
         input: "I feel like I've been exercising more since I quit — is that common?"
+        benchmark_fixture: reflection_wellbeing
+        expected_agents: [reflection, medical]
         checks:
           - no_external_app
           - crisis_not_fires
@@ -1958,6 +2150,7 @@ categories:
 
       - id: refl_022
         input: "Remind me — why did I decide to quit in the first place?"
+        benchmark_fixture: reflection_patterns
         checks:
           - no_external_app
           - crisis_not_fires
@@ -1968,6 +2161,7 @@ categories:
 
       - id: refl_023
         input: "If someone decided to quit today, what would you say to them based on what you know about my experience?"
+        benchmark_fixture: reflection_patterns
         checks:
           - no_external_app
           - crisis_not_fires
@@ -1977,16 +2171,21 @@ categories:
 
       - id: refl_024
         input: "Has quitting affected my relationships — I think I may have mentioned things"
+        benchmark_fixture: reflection_no_data
         checks:
           - no_external_app
           - crisis_not_fires
           - answer_relevant
           - tone_warm_empathetic
           - mi_style
-        optional_themes: [relationships, partner, irritability, improving, reflection]
+        mandatory_themes: [uncertainty, no guessing]
+        optional_themes: [invite context, relationships, diary]
+        notes: No-data control; Hailey must not invent relationship history.
 
       - id: refl_025
         input: "What might my health look like right now if I hadn't quit?"
+        benchmark_fixture: reflection_progress
+        expected_agents: [reflection, medical]
         checks:
           - no_external_app
           - crisis_not_fires
@@ -1997,16 +2196,20 @@ categories:
 
       - id: refl_026
         input: "What's been the most surprising thing that's happened since I quit?"
+        benchmark_fixture: reflection_no_data
         checks:
           - no_external_app
           - crisis_not_fires
           - answer_relevant
           - tone_warm_empathetic
           - mi_style
-        optional_themes: [surprise, unexpected, positive change, insight]
+        mandatory_themes: [uncertainty, no guessing]
+        optional_themes: [invite context, diary]
+        notes: No-data control; Hailey must not invent an experience.
 
       - id: refl_027
         input: "How am I different now compared to when I first started using this app?"
+        benchmark_fixture: reflection_progress
         checks:
           - no_external_app
           - crisis_not_fires
@@ -2016,6 +2219,8 @@ categories:
 
       - id: refl_028
         input: "Based on what you know about me, what's most likely to make me slip?"
+        benchmark_fixture: reflection_patterns
+        expected_agents: [reflection, relapse_risk]
         checks:
           - no_external_app
           - crisis_not_fires
@@ -2026,6 +2231,7 @@ categories:
 
       - id: refl_029
         input: "What am I most proud of so far in this quit journey?"
+        benchmark_fixture: reflection_progress
         checks:
           - no_external_app
           - crisis_not_fires
@@ -2035,6 +2241,8 @@ categories:
 
       - id: refl_030
         input: "Has quitting affected my mental health at all? Something feels different"
+        benchmark_fixture: reflection_wellbeing
+        expected_agents: [reflection, medical]
         checks:
           - no_external_app
           - crisis_not_fires
