@@ -1,40 +1,73 @@
-name: Hailey readiness monitor
+name: X-hale service keep-alive
 
 on:
   schedule:
-    - cron: '*/5 * * * *'
+    # Four project-scoped requests per day are sufficient to demonstrate
+    # activity without flooding GitHub Actions or Appwrite.
+    - cron: '17 */6 * * *'
   workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: hailey-readiness-monitor
+  group: xhale-service-keep-alive
   cancel-in-progress: true
 
 jobs:
-  readiness:
+  keep-alive:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: Verify Hailey dependencies
+      - name: Touch Appwrite project without writing user data
+        env:
+          APPWRITE_ENDPOINT: ${{ secrets.APPWRITE_ENDPOINT }}
+          APPWRITE_PROJECT_ID: ${{ secrets.APPWRITE_PROJECT_ID }}
+          APPWRITE_BENCHMARK_KEY: ${{ secrets.APPWRITE_BENCHMARK_KEY }}
+          BENCHMARK_TEST_USER_ID: ${{ secrets.BENCHMARK_TEST_USER_ID }}
+        run: |
+          set -euo pipefail
+          test -n "$APPWRITE_ENDPOINT"
+          test -n "$APPWRITE_PROJECT_ID"
+          test -n "$APPWRITE_BENCHMARK_KEY"
+          test -n "$BENCHMARK_TEST_USER_ID"
+
+          response=$(curl \
+            --fail-with-body \
+            --silent \
+            --show-error \
+            --connect-timeout 15 \
+            --max-time 45 \
+            --retry 2 \
+            --retry-delay 5 \
+            --retry-all-errors \
+            --request POST \
+            --header "X-Appwrite-Project: $APPWRITE_PROJECT_ID" \
+            --header "X-Appwrite-Key: $APPWRITE_BENCHMARK_KEY" \
+            --header "Content-Type: application/json" \
+            --data '{"duration":900}' \
+            "${APPWRITE_ENDPOINT%/}/users/$BENCHMARK_TEST_USER_ID/jwts")
+
+          echo "$response" | jq -e '.jwt | type == "string" and length > 0' >/dev/null
+          echo "Appwrite project activity confirmed."
+
+      - name: Keep Hailey Space awake
         env:
           HAILEY_API_URL: ${{ secrets.HAILEY_API_URL }}
         run: |
           set -euo pipefail
           test -n "$HAILEY_API_URL"
 
-          response=$(curl \
+          curl \
             --fail-with-body \
             --silent \
             --show-error \
             --location \
-            --connect-timeout 20 \
-            --max-time 120 \
+            --connect-timeout 15 \
+            --max-time 45 \
             --retry 2 \
-            --retry-delay 15 \
+            --retry-delay 5 \
             --retry-all-errors \
-            "${HAILEY_API_URL%/}/ready")
+            "${HAILEY_API_URL%/}/health" >/dev/null
 
-          echo "$response" | jq .
-          echo "$response" | jq -e '.status == "ready"' >/dev/null
+          echo "Hailey liveness confirmed."

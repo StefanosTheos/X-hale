@@ -14,6 +14,9 @@ on:
       daily_model_token_budget:
         description: 'Per-model Groq token budget for this run'
         default: '170000'
+      campaign_ref:
+        description: 'Optional commit/tag to keep a campaign on one implementation'
+        default: ''
 
 permissions:
   actions: read
@@ -30,6 +33,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.campaign_ref || vars.BENCHMARK_CAMPAIGN_REF || github.sha }}
 
       - uses: actions/setup-python@v5
         with:
@@ -44,6 +49,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          SOURCE_COMMIT=$(git rev-parse HEAD)
           RUN_ID=$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts?name=benchmark-campaign&per_page=100" \
             --jq '.artifacts | map(select(.expired == false)) | sort_by(.created_at) | reverse | .[0].workflow_run.id // empty')
           if [[ -z "$RUN_ID" ]]; then
@@ -53,7 +59,7 @@ jobs:
           mkdir -p finetune/eval/resume
           gh run download "$RUN_ID" --name benchmark-campaign --dir finetune/eval/resume
           FILE=$(find finetune/eval/resume -name '*.json' -print -quit)
-          if [[ -n "$FILE" && "$(jq -r '.source_commit' "$FILE")" == "$GITHUB_SHA" ]]; then
+          if [[ -n "$FILE" && "$(jq -r '.source_commit' "$FILE")" == "$SOURCE_COMMIT" ]]; then
             cp "$FILE" finetune/eval/campaign.json
             echo "resume=true" >> "$GITHUB_OUTPUT"
             echo "run_id=$RUN_ID" >> "$GITHUB_OUTPUT"
