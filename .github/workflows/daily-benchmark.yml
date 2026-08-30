@@ -87,7 +87,13 @@ jobs:
           fi
           BUDGET="${{ inputs.daily_model_token_budget }}"
           [[ -z "$BUDGET" ]] && BUDGET="170000"
-          python finetune/eval/run_benchmark.py $ARGS --daily-model-token-budget "$BUDGET"
+          # The workflow itself may run from a newer workflow-only commit while
+          # checkout is pinned to the evaluated application revision. Pass the
+          # checked-out revision to the runner so checkpoint provenance matches
+          # the code that is actually being executed.
+          SOURCE_COMMIT=$(git rev-parse HEAD)
+          GITHUB_SHA="$SOURCE_COMMIT" python finetune/eval/run_benchmark.py \
+            $ARGS --daily-model-token-budget "$BUDGET"
 
       - name: Upload campaign checkpoint
         if: always()
