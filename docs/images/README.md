@@ -1,21 +1,30 @@
 # Application screenshots
 
-The root README uses existing X-hale interface captures supplied in the project's `assets/icons/` folder. The selected files were inspected and copied here byte-for-byte on 26 October 2026, without cropping, retouching or replacing interface content.
+The root README uses the updated application captures supplied in the project's local `Pics/` folder. They replace the earlier `assets/icons/` screenshots. The documentation images were prepared on 26 October 2026.
 
-| Documentation image | Original local source | Dimensions |
+| Documentation image | Original local source | Final dimensions |
 | --- | --- | --- |
-| `progress-dashboard.jpg` | `assets/icons/xhale_landing_page.JPG` | 1080 × 2340 |
-| `guided-breathing.jpg` | `assets/icons/breathing.jpg` | 414 × 579 |
-| `milestones.jpg` | `assets/icons/milestones.jpg` | 401 × 333 |
-| `challenges.jpg` | `assets/icons/challenges.jpg` | 414 × 318 |
-| `health-benefit.jpg` | `assets/icons/health_benefit.jpg` | 393 × 277 |
+| `progress-dashboard.webp` | `Pics/dashboard.jpg` | 1080 × 2104 |
+| `hailey-conversation.webp` | `Pics/chatbot_interaction.jpg` | 1080 × 2104 |
+| `guided-breathing.webp` | `Pics/breathing_technique.jpg` | 1080 × 2104 |
+| `milestones.webp` | `Pics/milestones.jpg` | 1080 × 2104 |
+| `challenges.webp` | `Pics/challenge_crop_1.jpg` | 1080 × 722 |
+| `health-benefit.webp` | `Pics/health_benefits_cropped_2.jpg` | 1080 × 727 |
 
-The smaller files are supplied captures of individual interface sections, rather than full-device screenshots. The dashboard includes the original device status/navigation bars; visible notification icons do not show message contents. The selected captures contain no visible names, email addresses, chat/diary text or credentials.
+## Cropping and image fidelity
 
-The files contain no recorded EXIF capture date, and their exact application revision is unknown. The dashboard/milestone/challenge screens display 2025 dates; those are application content, not verified capture timestamps. The documentation-copy date above must not be treated as a fresh capture date. The source account's demo/real status is not established; displayed quit/progress values should not be described as independently verified or as study results.
+For the four full-device captures, the source dimensions are 1080 × 2340. The retained rectangle is `(left=0, top=96, right=1080, bottom=2200)`, using an exclusive right/bottom boundary. This removes the clock/battery/notification bar and Android's three-button system navigation bar. App headers, app navigation, chat actions, input controls and breathing controls remain intact.
 
-These images illustrate existing application interfaces, not current Hailey model behavior, clinical effectiveness, or measured physiological recovery. The health-benefit card is informational. The stretching capture was omitted because it contains additional third-party artwork with unresolved provenance. Other asset-rights work remains in [third-party notices](../../THIRD_PARTY_NOTICES.md).
+The challenge and health-benefit sources were already tightly framed by the owner and contain neither system bar; their full supplied image areas are retained. No composite or simulated interface was used.
 
-A Hailey conversation screenshot is not present among these supplied captures. Add one separately after capturing the current implementation with a controlled demo account and reviewing its content.
+All six images use **lossless WebP** at their retained native resolution, without rescaling, text replacement, retouching or generated content. The decoded output pixels were checked against the corresponding decoded source crop and match exactly. The gallery totals approximately 1.4 MB. The three lead images have matching dimensions and display at 240 pixels wide; the two detail cards display at 360 pixels wide. Clicking an image opens its full-resolution file.
+
+## Provenance and interpretation
+
+The source files have no recorded EXIF capture date or exact code revision. The dashboard and conversation show September 2026 dates, but those visible application timestamps do not establish the precise capture date or deployed model/corpus revision. The preparation date above is not a claim that the app was recaptured on that day.
+
+The Hailey capture shows a supplied interaction about cravings and app-action links. Displayed progress, savings and health-benefit information illustrate the interface; screenshots are not benchmark results or evidence of clinical effectiveness. The health-benefit timeline is informational, not an individual physiological measurement. Other asset-rights work remains in [third-party notices](../../THIRD_PARTY_NOTICES.md).
+
+The local source folder is kept out of routine commits; only these curated, cropped documentation images are published. Source files remain unchanged.
 
 For future captures, exclude personal information, real messages/diary entries, credentials and notification contents; record capture date and code revision. Any biometrics image must label its readings as demonstration data.

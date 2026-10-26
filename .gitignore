@@ -126,6 +126,7 @@ qdrant_storage/
 # Local audits and private working notes
 /.github_review/
 /.publication_review/
+/Pics/
 /errors.md
 /chatbot_review.md
 /chatbot_revamp_overview.md

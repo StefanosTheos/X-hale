@@ -6,24 +6,33 @@ X-hale is a Flutter mobile application combining cessation-progress tracking, re
 
 ## Preview
 
-| Progress dashboard | Guided breathing |
-| --- | --- |
-| <img src="docs/images/progress-dashboard.jpg" alt="X-hale progress dashboard with quit timer, milestone progress and estimated savings" width="240"> | <img src="docs/images/guided-breathing.jpg" alt="Guided breathing exercise showing the hold phase and remaining time" width="260"> |
+| Progress dashboard | Hailey conversation | Guided breathing |
+| --- | --- | --- |
+| <a href="docs/images/progress-dashboard.webp"><img src="docs/images/progress-dashboard.webp" alt="X-hale dashboard showing quit duration, milestone progress and estimated savings" width="240"></a> | <a href="docs/images/hailey-conversation.webp"><img src="docs/images/hailey-conversation.webp" alt="Hailey answering a question about cravings with links to the distraction wheel and diary" width="240"></a> | <a href="docs/images/guided-breathing.webp"><img src="docs/images/guided-breathing.webp" alt="Box-breathing screen with technique, duration, instructions and breathing timer" width="240"></a> |
 
 <details>
 <summary>More application screens: milestones, challenges and health information</summary>
 
-| Milestones | User-defined challenges |
-| --- | --- |
-| <img src="docs/images/milestones.jpg" alt="Day-based smoke-free milestone cards" width="300"> | <img src="docs/images/challenges.jpg" alt="Activity and financial challenges with progress indicators" width="300"> |
-
-<img src="docs/images/health-benefit.jpg" alt="Informational health-benefit timeline card for circulation and lung function" width="360">
+<table>
+  <tr><th>Milestones</th><th>Challenges and health information</th></tr>
+  <tr>
+    <td align="center" valign="top">
+      <a href="docs/images/milestones.webp"><img src="docs/images/milestones.webp" alt="Smoke-free milestone grid showing completed and upcoming achievements" width="240"></a>
+    </td>
+    <td align="center" valign="top">
+      <p><strong>User-defined financial challenge</strong></p>
+      <a href="docs/images/challenges.webp"><img src="docs/images/challenges.webp" alt="Savings challenge for a scooter with a progress bar and link to all challenges" width="360"></a>
+      <p><strong>Informational health-benefit card</strong></p>
+      <a href="docs/images/health-benefit.webp"><img src="docs/images/health-benefit.webp" alt="Health-benefit timeline card with progress and a Learn More link" width="360"></a>
+    </td>
+  </tr>
+</table>
 
 *The health-benefit card is informational; its timeline and progress display do not measure an individual's physiological recovery.*
 
 </details>
 
-*Representative interfaces from existing project captures. These older screenshots illustrate the app UI; their original capture dates and code revisions are not recorded. Displayed progress values are not evaluation results, and these images do not demonstrate the current Hailey backend.* See [screenshot provenance](docs/images/README.md).
+*Updated application captures supplied in `Pics/`, with the phone's status and system navigation bars removed. The app's own controls and displayed content are preserved. Select an image to view it at full resolution.* See [screenshot provenance](docs/images/README.md).
 
 ## Application features
 
