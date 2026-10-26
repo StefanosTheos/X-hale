@@ -44,7 +44,7 @@ Expected output: `7860`
 Open a **dedicated terminal** (keep it open for the whole session):
 
 ```powershell
-Set-Location "C:\Users\steve\smoking2.0\rag_backend2.0"
+Set-Location rag_backend2.0  # from the repository root
 .\.venv\Scripts\uvicorn app.main:app --reload --port 7860
 ```
 
@@ -69,7 +69,7 @@ Expected: `{"status":"ok", ...}`
 Open a **second terminal** (leave the backend terminal running):
 
 ```powershell
-Set-Location "C:\Users\steve\smoking2.0"
+# Open this terminal at the repository root
 flutter run --dart-define=HAILEY_API_URL=http://localhost:7860
 ```
 
@@ -119,7 +119,7 @@ While `flutter run` is running in the terminal:
 - Check that `.env` is present and all keys are filled in.
 - Run:
   ```powershell
-  Set-Location "C:\Users\steve\smoking2.0\rag_backend2.0"
+  Set-Location rag_backend2.0  # from the repository root
   .\.venv\Scripts\python.exe -c "from app.config import settings; print('Config OK')"
   ```
 
@@ -138,12 +138,12 @@ While `flutter run` is running in the terminal:
 **Terminal 1 (backend):**
 ```powershell
 adb reverse tcp:7860 tcp:7860
-Set-Location "C:\Users\steve\smoking2.0\rag_backend2.0"
+Set-Location rag_backend2.0  # from the repository root
 .\.venv\Scripts\uvicorn app.main:app --reload --port 7860
 ```
 
 **Terminal 2 (Flutter — after backend shows "startup complete"):**
 ```powershell
-Set-Location "C:\Users\steve\smoking2.0"
+# Open this terminal at the repository root
 flutter run --dart-define=HAILEY_API_URL=http://localhost:7860
 ```

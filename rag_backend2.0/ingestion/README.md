@@ -5,8 +5,9 @@ Scripts for building and maintaining the Hailey 2.0 knowledge base in Qdrant Clo
 ## Setup
 
 ```bash
-pip install ".[ingestion]"
-cp ../.env.example ../.env
+cd rag_backend2.0  # from the repository root
+python -m pip install -e ".[ingestion]"
+cp .env.example .env  # only if .env does not already exist
 # Fill in QDRANT_URL, QDRANT_API_KEY, CF_ACCOUNT_ID, CF_WORKERS_AI_TOKEN
 ```
 

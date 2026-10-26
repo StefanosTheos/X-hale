@@ -1,369 +1,139 @@
-# X-hale — Quit Smoking Companion
+# X-hale — Smoking-cessation companion
 
-A full-stack mobile application for quitting smoking, combining a Flutter client with **Hailey**, an agentic RAG chatbot backend built on FastAPI + LangGraph.
+X-hale is a Flutter mobile application combining cessation-progress tracking, reflection and coping activities with **Hailey**, a retrieval-augmented conversational assistant built with Python, FastAPI and LangGraph.
 
----
+**Status:** Research prototype. The application and assistant provide cessation support and information; they are not a diagnostic service, a clinically validated treatment, or an emergency service.
 
-## Contents
+## Preview
 
-- [App Overview](#app-overview)
-- [Hailey — AI Chatbot](#hailey--ai-chatbot)
-- [Tech Stack](#tech-stack)
-- [Project Structure](#project-structure)
-- [Getting Started](#getting-started)
-- [Backend Setup](#backend-setup)
-- [Knowledge Base Ingestion](#knowledge-base-ingestion)
-- [Deployment](#deployment)
-- [Environment Variables](#environment-variables)
-- [API Reference](#api-reference)
+![Placeholders for the progress dashboard, Hailey conversation and coping tools](docs/images/app-preview-placeholder.svg)
 
----
+*Screenshot placeholders only. Real application captures will replace these panels; no application screens are shown above.* See [screenshot instructions](docs/images/README.md).
 
-## App Overview
+## Application features
 
-X-hale supports the full quit journey through structured features across four pillars:
+| Area | Implemented scope |
+| --- | --- |
+| Progress | Quit timer, estimated cigarettes avoided and money saved, milestones, achievements and an informational health-benefit timeline. Estimates are not measurements of an individual's physiological recovery. |
+| Coping | Guided breathing, stretching, drawing, audio activities and mini-games. |
+| Reflection | Diary entries, motivations and user-defined challenges. |
+| Social | Friends, community posts and direct messaging, backed by Appwrite. |
+| Hailey | Context-aware routing, specialist drafts, knowledge retrieval, citation checks, app-action links, conversation history and user-managed remembered facts. |
+| Biometrics | **Demonstration data only.** No wearable readings or working Samsung Health integration. |
 
-### Tracking & Progress
-- **Quit timer** — live countdown from the user's quit date
-- **Health benefits timeline** — visualises the 20-minute to 15-year recovery arc with real medical sources
-- **Biometrics dashboard** — charts for health metrics over time
-- **Milestones** — time-based smoke-free achievements
-- **Achievement system** — unlockable badges for behaviours and streaks
+## Hailey: current implementation
 
-### Craving & Habit Management
-- **Guided breathing exercises** — animated breath timers with audio cues
-- **Distraction toolkit** — drawing canvas, ambient sounds, stretching routines, spin-the-wheel activity selector
-- **Mini-games** — Snake, Flappy Bird, 2048, Tic-Tac-Toe to occupy craving windows
-- **Challenges** — user-created and community challenges
+The active backend is [`rag_backend2.0/`](rag_backend2.0/):
 
-### Journaling & Reflection
-- **Diary** — mood-tagged entries with tagging support
-- **Motivations feed** — rotating personalised motivational content
-
-### Social
-- **Friends** — mutual follow system
-- **Forum** — community discussion board
-- **Direct messaging** — peer-to-peer chat
-
----
-
-## Hailey — AI Chatbot
-
-Hailey is a multi-agent RAG chatbot that personalises every conversation using the user's quit history, known triggers, coping strategies, and long-term memory. She is not a general assistant — every response is scoped to smoking cessation.
-
-### Multi-agent architecture
-
-```
-User message
-    │
-    ▼
-Triage (8B, temp=0) ──── crisis? ──→ Crisis Handler (deterministic + hotlines)
-    │
-    ▼
-Context Loader (parallel Appwrite reads)
-    │                    ┌─────────────────────────────────┐
-    ▼                    │  User profile + last 10 turns   │
-Supervisor (pure Python) │  + top 30 user facts            │
-    │                    └─────────────────────────────────┘
-    ├──→ Medical Agent          (8B · vector search → KB citations)
-    ├──→ Craving Support Agent  (8B · urge-surfing script + deeplinks)
-    ├──→ Emotional Support Agent(8B · MI-style reflection)
-    ├──→ Reflection Agent       (8B · diary pattern analysis)
-    └──→ Relapse-Risk Agent     (8B · behavioural signals → risk score)
-    │
-    ▼
-Synthesizer (Gemini Flash · streams tokens via SSE)
-    │
-    ▼
-output_node ──→ Appwrite (save turn) ──→ Memory Curator (async, fire-and-forget)
+```text
+Authenticated chat request
+  → deterministic crisis precheck (positive → fixed crisis guidance → completion)
+  → otherwise, load user context
+  → model triage
+  → routing: crisis guidance / clarification / scope redirect / specialists
+  → sequential specialist dispatch where needed
+  → synthesis and citation/safety post-processing
+  → emit response content through SSE
+  → persist the turn and await eligible memory curation
+  → terminal done event
 ```
 
-### Retrieval pipeline
+The `/chat/` endpoint uses a preparation graph that stops after specialist drafting. The endpoint coordinates synthesis, post-processing and completion. A complete graph variant also exists; it is not the graph used by the active endpoint.
 
-Hailey uses a two-pass retrieval pipeline for medical queries:
+### Models and retrieval
 
-1. **Vector search** — query embedded via Cloudflare Workers AI (`bge-small-en-v1.5`), nearest neighbours fetched from Qdrant Cloud
-2. **Knowledge graph expansion** — 139-node domain graph (symptoms, triggers, medications, health benefits, diseases, coping strategies) matches entities in the query and expands to related topic tags, driving a second filtered Qdrant pass that surfaces related content the vector search missed
-3. **Cross-encoder reranker** — `BAAI/bge-reranker-base` available, disabled by default; enable via `ENABLE_RERANKER=true` when KB exceeds ~250 chunks
+| Component | Repository default |
+| --- | --- |
+| Triage, specialists and memory extraction | Groq `openai/gpt-oss-20b` |
+| Final synthesis | Groq `openai/gpt-oss-120b` |
+| Embeddings | Cloudflare Workers AI `@cf/baai/bge-small-en-v1.5`, with an optional same-model local fallback |
+| Knowledge store | Qdrant: cessation and health-benefit chunks |
+| Graph expansion | Implemented, **disabled by default** |
+| Cross-encoder reranking | Implemented, **disabled by default** |
+| Web-search fallback | Implemented, **disabled by default** |
 
-### Long-term memory
+Defaults are defined in [`app/config.py`](rag_backend2.0/app/config.py); environment variables can override them. The active model factories select Groq. Retained Gemini files do not make Gemini the default provider; a Gemini key alone does not configure the active path.
 
-The Memory Curator runs post-reply on every non-casual turn and extracts durable facts into Appwrite (`chatbot_user_facts`):
+Retrieval normally uses vector search and metadata filtering. Optional graph, reranker and web paths require explicit configuration and validation. [`sources.yaml`](rag_backend2.0/ingestion/sources.yaml) records the intended corpus and governance metadata, not proof of a deployed Qdrant collection's contents.
 
-| Fact type | Example |
-|---|---|
-| `trigger` | "coffee is biggest craving trigger" |
-| `coping_strategy_validated` | "deep breathing works in the morning" |
-| `coping_strategy_failed` | "chewing gum didn't help" |
-| `nrt_use` | "using 21mg nicotine patch" |
-| `social_context` | "partner still smokes at home" |
-| `motivation` | "wants to be healthy for kids" |
-| `physical_symptom_reported` | "experiencing insomnia since quitting" |
+### Memory and response delivery
 
-Facts are loaded at the start of every turn and injected into every agent's context window, making Hailey progressively more personalised without the user repeating themselves.
+Hailey assembles a snapshot from Appwrite profile data, recent conversation records and selected remembered facts. Users can inspect and delete facts through the app's memory screen. Extracted facts and confidence scores are model outputs, not independently verified personal or clinical records.
 
-Users can view and delete their stored facts via the **"What does Hailey know about me?"** screen (psychology icon in the chatbot AppBar).
+The turn is saved before eligible memory curation. Curation is lifecycle-managed, retried with bounded backoff, shielded against client disconnects, and **awaited before `done`**. It is skipped for the configured benchmark user and some intent categories. This is not fire-and-forget processing; see [`curation_tasks.py`](rag_backend2.0/app/memory/curation_tasks.py).
 
-### Crisis safety
+The API uses server-sent events for status, response content and completion. Model synthesis is buffered and post-processed **before model text reaches the client**. SSE transport does not imply immediate token-by-token model output. The `token` event carries `{"token": "..."}`.
 
-Any message containing suicidal ideation bypasses the LLM pipeline entirely. A deterministic handler returns a fixed, vetted safety message, locale-matched hotline numbers (Greek + English), and one constrained empathy sentence generated under tight constraints. No free-form LLM reply is ever returned for a crisis message.
+### Safety boundaries
 
----
+A deterministic precheck can route a detected crisis directly to a fixed response; model triage can also select that response. The crisis guidance itself is constructed without a generative-model call. This does not mean every dangerous message is detected, the entire request lifecycle avoids model calls, or the resource list covers every country and language.
 
-## Tech Stack
+Citation checks and output filtering are safeguards with limitations, not guarantees of medical accuracy or complete risk detection. The automated benchmark is a developer-authored scenario evaluation, not independent clinical validation or evidence of production uptime. See [limitations and roadmap](docs/ROADMAP.md) and [benchmark documentation](finetune/eval/README.md).
 
-### Flutter client
+## Repository layout
 
-| Layer | Technology |
-|---|---|
-| Framework | Flutter 3.7+ / Dart |
-| State management | Riverpod 2.x |
-| Data models | Freezed + JSON serializable |
-| Backend-as-a-service | Appwrite (auth, database, storage) |
-| Push notifications | Firebase Cloud Messaging |
-| Charts | fl_chart |
-| Game engine | Flame |
-| Audio | audioplayers |
-| HTTP | http (REST + SSE streaming) |
-
-### Python backend
-
-| Layer | Technology |
-|---|---|
-| API framework | FastAPI + uvicorn |
-| Agent orchestration | LangGraph |
-| LLM — triage & specialists | Groq `llama-3.1-8b-instant` |
-| LLM — synthesizer | Gemini Flash (`gemini-2.5-flash`) |
-| Embeddings | Cloudflare Workers AI `bge-small-en-v1.5` |
-| Vector store | Qdrant Cloud |
-| Graph | NetworkX (in-process, no external DB) |
-| Auth | Appwrite JWT verification |
-| Conversation + facts store | Appwrite |
-| Streaming | SSE via sse-starlette |
-| Observability | Prometheus + structlog |
-
-All backend infrastructure runs on **free tiers** (Groq, Cloudflare, Qdrant Cloud, Appwrite, Hugging Face Spaces).
-
----
-
-## Project Structure
-
-```
-x-hale/
-├── lib/                            # Flutter app
-│   ├── main.dart
-│   ├── constants/                  # App-wide constants (achievements, limits, affirmations)
-│   ├── extensions/                 # Dart extensions (theme helpers)
-│   ├── mixins/                     # Scroll controller mixin
-│   ├── models/                     # Freezed data classes (23 models)
-│   ├── providers/                  # Riverpod providers (12 providers)
-│   ├── services/                   # Appwrite + ChatService
-│   ├── mini_games/                 # Snake, Flappy Bird, 2048, Tic-Tac-Toe
-│   └── pages/
-│       ├── starting_pages/         # Splash, auth, onboarding
-│       ├── home_pages/             # Main screens (chatbot, diary, achievements, …)
-│       ├── explore_pages/          # Distractions, breathing, wellness content
-│       ├── account_pages/          # Profile, preferences
-│       ├── settings_pages/         # Settings, FAQs, about
-│       └── utils/                  # Themes, dialogs, notification service
-│
-├── rag_backend2.0/                 # Hailey chatbot backend
-│   ├── app/
-│   │   ├── main.py
-│   │   ├── config.py               # Pydantic-settings, all env vars
-│   │   ├── agents/                 # 10 agents (triage → synthesizer → memory curator)
-│   │   ├── graph/                  # LangGraph state, builder, routing
-│   │   ├── retrieval/              # Hybrid retriever, vector store, KG, reranker
-│   │   ├── memory/                 # Conversation + user facts stores, snapshot builder
-│   │   ├── llm/                    # Groq, Gemini, Workers AI clients
-│   │   ├── prompts/                # System prompts for all agents
-│   │   ├── routers/                # FastAPI routers (chat, history, memory, kb)
-│   │   ├── safety/                 # Crisis detector, hotlines, content filter
-│   │   ├── tools/                  # Diary retrieval, user profile, behavioural signals
-│   │   ├── models/                 # Pydantic schemas
-│   │   └── observability/          # Metrics, logging
-│   ├── ingestion/                  # KB ingestion pipeline
-│   │   ├── ingest_kb.py
-│   │   ├── bulk_ingest.py
-│   │   ├── sources.yaml            # Ground truth for what's in Qdrant
-│   │   └── knowledge_graph.yaml    # 139-node domain graph (206 edges)
-│   ├── tests/
-│   │   ├── unit/                   # 65+ unit tests
-│   │   └── integration/
-│   ├── docker/Dockerfile
-│   └── pyproject.toml
-│
-└── assets/                         # Icons, images, audio, game tiles
+```text
+lib/                    Flutter application, providers, models and services
+assets/, fonts/         Application media and fonts; separate rights review applies
+test/                   Flutter tests
+rag_backend2.0/         Active Hailey backend, tests and ingestion tools
+rag_backend/            Legacy ChromaDB-era backend and historical resources
+finetune/eval/          Scenario benchmark, judge prompts and aggregation
+.github/workflows/      Benchmark execution/aggregation and keep-alive
+docs/                   Setup, roadmap and screenshot instructions
 ```
 
----
+`rag_backend/` is historical implementation context, not a second service required by Hailey 2.0. Its ChromaDB store, temporary-tunnel setup and old resource loaders are not the active backend. Start new development in `rag_backend2.0/`; do not combine the two setup guides.
 
-## Getting Started
+## Run locally
 
-### Prerequisites
+You need Flutter with a Dart SDK satisfying `^3.7.2`, Python 3.11+, a mobile development environment and configured service accounts. `^3.7.2` is a **Dart** constraint, not a Flutter version number. Appwrite provisioning and client configuration are required; this is not a self-contained, one-command demo.
 
-- Flutter SDK `^3.7.2`
-- Python 3.11+
-- Accounts: [Appwrite](https://appwrite.io), [Groq](https://console.groq.com), [Cloudflare](https://dash.cloudflare.com), [Qdrant Cloud](https://cloud.qdrant.io), [Google AI Studio](https://aistudio.google.com) (Gemini)
+Follow the [setup guide](docs/SETUP.md) for service configuration, Appwrite requirements, Firebase setup, knowledge ingestion and networking.
 
-### Flutter app
-
-```bash
-# Install dependencies
-flutter pub get
-
-# Run on a device or emulator
-# Replace the URL with your backend address
-flutter run --dart-define=HAILEY_API_URL=http://localhost:7860
-```
-
-For a physical Android device, forward the port first:
-
-```bash
-adb reverse tcp:7860 tcp:7860
-flutter run --dart-define=HAILEY_API_URL=http://localhost:7860
-```
-
----
-
-## Backend Setup
+Backend, from the repository root:
 
 ```bash
 cd rag_backend2.0
-
-# Create virtual environment
 python -m venv .venv
-source .venv/bin/activate        # Windows: .\.venv\Scripts\activate
-
-# Install runtime dependencies
-pip install -e .
-
-# Copy and fill in environment variables
+# POSIX activation: source .venv/bin/activate
+# PowerShell activation: .\.venv\Scripts\Activate.ps1
+python -m pip install -r requirements.txt
+python -m pip install -e ".[dev]"
 cp .env.example .env
-
-# Start the server
-uvicorn app.main:app --reload --port 7860
+# Configure your own services in .env before starting.
+python -m uvicorn app.main:app --reload --port 7860
 ```
 
-The server will be available at `http://localhost:7860`. The knowledge graph loads at startup (~100 ms).
+PowerShell also supports `Copy-Item .env.example .env`. Do not overwrite an existing configured `.env`.
 
-### Appwrite collections
-
-Create these two collections manually in your Appwrite project alongside the existing app collections:
-
-| Collection | Key fields |
-|---|---|
-| `chatbot_messages` | `userId`, `role`, `content`, `timestamp`, `turn_id`, `citations[]` |
-| `chatbot_user_facts` | `userId`, `fact_type`, `fact_key`, `fact_value`, `confidence`, `source_turn_ids[]`, `first_observed`, `last_confirmed` |
-
-Add an index on `(userId, timestamp DESC)` to `chatbot_messages` for efficient history queries.
-
----
-
-## Knowledge Base Ingestion
-
-The knowledge base lives in Qdrant Cloud. Run ingestion once on a fresh cluster, then add sources as needed.
+Flutter, in a second terminal at the repository root:
 
 ```bash
-# Install ingestion extras
-pip install -e ".[ingestion]"
-
-# Re-ingest all 14 health benefit sources
-python -m ingestion.reingest_health_benefits
-
-# Ingest a URL
-python -m ingestion.ingest_kb \
-  --url https://www.nhs.uk/live-well/quit-smoking/ \
-  --source-id nhs_quit \
-  --source-type government
-
-# Ingest a local PDF
-python -m ingestion.ingest_kb \
-  --file path/to/document.pdf \
-  --source-type peer_reviewed
+flutter pub get
+# Android emulator reaches the host through 10.0.2.2:
+flutter run --dart-define=HAILEY_API_URL=http://10.0.2.2:7860
 ```
 
-`ingestion/sources.yaml` is the ground truth for what's in Qdrant. Set `ingested: true` after each successful ingest and commit the file.
+For a USB-connected Android phone, run `adb reverse tcp:7860 tcp:7860`, then use `--dart-define=HAILEY_API_URL=http://localhost:7860`. Other devices need a reachable host address; a device's `localhost` normally refers to the device itself.
 
----
-
-## Deployment
-
-### Backend — Hugging Face Spaces (recommended)
-
-1. Create a new Space on [huggingface.co/spaces](https://huggingface.co/spaces), type **Docker**
-2. Push `rag_backend2.0/` as the Space repository root
-3. Set all environment variables under **Settings → Variables and secrets**
-4. The `Dockerfile` in `docker/` handles the build; the server binds to port 7860
-
-The free HF Spaces tier provides 16 GB CPU RAM with no spin-down.
-
-### Backend — Docker (self-hosted)
+## Verification and API
 
 ```bash
-cd rag_backend2.0
-docker build -f docker/Dockerfile -t hailey-backend .
-docker run -p 7860:7860 --env-file .env hailey-backend
+# Repository root
+flutter analyze
+flutter test
+
+# rag_backend2.0/, with development dependencies installed
+python -m pytest tests/unit/
 ```
 
-### Flutter — production build
+Live integration tests and benchmark campaigns need external services and may consume provider quota. See the [backend guide](rag_backend2.0/README.md), [architecture](rag_backend2.0/ARCHITECTURE.md), [ingestion guide](rag_backend2.0/ingestion/README.md) and [evaluation guide](finetune/eval/README.md).
 
-```bash
-# Android APK
-flutter build apk --dart-define=HAILEY_API_URL=https://your-hf-space.hf.space
+User-data endpoints require an Appwrite JWT. Operational endpoints such as `/live`, `/ready` and `/metrics` have separate exposure considerations; not every endpoint is authenticated. Liveness does not prove dependency readiness. Benchmark workflows can retain results despite individual failures: a green Actions run alone does not establish that every quality gate passed.
 
-# iOS
-flutter build ipa --dart-define=HAILEY_API_URL=https://your-hf-space.hf.space
-```
+## License and assets
 
----
+Original X-hale code owned by Stefanos Theos is licensed under the [MIT License](LICENSE). Dependencies, fonts, images, audio, logos, source documents and external knowledge content retain their own terms. See [third-party material and release requirements](THIRD_PARTY_NOTICES.md).
 
-## Environment Variables
-
-All backend configuration is via environment variables. See `rag_backend2.0/.env.example` for the full list.
-
-| Variable | Description |
-|---|---|
-| `GROQ_API_KEY` | Groq API key |
-| `GEMINI_API_KEY` | Google Gemini API key |
-| `CF_ACCOUNT_ID` | Cloudflare account ID |
-| `CF_WORKERS_AI_TOKEN` | Cloudflare Workers AI token |
-| `QDRANT_URL` | Qdrant Cloud cluster URL |
-| `QDRANT_API_KEY` | Qdrant Cloud API key |
-| `APPWRITE_PROJECT_ID` | Appwrite project ID |
-| `APPWRITE_API_KEY` | Appwrite server API key |
-| `APPWRITE_DATABASE_ID` | Appwrite database ID |
-| `APPWRITE_CHAT_MESSAGES_COLLECTION_ID` | chatbot_messages collection |
-| `APPWRITE_USER_FACTS_COLLECTION_ID` | chatbot_user_facts collection |
-| `ENABLE_KNOWLEDGE_GRAPH` | `true` (default) — domain KG-guided retrieval |
-| `ENABLE_RERANKER` | `false` (default) — enable when KB > ~250 chunks |
-| `ENABLE_WEB_SEARCH_FALLBACK` | `true` (default) — DuckDuckGo fallback for sparse KB hits |
-
----
-
-## API Reference
-
-All endpoints require `Authorization: Bearer <appwrite-jwt>`.
-
-| Method | Path | Description |
-|---|---|---|
-| `POST` | `/chat/` | Send a message; returns an SSE stream |
-| `GET` | `/history/` | Fetch the last 10 conversation turns |
-| `DELETE` | `/history/` | Clear conversation history |
-| `GET` | `/memory/` | List all stored user facts |
-| `DELETE` | `/memory/{fact_id}` | Remove a specific user fact |
-| `GET` | `/kb/{benefit_id}` | Retrieve health benefit KB chunks by ID |
-| `GET` | `/health` | Health check |
-| `GET` | `/metrics` | Prometheus metrics |
-
-### SSE event types (`POST /chat/`)
-
-```
-event: status   data: {"status": "triaging"}
-event: status   data: {"status": "loading_context"}
-event: status   data: {"status": "searching_kb"}
-event: status   data: {"status": "composing"}
-event: token    data: {"text": "It sounds like..."}
-event: done     data: {"citations": [...], "deeplinks": [...], "turn_id": "..."}
-event: error    data: {"message": "..."}
-```
+Documentation cleanup does not itself clear all assets or historical content for redistribution. Remaining work is tracked in [the roadmap](docs/ROADMAP.md).

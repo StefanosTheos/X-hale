@@ -1,102 +1,57 @@
-# Hailey 2.0 — Architecture Reference
+# Hailey 2.0 architecture
 
-This document describes the deployed architecture of Hailey 2.0.
-The design rationale is in `chatbot_revamp_overview.md` (project root).
+This guide describes the active repository implementation. Runtime settings can differ through environment overrides; evaluation results must identify the actual code, model and corpus versions.
 
-## Phase Status
+## System boundaries
 
-| Phase | Status | Description |
-|---|---|---|
-| 0 | ✅ Complete | Auth, URL config, logging |
-| 1 | ✅ Complete | FastAPI foundation, Qdrant, Appwrite history, Medical agent, SSE |
-| 2 | ✅ Complete | Multi-agent supervisor, Emotional + Craving agents, Memory Curator |
-| 3 | ✅ Complete | Knowledge graph and entity extractor (off by default), Reflection + Relapse-Risk agents, reranker (off by default) |
-| 4 | 🟡 Partial | Crisis handler done; benchmark harness (eval categories, judge prompts, CI) pending |
-| 5 | ⏳ Deferred | Fine-tuning pipeline |
+The Flutter app communicates directly with Appwrite for application data and authentication. It sends an Appwrite JWT to the FastAPI Hailey service. Hailey reads the relevant Appwrite context, calls external model/embedding services, queries Qdrant and persists conversations and derived facts. Provider API keys remain backend-only.
 
-## Request Flow
+`rag_backend2.0/` is the active service. The sibling `rag_backend/` is the legacy ChromaDB-era implementation and is not required by this architecture.
 
-```
-POST /chat/
-  │
-  ├─ Auth: verify Appwrite JWT → get user_id
-  │
-  ├─ [status: triaging]
-  │   └─ Triage node: fast_crisis_check (sync) → GPT OSS 20B classify (temp=0)
-  │       → TriageResult {intent, emotion, urgency, crisis_flag, specialists[]}
-  │
-  ├─ If crisis_flag → Crisis Handler (deterministic) → output_node → SSE done
-  ├─ If irrelevant → irrelevant_node → output_node → SSE done
-  ├─ If needs_clarification → clarification_node → output_node → SSE done
-  │
-  ├─ [status: loading_context]
-  │   └─ context_loader_node: build_snapshot (parallel Appwrite reads)
-  │       → UserMemorySnapshot {profile, recent_turns, top_facts}
-  │
-  ├─ Supervisor: decide_specialists(triage, memory) → requested_specialists[]
-  │
-  ├─ Specialist nodes (sequential dispatch):
-  │   ├─ medical_node: retrieve (Qdrant) → GPT OSS 20B key_points → SpecialistDraft
-  │   ├─ craving_support_node: GPT OSS 20B urge-surfing script + deeplinks
-  │   ├─ emotional_support_node: GPT OSS 20B MI-style reflection
-  │   ├─ reflection_node: diary retrieval + GPT OSS 20B theme analysis
-  │   └─ relapse_risk_node: behavioral signals + GPT OSS 20B support draft
-  │
-  ├─ [status: composing]
-  │   └─ router-driven GPT OSS 120B stream → final reply (citations extracted, content-filtered)
-  │
-  ├─ [status: saving]
-  │   └─ output_node: append turns to Appwrite + fire memory_curator (async)
-  │
-  └─ SSE done event {citations, deeplinks, turn_id}
-```
+## Active chat request
 
-## Technology Stack
+1. `/chat/` authenticates the Appwrite JWT and initializes request state.
+2. `crisis_precheck_node` runs deterministic detection before context or model I/O. A positive precheck routes directly to deterministic crisis guidance.
+3. Otherwise, `context_loader_node` assembles a snapshot from profile data, recent conversation records and selected user facts.
+4. `triage_node` classifies the message with that context. Routing can select crisis guidance, a clarification question, an off-topic redirect, or the supervisor.
+5. The Python supervisor chooses specialists. The dispatcher runs the selected medical, craving-support, emotional-support, reflection and/or relapse-risk nodes **sequentially**.
+6. The preparation graph ends after specialist drafting. The endpoint collects synthesis output, validates citations and applies output filtering before emitting model response content.
+7. Deterministic branches already have their response text and do not need synthesis.
+8. The endpoint calls `output_node`: persist both conversation records, then await eligible lifecycle-managed, retriable memory curation.
+9. Only then emit the terminal SSE `done` event with citations, deeplinks and turn ID. The configured benchmark identity also receives evaluation telemetry.
 
-| Layer | Technology | Free Tier |
-|---|---|---|
-| API server | FastAPI + LangGraph | HF Spaces (16 GB CPU, no spin-down) |
-| Synthesis LLM | Groq `openai/gpt-oss-120b` | Subject to Groq account quota |
-| Routing/specialist LLM | Groq `openai/gpt-oss-20b` | Subject to the same account quota |
-| Embeddings | Cloudflare Workers AI bge-small-en-v1.5 | Yes (10k/day) |
-| Vector store | Qdrant Cloud | Yes (1 GB, no spin-down) |
-| Conv. history | Appwrite chatbot_messages | Yes (existing project) |
-| User facts | Appwrite chatbot_user_facts | Yes (existing project) |
-| App data | Appwrite (users, diary, etc.) | Yes (read-only from chatbot) |
-| Streaming | SSE via sse-starlette | N/A |
+The endpoint imports `get_compiled_preparation_graph()`. A complete graph with synthesis/output nodes exists for other callers; do not describe it as the active endpoint execution path. See [`builder.py`](app/graph/builder.py) and [`chat.py`](app/routers/chat.py).
 
-## Agent Responsibilities
+## Models and retrieval
 
-| Agent | Model | Call type | Purpose |
-|---|---|---|---|
-| Triage | GPT OSS 20B, temp=0 | JSON completion | Classify intent/emotion/urgency/crisis |
-| Supervisor | Pure Python | No LLM | Decide which specialists to invoke |
-| Medical | GPT OSS 20B, temp=0 | JSON completion | Extract evidence-based key points from KB |
-| Craving Support | GPT OSS 20B, temp=0.1 | JSON completion | Urge-surfing script + deeplinks |
-| Emotional Support | GPT OSS 20B, temp=0.3 | JSON completion | MI-style reflective draft |
-| Reflection | GPT OSS 20B, temp=0.3 | JSON completion | Diary pattern analysis |
-| Relapse-Risk | GPT OSS 20B, temp=0.2 | JSON completion | Interpret behavioral signals and draft support |
-| Synthesizer | GPT OSS 120B, temp=0.5 | Streaming | Compose final reply in Hailey's voice |
-| Memory Curator | GPT OSS 20B, temp=0 | JSON completion | Extract durable user facts (async) |
-| Crisis Handler | Deterministic | One constrained sentence | Fixed safety message + hotlines |
+The active factories select Groq. `Settings` defaults are `openai/gpt-oss-20b` for triage/specialists/curation and `openai/gpt-oss-120b` for synthesis. Gemini client/configuration code remains available but is not selected by the current factories.
 
-## Memory Architecture
+The retriever uses Qdrant with 384-dimensional `bge-small-en-v1.5` embeddings, normally obtained through Cloudflare Workers AI, with a same-model local fallback when configured. Medical retrieval uses vector search and metadata filtering over cessation/health-benefit collections.
 
-```
-Per-turn context budget (~5400 tokens):
-  1. System prompt + Hailey persona          ~800 tok
-  2. User profile snapshot                   ~200 tok
-  3. User facts (top 30 by confidence)       ~600 tok
-  4. Last 10 conversation turns              ~1500 tok
-  5. Retrieved KB chunks (vector search)     ~1500 tok
-  6. Specialist draft outputs                ~800 tok
-```
+| Optional path | Repository default |
+| --- | --- |
+| Knowledge-graph expansion | `ENABLE_KNOWLEDGE_GRAPH=false` |
+| Cross-encoder reranking | `ENABLE_RERANKER=false` |
+| Web-search fallback | `ENABLE_WEB_SEARCH_FALLBACK=false` |
 
-## Phase 3 Feature Flags
+The existence of graph data or web/reranker code does not imply those paths execute. The source manifest is an intended corpus/governance record; deployed Qdrant contents require a separate inventory.
 
-All Phase 3 features are implemented. Two remain off by default:
+## Memory lifecycle
 
-| Flag | Default | Notes |
-|---|---|---|
-| `ENABLE_KNOWLEDGE_GRAPH` | `false` | 139-node/206-edge domain graph; entity extractor uses keyword matching (no ML dep) |
-| `ENABLE_RERANKER` | `false` | `BAAI/bge-reranker-base` cross-encoder; enable when KB exceeds ~250 diverse chunks |
+The snapshot contains a profile, recent conversation **records**, and selected remembered facts. Limits and ranking are implementation constraints, not promises to include all relevant history. Triage uses a smaller formatted subset of that context; specialists need not receive identical prompt content.
+
+Facts retain provenance and can be inspected/deleted by their owner. Extracted confidence is model-assigned and uncalibrated. Expired/superseded facts are handled separately from active facts.
+
+After persistence, eligible curation is scheduled as a tracked task and awaited through `asyncio.shield`. Bounded retries, strong task references and shutdown draining manage its lifecycle. The benchmark identity and some intent categories skip curation. This is not a detached fire-and-forget job. Conversation deletion and fact deletion are distinct operations; do not claim atomic erasure across them.
+
+## SSE and safety boundaries
+
+SSE includes `status`, `token`, `done` and `error`; response data uses `{"token": "..."}`. The current endpoint buffers model synthesis before post-processing and emits the processed response, rather than forwarding raw provider tokens immediately. Status labels are presentation events and should not be treated as precise internal timing instrumentation.
+
+The crisis guidance text is deterministic. Detection can miss cases, static resources have limited locale coverage, and the overall completion lifecycle may still include persistence/curation. Citation validation and output filtering do not establish clinical accuracy or exhaustive risk coverage. Relapse-risk scoring is a support-priority heuristic, not a validated clinical prediction.
+
+## Operations and evidence
+
+User-data routes require JWT authentication. Liveness/readiness, documentation and metrics have different access/exposure considerations; see [`main.py`](app/main.py). `/live` and `/health` report liveness; `/ready` checks cached dependency readiness and can return HTTP 503.
+
+Benchmark Actions workflows execute developer-authored scenarios and retain artifacts; green workflow status is not proof that all case gates passed. Sequential scenario completion does not establish availability, scale or production reliability. Fine-tuning is deferred. See [evaluation](../finetune/eval/README.md), [setup](../docs/SETUP.md) and [limitations](../docs/ROADMAP.md).

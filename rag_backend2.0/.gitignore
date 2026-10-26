@@ -27,10 +27,7 @@ htmlcov/
 ~/.cache/huggingface/
 sentence_transformers/
 
-# Fine-tune data (large, not in VCS)
-finetune/data/raw/
-finetune/data/processed/
-finetune/eval/reports/
+# Root-level finetune/ outputs are covered by the repository-root .gitignore.
 
 # IDE
 .vscode/

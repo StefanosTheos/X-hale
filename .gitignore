@@ -122,3 +122,34 @@ qdrant_storage/
 /assets/icons/health_benefit.jpg
 /assets/icons/milestones.jpg
 /assets/icons/stretching.jpg
+
+# Local audits and private working notes
+/.github_review/
+/.publication_review/
+/errors.md
+/chatbot_review.md
+/chatbot_revamp_overview.md
+
+# Manuscript drafts, submission summaries and personal CV (not app inputs)
+/Publication*.docx
+/Supplementary_Material*.docx
+/Frontiers_Manuscript_Summary.md
+/Stefanos Theos - CV.pdf
+/assets/icons/Fig_*.png
+~$*
+
+# Generated output under the root-level finetune/ sibling
+/finetune/data/raw/
+/finetune/data/processed/
+/finetune/eval/results/*
+!/finetune/eval/results/.gitkeep
+/finetune/eval/reports/
+/finetune/checkpoints/
+/finetune/outputs/
+
+# Local tooling output
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+*.egg-info/
+Thumbs.db
