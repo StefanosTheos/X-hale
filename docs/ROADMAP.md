@@ -9,7 +9,8 @@ This is the maintained public engineering backlog, replacing root review diaries
 - [x] Add the owner-approved MIT code license with a separate third-party review.
 - [x] Ignore local manuscripts, CV, editorial reviews and generated evaluation output.
 - [x] Consolidate durable findings here and preserve private review copies outside the tracked tree.
-- [ ] Replace screenshot placeholders with reviewed demo-account captures.
+- [x] Replace screenshot placeholders with supplied application captures and document their provenance/version limits.
+- [ ] Add a current Hailey conversation capture from a controlled demo account; record its date and code revision.
 - [ ] Complete [asset-provenance and redistribution review](../THIRD_PARTY_NOTICES.md), including historical copies.
 - [ ] Confirm Firebase restrictions, Appwrite permissions, server-key scopes and deployment access controls. Public client identifiers do not establish secure cloud configuration.
 - [ ] Provide a complete Appwrite schema/bootstrap and reviewed seed data; manual instructions are not an automated fresh-project deployment.

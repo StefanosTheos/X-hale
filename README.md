@@ -6,9 +6,24 @@ X-hale is a Flutter mobile application combining cessation-progress tracking, re
 
 ## Preview
 
-![Placeholders for the progress dashboard, Hailey conversation and coping tools](docs/images/app-preview-placeholder.svg)
+| Progress dashboard | Guided breathing |
+| --- | --- |
+| <img src="docs/images/progress-dashboard.jpg" alt="X-hale progress dashboard with quit timer, milestone progress and estimated savings" width="240"> | <img src="docs/images/guided-breathing.jpg" alt="Guided breathing exercise showing the hold phase and remaining time" width="260"> |
 
-*Screenshot placeholders only. Real application captures will replace these panels; no application screens are shown above.* See [screenshot instructions](docs/images/README.md).
+<details>
+<summary>More application screens: milestones, challenges and health information</summary>
+
+| Milestones | User-defined challenges |
+| --- | --- |
+| <img src="docs/images/milestones.jpg" alt="Day-based smoke-free milestone cards" width="300"> | <img src="docs/images/challenges.jpg" alt="Activity and financial challenges with progress indicators" width="300"> |
+
+<img src="docs/images/health-benefit.jpg" alt="Informational health-benefit timeline card for circulation and lung function" width="360">
+
+*The health-benefit card is informational; its timeline and progress display do not measure an individual's physiological recovery.*
+
+</details>
+
+*Representative interfaces from existing project captures. These older screenshots illustrate the app UI; their original capture dates and code revisions are not recorded. Displayed progress values are not evaluation results, and these images do not demonstrate the current Hailey backend.* See [screenshot provenance](docs/images/README.md).
 
 ## Application features
 
