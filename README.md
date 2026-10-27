@@ -11,24 +11,27 @@ X-hale is a Flutter mobile application combining cessation-progress tracking, re
 | <a href="docs/images/progress-dashboard.webp"><img src="docs/images/progress-dashboard.webp" alt="X-hale dashboard showing quit duration, milestone progress and estimated savings" width="240"></a> | <a href="docs/images/hailey-conversation.webp"><img src="docs/images/hailey-conversation.webp" alt="Hailey answering a question about cravings with links to the distraction wheel and diary" width="240"></a> | <a href="docs/images/guided-breathing.webp"><img src="docs/images/guided-breathing.webp" alt="Box-breathing screen with technique, duration, instructions and breathing timer" width="240"></a> |
 
 <details>
-<summary>More application screens: milestones, challenges and health information</summary>
+<summary>More application screens: Explore, stretching, milestones, health benefits and challenges</summary>
 
 <table>
-  <tr><th>Milestones</th><th>Challenges and health information</th></tr>
+  <tr><th align="center">Explore</th><th align="center">Stretching routine</th></tr>
   <tr>
-    <td align="center" valign="top">
-      <a href="docs/images/milestones.webp"><img src="docs/images/milestones.webp" alt="Smoke-free milestone grid showing completed and upcoming achievements" width="240"></a>
-    </td>
-    <td align="center" valign="top">
-      <p><strong>User-defined financial challenge</strong></p>
-      <a href="docs/images/challenges.webp"><img src="docs/images/challenges.webp" alt="Savings challenge for a scooter with a progress bar and link to all challenges" width="360"></a>
-      <p><strong>Informational health-benefit card</strong></p>
-      <a href="docs/images/health-benefit.webp"><img src="docs/images/health-benefit.webp" alt="Health-benefit timeline card with progress and a Learn More link" width="360"></a>
-    </td>
+    <td align="center" valign="top"><a href="docs/images/explore.webp"><img src="docs/images/explore.webp" alt="Explore screen with preparation tips, wellness support, breathing techniques and mini-games" width="300"></a></td>
+    <td align="center" valign="top"><a href="docs/images/stretching-routine.webp"><img src="docs/images/stretching-routine.webp" alt="Neck-stretch routine with stretch selection, repetitions, instructions and illustration" width="300"></a></td>
+  </tr>
+  <tr><th align="center">Milestones</th><th align="center">Health benefits</th></tr>
+  <tr>
+    <td align="center" valign="top"><a href="docs/images/milestones.webp"><img src="docs/images/milestones.webp" alt="Smoke-free milestone grid showing completed and upcoming achievements" width="300"></a></td>
+    <td align="center" valign="top"><a href="docs/images/health-benefits.webp"><img src="docs/images/health-benefits.webp" alt="Health Benefits page with informational recovery timelines and benefit cards" width="300"></a></td>
   </tr>
 </table>
 
-*The health-benefit card is informational; its timeline and progress display do not measure an individual's physiological recovery.*
+<p align="center">
+  <strong>Ongoing challenges</strong><br>
+  <a href="docs/images/challenges.webp"><img src="docs/images/challenges.webp" alt="Ongoing challenges showing a running goal and a savings goal, with progress and a link to all challenges" width="480"></a>
+</p>
+
+*Health-benefit timelines and progress displays are informational; they do not measure an individual's physiological recovery.*
 
 </details>
 
